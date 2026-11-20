@@ -1,0 +1,403 @@
+package widgets
+
+import (
+	"sync"
+	"time"
+
+	. "github.com/bbmumford/mullion/native"
+)
+
+// ToastDuration is the default auto-dismiss lifetime when ToastAttrs.Duration is 0.
+var ToastDuration = 5 * time.Second
+
+// DefaultToastWidth is the card width when ToastAttrs.Width is 0.
+var DefaultToastWidth f32 = 360
+
+// ToastCorner places a toast stack against a window corner.
+type ToastCorner int
+
+const (
+	ToastBottomRight ToastCorner = iota
+	ToastBottomLeft
+	ToastTopRight
+	ToastTopLeft
+)
+
+// ToastId identifies one active toast for DismissToast.
+type ToastId int64
+
+// ToastAttrs configures a notification card. The general entry point is
+// ToastExt; Toast / ToastMessage / ToastWithAccent are thin wrappers.
+//
+// When Content is set, it replaces the default icon/title/body block. The
+// card chrome (background, dismiss, countdown bar) still applies unless
+// disabled via flags.
+type ToastAttrs struct {
+	Title string
+	Body  string
+
+	// Icon is a font glyph drawn at the leading edge. Ignored when Image != 0
+	// or when Content is set.
+	Icon IconGlyph
+	// Image is an optional leading bitmap (e.g. from UseImage). Takes
+	// precedence over Icon. Ignored when Content is set.
+	Image ImageId
+
+	// Content, when non-nil, replaces the icon/title/body area with arbitrary
+	// UI. The card still provides dismiss and the countdown bar.
+	Content func()
+
+	Background Vec4 // card fill; zero → scheme background
+	TitleColor Vec4 // zero → scheme title
+	BodyColor  Vec4 // zero → scheme body
+	Accent     Vec4 // countdown bar; zero → scheme accent
+
+	// Duration until auto-dismiss. 0 → ToastDuration; negative → sticky
+	// (no timer, no auto-dismiss).
+	Duration time.Duration
+
+	Corner ToastCorner // zero value is ToastBottomRight
+	Width  f32         // zero → DefaultToastWidth
+
+	NoDismiss bool // hide the × control
+	NoTimer   bool // hide the countdown bar (auto-dismiss still runs if Duration ≥ 0)
+}
+
+// Common card backgrounds (HSLA). Assign to ToastAttrs.Background.
+var (
+	ToastBackgroundDefault = Vec4{0, 0, 18, 0.92}
+	ToastBackgroundSuccess = Vec4{140, 45, 22, 0.94}
+	ToastBackgroundWarning = Vec4{40, 70, 28, 0.94}
+	ToastBackgroundDanger  = Vec4{5, 65, 28, 0.94}
+	ToastBackgroundInfo    = Vec4{210, 55, 28, 0.94}
+)
+
+type toastEntry struct {
+	id    ToastId
+	attrs ToastAttrs
+	style *ToastStyle
+	born  time.Time
+	until time.Time // zero when sticky
+}
+
+type toastState struct {
+	toastMu      sync.Mutex
+	toasts       []toastEntry
+	nextToastId  ToastId
+	toastLayouts []ToastLayout
+}
+
+func toastStateForUI() *toastState { return LocalState[toastState]("widgets.toasts") }
+
+// ToastLayout holds identity handles for one painted toast card. Use with
+// GetResolvedRectOf / GetScreenRectOf (previous-frame geometry).
+type ToastLayout struct {
+	Id        ToastId
+	CardId    ContainerId
+	DismissId ContainerId // nil when NoDismiss
+}
+
+// ToastCount returns how many toasts are currently queued (including those
+// that have not painted a frame yet).
+func ToastCount() int {
+	state := toastStateForUI()
+
+	state.toastMu.Lock()
+	n := len(state.toasts)
+	state.toastMu.Unlock()
+	return n
+}
+
+// ActiveToastLayouts returns the cards painted in the latest toastFrame pass.
+func ActiveToastLayouts() []ToastLayout {
+	state := toastStateForUI()
+
+	return state.toastLayouts
+}
+
+func init() {
+	RegisterFramePopup(toastFrame)
+}
+
+// Toast pushes a toast with icon, title, and body.
+func Toast(icon IconGlyph, title, msg string) ToastId {
+	return ToastExt(ToastAttrs{Icon: icon, Title: title, Body: msg})
+}
+
+// ToastMessage pushes a body-only toast with package defaults.
+func ToastMessage(msg string) ToastId {
+	return ToastExt(ToastAttrs{Body: msg})
+}
+
+// ToastWithAccent is Toast plus a countdown-bar accent color.
+func ToastWithAccent(icon IconGlyph, title, msg string, accent Vec4) ToastId {
+	return ToastExt(ToastAttrs{Icon: icon, Title: title, Body: msg, Accent: accent})
+}
+
+// ToastExt adds a toast to the stack and returns its id. Toasts with the same
+// Corner stack together; the app should avoid flooding the stack.
+func ToastExt(attrs ToastAttrs) ToastId { return enqueueToast(attrs, nil) }
+
+// ToastStyled queues a toast with literal paint, including transparent colors.
+// Color overrides in attrs are ignored. The stored style remains independent of scheme changes.
+func ToastStyled(attrs ToastAttrs, style ToastStyle) ToastId { return enqueueToast(attrs, &style) }
+
+func enqueueToast(attrs ToastAttrs, style *ToastStyle) ToastId {
+	state := toastStateForUI()
+
+	if attrs.Width <= 0 {
+		attrs.Width = DefaultToastWidth
+	}
+
+	now := time.Now()
+	var until time.Time
+	dur := attrs.Duration
+	if dur == 0 {
+		dur = ToastDuration
+		attrs.Duration = dur
+	}
+	if dur > 0 {
+		until = now.Add(dur)
+	}
+
+	state.toastMu.Lock()
+	state.nextToastId++
+	id := state.nextToastId
+	state.toasts = append(state.toasts, toastEntry{id: id, attrs: attrs, style: style, born: now, until: until})
+	state.toastMu.Unlock()
+
+	RequestNextFrame()
+	return id
+}
+
+// DismissToast removes one toast by id. Unknown ids are ignored.
+func DismissToast(id ToastId) {
+	state := toastStateForUI()
+
+	state.toastMu.Lock()
+	for i, t := range state.toasts {
+		if t.id == id {
+			state.toasts = append(state.toasts[:i], state.toasts[i+1:]...)
+			break
+		}
+	}
+	state.toastMu.Unlock()
+}
+
+// DismissAllToasts clears the entire stack.
+func DismissAllToasts() {
+	state := toastStateForUI()
+
+	state.toastMu.Lock()
+	state.toasts = state.toasts[:0]
+	state.toastMu.Unlock()
+}
+
+func toastFrame() {
+	state := toastStateForUI()
+
+	state.toastLayouts = state.toastLayouts[:0]
+
+	state.toastMu.Lock()
+	now := time.Now()
+	alive := state.toasts[:0]
+	for _, t := range state.toasts {
+		if !t.until.IsZero() && now.After(t.until) {
+			continue
+		}
+		alive = append(alive, t)
+	}
+	state.toasts = alive
+	if len(state.toasts) == 0 {
+		state.toastMu.Unlock()
+		return
+	}
+	snapshot := append([]toastEntry(nil), state.toasts...)
+	state.toastMu.Unlock()
+
+	RequestNextFrame()
+
+	byCorner := [4][]toastEntry{}
+	for _, t := range snapshot {
+		c := t.attrs.Corner
+		if c < ToastBottomRight || c > ToastTopLeft {
+			c = ToastBottomRight
+		}
+		byCorner[c] = append(byCorner[c], t)
+	}
+
+	Popup(func() {
+		ws := GetHost().WindowSize
+		const pad f32 = 16
+		const stackGap f32 = 8
+		for corner, list := range byCorner {
+			if len(list) == 0 {
+				continue
+			}
+			bottom := corner == int(ToastBottomRight) || corner == int(ToastBottomLeft)
+			right := corner == int(ToastBottomRight) || corner == int(ToastTopRight)
+			main := AlignStart
+			cross := AlignStart
+			if bottom {
+				main = AlignEnd
+			}
+			if right {
+				cross = AlignEnd
+			}
+			// Bottom: oldest first so newest sits on the corner.
+			// Top: newest first so newest sits on the corner.
+			ordered := list
+			if !bottom {
+				ordered = append([]toastEntry(nil), list...)
+				for i, j := 0, len(ordered)-1; i < j; i, j = i+1, j-1 {
+					ordered[i], ordered[j] = ordered[j], ordered[i]
+				}
+			}
+			// ClickThrough on the full-window host so empty areas do not steal
+			// hits; each card opts back in with NoClickThrough.
+			Container(Attrs(Float(0, 0), FixSizeVec(ws), ClickThrough, Pad(pad),
+				MainAlign(main), CrossAlign(cross), Gap(stackGap)), func() {
+				for _, t := range ordered {
+					toastCard(t, now)
+				}
+			})
+		}
+	})
+}
+
+func toastCard(t toastEntry, now time.Time) {
+	state := toastStateForUI()
+
+	a := t.attrs
+	var style ToastStyle
+	if t.style != nil {
+		style = *t.style
+	} else {
+		style = CurrentColorScheme.Toast
+		if a.Background != (Vec4{}) {
+			style.Background = a.Background
+		}
+		if a.TitleColor != (Vec4{}) {
+			style.Title = a.TitleColor
+		}
+		if a.BodyColor != (Vec4{}) {
+			style.Body = a.BodyColor
+		}
+		if a.Accent != (Vec4{}) {
+			style.Accent = a.Accent
+		}
+	}
+	a.Background, a.TitleColor, a.BodyColor, a.Accent = style.Background, style.Title, style.Body, style.Accent
+	w := a.Width
+	const pad f32 = 14
+	const dismissBox f32 = 28
+	const iconBox f32 = 28
+	const gap f32 = 10
+
+	var remaining f32
+	showTimer := !a.NoTimer && !t.until.IsZero() && a.Duration > 0
+	if showTimer {
+		total := a.Duration.Seconds()
+		left := t.until.Sub(now).Seconds()
+		if total > 0 {
+			remaining = f32(left / total)
+			if remaining < 0 {
+				remaining = 0
+			}
+			if remaining > 1 {
+				remaining = 1
+			}
+		}
+	}
+
+	var dismissId ContainerId
+	// NoClickThrough: sit inside the ClickThrough corner host but accept hits.
+	cardId := ContainerWithKey(t.id, Attrs(NoClickThrough, FixWidth(w), Clip, Corners(8),
+		BackgroundVec(a.Background), AmendTextStyle(TextColorVec(a.BodyColor)), BoxShadow(12), NoAnimate), func() {
+		NextAccessRole("alert")
+		if a.Title != "" {
+			NextAccessValue(a.Title)
+		} else if a.Body != "" {
+			NextAccessValue(a.Body)
+		}
+		AssignAccess()
+		// Expand so this column takes the card width; without it the row is
+		// content-sized and Filler/Grow have no leftover to push × right.
+		Container(Attrs(Expand, Pad(pad), Gap(8)), func() {
+			textMax := w - pad*2
+			if !a.NoDismiss {
+				textMax -= dismissBox + gap
+			}
+
+			if a.Content != nil {
+				Container(Attrs(Row, Expand, CrossAlign(AlignStart), Gap(gap)), func() {
+					Container(Attrs(MaxWidth(textMax), Gap(4)), func() {
+						a.Content()
+					})
+					if !a.NoDismiss {
+						Filler(1)
+						dismissId = toastDismissButton(t.id, a.TitleColor, style.DismissHovered)
+					}
+				})
+				return
+			}
+
+			hasLead := a.Image != 0 || a.Icon.Rune != 0
+			if hasLead {
+				textMax -= iconBox + gap
+			}
+			if textMax < 40 {
+				textMax = 40
+			}
+
+			Container(Attrs(Row, Expand, CrossAlign(AlignStart), Gap(gap)), func() {
+				if a.Image != 0 {
+					ImageView(a.Image, Vec2{iconBox, iconBox})
+				} else if a.Icon.Rune != 0 {
+					Container(Attrs(FixSize(iconBox, iconBox), Center), func() {
+						Icon(a.Icon, FontSize(18), TextColorVec(a.TitleColor))
+					})
+				}
+
+				Container(Attrs(MaxWidth(textMax), Gap(4)), func() {
+					if a.Title != "" {
+						Label(a.Title, FontSize(13), FontWeight(WeightBold), TextColorVec(a.TitleColor))
+					}
+					if a.Body != "" {
+						Label(a.Body, FontSize(12), TextColorVec(a.BodyColor))
+					}
+				})
+
+				if !a.NoDismiss {
+					Filler(1)
+					dismissId = toastDismissButton(t.id, a.TitleColor, style.DismissHovered)
+				}
+			})
+		})
+
+		if showTimer {
+			// Countdown: full → empty (remaining fraction of lifetime).
+			barH := comfort(3)
+			Container(Attrs(Expand, FixHeight(barH), BackgroundVec(style.Track), NoAnimate, Clip), func() {
+				Element(Attrs(FixWidth(w*remaining), FixHeight(barH), BackgroundVec(a.Accent), NoAnimate))
+			})
+		}
+	})
+	state.toastLayouts = append(state.toastLayouts, ToastLayout{Id: t.id, CardId: cardId, DismissId: dismissId})
+}
+
+func toastDismissButton(id ToastId, fg, hovered Vec4) ContainerId {
+	return ContainerWithKey(toastDismissKey(id), Attrs(FixSize(28, 28), Center, Corners(4)), func() {
+		NextAccessRole("button")
+		AssignAccess()
+		if IsHovered() {
+			ModAttrs(BackgroundVec(hovered))
+		}
+		if PressAction() {
+			DismissToast(id)
+		}
+		Icon(TypTimes, FontSize(12), TextColorVec(fg))
+	})
+}
+
+type toastDismissKey ToastId

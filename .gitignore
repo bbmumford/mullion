@@ -1,0 +1,12 @@
+# Build output
+/examples/*/examples
+/examples/*/*.app
+*.exe
+*.wasm
+
+# Go
+*.test
+*.out
+
+# macOS
+.DS_Store

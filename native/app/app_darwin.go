@@ -1,0 +1,79 @@
+//go:build darwin && !ios
+
+package app
+
+import (
+	"image"
+
+	"github.com/bbmumford/mullion/native"
+	"github.com/bbmumford/mullion/native/cocoabackend"
+	"github.com/bbmumford/mullion/native/internal/iconimg"
+)
+
+// SetupWindow records the window's title and initial size in points. Call it
+// before Run.
+func SetupWindow(title string, width, height int) {
+	native.GetHost().WindowSize = native.Vec2{float32(width), float32(height)}
+	cocoabackend.SetupWindow(title, width, height)
+}
+
+// SetupQuiet maps the window without activating the app or making it key.
+// Call before Run.
+func SetupQuiet() {
+	cocoabackend.SetupQuiet()
+}
+
+func setupOverlayBackend() {
+	cocoabackend.SetupOverlay()
+}
+
+func setupBackgroundBackend() {
+	cocoabackend.SetupBackground()
+}
+
+// SetupTransparent lets unpainted pixels reveal the windows behind this window.
+// App backgrounds and controls retain their own alpha; the native window shadow
+// is disabled. Call before Run.
+// Supported on macOS and Windows; other platforms ignore this option.
+func SetupTransparent() {
+	cocoabackend.SetupTransparent()
+}
+
+// SetupUndecorated omits the window's title bar and standard window buttons.
+// The window can receive keyboard input and resize. Call before Run.
+// Supported on macOS and Windows; other platforms ignore this option.
+func SetupUndecorated() {
+	cocoabackend.SetupUndecorated()
+}
+
+// SetupIcon records the path of the image (PNG etc.) used as the app's icon —
+// shown wherever the platform shows one (macOS: Dock; Windows: title bar and
+// taskbar; X11: wherever the WM displays _NET_WM_ICON; Wayland: via
+// xdg-toplevel-icon-v1 where the compositor ships it, otherwise a .desktop
+// file matched by app_id). Optional; call it before Run.
+func SetupIcon(imagePath string) {
+	cocoabackend.SetupIcon(imagePath)
+}
+
+// SetupIconImage is SetupIcon from an in-memory image instead of a file. It
+// takes precedence over SetupIcon. Optional; call it before Run.
+func SetupIconImage(img image.Image) {
+	cocoabackend.SetupIconImage(img)
+}
+
+// SetupIconBytes is SetupIcon from encoded image bytes (PNG etc.), e.g. a
+// go:embed-ed asset. It takes precedence over SetupIcon; bytes that fail to
+// decode leave the default icon. Optional; call it before Run.
+func SetupIconBytes(data []byte) {
+	if img := iconimg.DecodeBytes(data); img != nil {
+		SetupIconImage(img)
+	}
+}
+
+// Run opens the window and runs the native event loop, invoking frameFn once per
+// frame. It must be called from the program's main goroutine and does not return:
+// quit paths (window close, Quit, Cmd-Q) call generic.ExitWithCleanup so
+// AddExitCleanup handlers run.
+func Run(frameFn native.FrameFn) {
+	cocoabackend.Run(frameFn)
+}

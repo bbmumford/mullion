@@ -1,0 +1,81 @@
+package widgets
+
+import (
+	"testing"
+
+	"github.com/bbmumford/mullion/native"
+
+	. "github.com/bbmumford/mullion/native"
+)
+
+// TestTextInputFocusedRender: an input must survive gaining focus and being
+// typed into. Regression for the ModAttrs-after-children panic: the input
+// draws decoration child elements, and the focused-restyle ModAttrs must
+// stay ahead of them — which no headless snapshot verifies, because nothing
+// ever focuses an input in a snapshot.
+func TestTextInputFocusedRender(t *testing.T) {
+	initFontsOnce.Do(native.InitFontSubsystem)
+	native.ResetInputSession()
+
+	var buf string
+	attrs := DefaultTextInputAttrs()
+	attrs.NoAutoFocus = true
+	view := func() {
+		Container(Attrs(Pad(20)), func() {
+			TextInputExt(&buf, attrs)
+		})
+	}
+
+	scope := new(int)
+	inside := Vec2{60, 40} // well within the input's min size + padding
+	runSemFrame(scope, semFrameInput{mouse: offscreen}, view)
+	runSemFrame(scope, semFrameInput{mouse: inside, action: MouseClick}, view)
+	runSemFrame(scope, semFrameInput{mouse: inside, action: MouseRelease}, view)
+	// the frame after focus is where the ModAttrs ordering bug lived
+	runSemFrame(scope, semFrameInput{mouse: inside}, view)
+	if !GetHost().WantsKeyboard {
+		t.Fatal("focused TextInput must assert GetHost().WantsKeyboard for the frame")
+	}
+	runSemFrame(scope, semFrameInput{mouse: inside, text: "hello"}, view)
+	if buf != "hello" {
+		t.Fatalf("typed text did not land in the buffer: %q", buf)
+	}
+	// Click far away and release so the field loses focus; next idle frame
+	// must not keep requesting a keyboard.
+	runSemFrame(scope, semFrameInput{mouse: offscreen, action: MouseClick}, view)
+	runSemFrame(scope, semFrameInput{mouse: offscreen, action: MouseRelease}, view)
+	runSemFrame(scope, semFrameInput{mouse: offscreen}, view)
+	if GetHost().WantsKeyboard {
+		t.Fatal("unfocused TextInput must not leave GetHost().WantsKeyboard set")
+	}
+}
+
+func TestTabLeavesTextInputWithoutWidgetCall(t *testing.T) {
+	initFontsOnce.Do(native.InitFontSubsystem)
+	native.ResetInputSession()
+	GetHost().WindowSize = Vec2{400, 200}
+
+	var buf string
+	var other ContainerId
+	attrs := DefaultTextInputAttrs()
+	attrs.FixedWidth = true
+	view := func() {
+		Container(Attrs(Pad(20), Gap(8)), func() {
+			TextInputExt(&buf, attrs)
+			other = Container(Attrs(Focusable, FixSize(40, 20)), func() {})
+		})
+	}
+
+	RunFrameFn(view) // AutoFocus requests the field
+	RunFrameFn(view) // field holds focus
+	if IdHasFocus(other) {
+		t.Fatal("setup: the trailing control must not start focused")
+	}
+
+	GetFrameInput().Key = KeyTab
+	RunFrameFn(view)
+	RunFrameFn(view)
+	if !IdHasFocus(other) {
+		t.Fatal("Tab should leave the text field for the next Focusable")
+	}
+}
