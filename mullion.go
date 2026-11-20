@@ -134,6 +134,11 @@ type Session struct {
 	// read every frame on the main thread and written by OpenWindow, which may
 	// be called from a goroutine.
 	attachedViews atomic.Int32
+
+	// shortcuts are the MenuBar accelerators this process has to match itself,
+	// because no platform menu bar took them. Built once while attaching and
+	// read every frame, both on the main thread.
+	shortcuts []shell.Shortcut
 }
 
 // surface names which kind of thing is driving the event loop.
@@ -229,6 +234,13 @@ func (s *Session) attach() error {
 			return err
 		}
 		s.bar = bar
+		// With no bar installed, nothing is matching the accelerators, so the
+		// Go-drawn surface does it from its own input. Where a bar went up it
+		// already answers them, and matching here as well would run each
+		// handler twice.
+		if bar == nil && s.owner == surfaceNative {
+			s.shortcuts = s.app.MenuBar.Shortcuts()
+		}
 	}
 	if s.app.OnReady != nil {
 		return s.app.OnReady(s)
@@ -249,6 +261,7 @@ func (s *Session) runNative() error {
 	// arrive here the same way it does under a WebView or tray loop.
 	native.RegisterFrameStart(mainthread.Drain)
 	native.RegisterFrameStart(s.pumpAttachedWindows)
+	native.RegisterFrameStart(s.matchMenuShortcuts)
 	mainthread.SetWake(native.RequestNextFrame)
 
 	app.SetupWindow(w.Title, w.width(), w.height())
@@ -257,6 +270,24 @@ func (s *Session) runNative() error {
 	}
 	app.Run(w.Draw) // does not return
 	return nil
+}
+
+// matchMenuShortcuts answers the MenuBar's accelerators from the Go-drawn
+// surface's own input.
+//
+// A menu bar is not available everywhere the menu is: macOS installs a real one
+// and matches the keys itself, Windows attaches one to the window, and Linux
+// draws none at all -- and the bar that would have carried the shortcuts there
+// wants a GtkWindow, which a Go-drawn window is not. Matching them here makes
+// one MenuBar behave the same on all three.
+//
+// On macOS the bar has already answered the key, so this would run the handler
+// a second time; the shortcuts are only collected where no bar took them.
+func (s *Session) matchMenuShortcuts() {
+	if len(s.shortcuts) == 0 {
+		return
+	}
+	shell.Match(s.shortcuts)
 }
 
 // pumpAttachedWindows gives a WebView window opened under this loop its turn.
