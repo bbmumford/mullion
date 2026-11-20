@@ -266,3 +266,12 @@ func TestPostAppDefinedEventBuildsAndPostsAnEvent(t *testing.T) {
 func TestPostAppDefinedEventIgnoresANilApplication(t *testing.T) {
 	PostAppDefinedEvent(0)
 }
+
+// Bundled is what stands between an unbundled process and a notification call
+// that would terminate it, so its answer matters more than most. A test binary
+// is not in an .app bundle, which is the case it has to get right here.
+func TestBundledIsFalseForAnUnbundledProcess(t *testing.T) {
+	if Bundled() {
+		t.Error("Bundled() is true for a test binary, which is not in an .app bundle")
+	}
+}

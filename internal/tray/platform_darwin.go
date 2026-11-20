@@ -772,9 +772,22 @@ func (t *darwinTray) applyItemUpdate(item menuItemSnapshot) {
 // NSUserNotification was deprecated in macOS 10.14 in favor of UNUserNotification,
 // but remains functional through at least macOS 14. A future version may migrate
 // to UNUserNotificationCenter.
+// ShowNotification posts a notification through the notification centre.
+//
+// It needs the process to be in an .app bundle: macOS will not deliver on
+// behalf of a process it cannot identify. The check is made first and the call
+// is not attempted otherwise, because the newer UNUserNotificationCenter
+// answers an unbundled process by raising NSInternalInconsistencyException,
+// and an uncaught Objective-C exception takes the process down in a way Go
+// cannot recover from. Anyone replacing the deprecated API below should keep
+// that check in front of it.
 func (t *darwinTray) ShowNotification(title, message string) error {
 	initDarwinSels()
 	initDarwinClasses()
+
+	if !darwin.Bundled() {
+		return errors.New("darwin: notifications need the process to be in an .app bundle; macOS will not deliver for a process it cannot identify")
+	}
 
 	// Create NSUserNotification.
 	notification := darwinClasses.NSUserNotification.Send(darwinSels.alloc)

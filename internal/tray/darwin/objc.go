@@ -272,6 +272,32 @@ func NewNSData(data []byte) ID {
 		uintptr(unsafe.Pointer(&data[0])), uintptr(len(data)))
 }
 
+// Bundled reports whether the process is running from an .app bundle, which it
+// answers by asking whether the main bundle has an identifier.
+//
+// Notifications are the reason this matters. macOS will not deliver one on
+// behalf of a process it cannot identify, and the two APIs refuse differently:
+// NSUserNotificationCenter hands back a nil centre, which is an error a caller
+// can report, while UNUserNotificationCenter raises
+// NSInternalInconsistencyException ("bundleProxyForCurrentProcess is nil") and
+// takes the process down with it. An uncaught Objective-C exception cannot be
+// recovered from in Go, so the only safe thing is to ask first and not call at
+// all when the answer is no.
+func Bundled() bool {
+	if initRuntime() != nil {
+		return false
+	}
+	cls := GetClass("NSBundle")
+	if cls == 0 {
+		return false
+	}
+	bundle := cls.Send(RegisterSelector("mainBundle"))
+	if bundle.IsNil() {
+		return false
+	}
+	return !bundle.Send(RegisterSelector("bundleIdentifier")).IsNil()
+}
+
 // PostAppDefinedEvent creates an NSEvent of type NSApplicationDefined and posts
 // it to the application's event queue via [NSApp postEvent:atStart:YES].
 //
