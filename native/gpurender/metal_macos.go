@@ -4,13 +4,14 @@ package gpurender
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 	"time"
 	"unsafe"
 
+	"github.com/bbmumford/mullion/native"
 	"github.com/ebitengine/purego/cstrings"
 	"github.com/ebitengine/purego/objc"
-	"github.com/bbmumford/mullion/native"
 )
 
 const metalShaderSrc = `#include <metal_stdlib>
@@ -398,6 +399,9 @@ func metalEncode(cmd, tex, inst objc.ID, w, h int, quads []Quad, batches []Batch
 	if cmd == 0 || tex == 0 || w <= 0 || h <= 0 {
 		return fmt.Errorf("bad target")
 	}
+	// One Pinner for the frame's uploads; see the replaceRegion call below.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 	qbytes := uint(len(quads) * int(unsafe.Sizeof(Quad{})))
 	if len(quads) > 0 {
 		dst := objc0(inst, sel_contents)
@@ -419,6 +423,11 @@ func metalEncode(cmd, tex, inst objc.ID, w, h int, quads []Quad, batches []Batch
 			continue
 		}
 		scratchRegion = mtlRegion2D(uint(u.x), uint(u.y), uint(u.w), uint(u.h))
+		// objc4 reaches objc_msgSend through a func value, so the address of
+		// the caller's pixels is not kept alive by the call. scratchRegion
+		// needs nothing: it is a package-level variable, whose storage the
+		// collector neither frees nor moves.
+		pinner.Pin(&u.pix[0])
 		objc4(dst, sel_replaceRegion, uintptr(unsafe.Pointer(&scratchRegion)), 0, uintptr(unsafe.Pointer(&u.pix[0])), uintptr(u.stride))
 	}
 

@@ -388,6 +388,12 @@ func gpuInit() error {
 }
 
 func createPipeline() error {
+	// One Pinner for the function: every descriptor below is a local whose
+	// address crosses to Direct3D through comCall, which passes it on as an
+	// ordinary parameter and so protects nothing.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	vsBlob, err := compileHLSL("vs_main", "vs_4_0")
 	if err != nil {
 		return err
@@ -417,6 +423,7 @@ func createPipeline() error {
 		{&semTEXCOORD[0], 2, dxgiFmtRGBA32Float, 0, 32, d3dInputPerInstance, 1},
 		{&semTEXCOORD[0], 3, dxgiFmtRGBA32Float, 0, 48, d3dInputPerInstance, 1},
 	}
+	pinner.Pin(&elems[0])
 	hr = comCall(d3dDev, devCreateInputLayout,
 		uintptr(unsafe.Pointer(&elems[0])), 4, vsPtr, vsLen, uintptr(unsafe.Pointer(&d3dLayout)))
 	if failed(hr) || d3dLayout == 0 {
@@ -429,12 +436,14 @@ func createPipeline() error {
 	rt.SrcBlend, rt.DestBlend, rt.BlendOp = d3dBlendOne, d3dBlendInvSrcAlpha, d3dBlendOpAdd
 	rt.SrcBlendAlpha, rt.DestBlendAlpha, rt.BlendOpAlpha = d3dBlendOne, d3dBlendInvSrcAlpha, d3dBlendOpAdd
 	rt.RenderTargetWriteMask = 0x0f
+	pinner.Pin(&bd)
 	hr = comCall(d3dDev, devCreateBlendState, uintptr(unsafe.Pointer(&bd)), uintptr(unsafe.Pointer(&d3dBlend)))
 	if failed(hr) || d3dBlend == 0 {
 		return fmt.Errorf("CreateBlendState hr=%s", hrStr(hr))
 	}
 
 	rd := rasterDesc{FillMode: d3dFillSolid, CullMode: d3dCullNone, DepthClipEnable: 1, ScissorEnable: 1}
+	pinner.Pin(&rd)
 	hr = comCall(d3dDev, devCreateRasterizerState, uintptr(unsafe.Pointer(&rd)), uintptr(unsafe.Pointer(&d3dRaster)))
 	if failed(hr) || d3dRaster == 0 {
 		return fmt.Errorf("CreateRasterizerState hr=%s", hrStr(hr))
@@ -444,12 +453,14 @@ func createPipeline() error {
 		Filter: d3dFilterLinear, AddressU: d3dAddrClamp, AddressV: d3dAddrClamp, AddressW: d3dAddrClamp,
 		MaxAnisotropy: 1, ComparisonFunc: d3dCmpNever, MaxLOD: 3.402823466e+38,
 	}
+	pinner.Pin(&sd)
 	hr = comCall(d3dDev, devCreateSamplerState, uintptr(unsafe.Pointer(&sd)), uintptr(unsafe.Pointer(&d3dSamp)))
 	if failed(hr) || d3dSamp == 0 {
 		return fmt.Errorf("CreateSamplerState hr=%s", hrStr(hr))
 	}
 
 	cbd := bufDesc{ByteWidth: uint32((unsafe.Sizeof(d3dUni{}) + 15) &^ 15), Usage: d3dUsageDefault, BindFlags: d3dBindConstBuf}
+	pinner.Pin(&cbd)
 	hr = comCall(d3dDev, devCreateBuffer, uintptr(unsafe.Pointer(&cbd)), 0, uintptr(unsafe.Pointer(&d3dCBuf)))
 	if failed(hr) || d3dCBuf == 0 {
 		return fmt.Errorf("CreateBuffer cbuf hr=%s", hrStr(hr))
@@ -477,10 +488,13 @@ func createPipeline() error {
 	comCall(d3dCtx, ctxPSSetShader, d3dPS, 0, 0)
 	comCall(d3dCtx, ctxRSSetState, d3dRaster)
 	factor := [4]float32{}
+	pinner.Pin(&factor[0])
 	comCall(d3dCtx, ctxOMSetBlendState, d3dBlend, uintptr(unsafe.Pointer(&factor[0])), 0xffffffff)
 	samp := d3dSamp
+	pinner.Pin(&samp)
 	comCall(d3dCtx, ctxPSSetSamplers, 0, 1, uintptr(unsafe.Pointer(&samp)))
 	cbuf := d3dCBuf
+	pinner.Pin(&cbuf)
 	comCall(d3dCtx, ctxVSSetConstantBuffers, 0, 1, uintptr(unsafe.Pointer(&cbuf)))
 	comCall(d3dCtx, ctxPSSetConstantBuffers, 0, 1, uintptr(unsafe.Pointer(&cbuf)))
 	return nil
@@ -544,21 +558,45 @@ func gpuSubmit(dest unsafe.Pointer, w, h int, quads []Quad, batches []Batch, upl
 		return 0, 0, err
 	}
 
+	// Every address below crosses to Direct3D through comCall, which hands it
+	// on as an ordinary parameter and so keeps nothing alive. This runs once
+	// per frame, so the three values the batch loop passes are declared here
+	// and pinned once rather than per batch: a scene with two hundred batches
+	// would otherwise add six hundred pins a frame for no gain, since each
+	// iteration overwrites them in full before use.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	rtv := target.rtv
-	comCall(d3dCtx, ctxOMSetRenderTargets, 1, uintptr(unsafe.Pointer(&rtv)), 0)
 	vp := viewport{Width: float32(w), Height: float32(h), MaxDepth: 1}
+	stride := uint32(unsafe.Sizeof(Quad{}))
+	off := uint32(0)
+	inst := d3dInst
+	var (
+		sc  d3dRect
+		srv uintptr
+		uni d3dUni
+	)
+	pinner.Pin(&rtv)
+	pinner.Pin(&vp)
+	pinner.Pin(&stride)
+	pinner.Pin(&off)
+	pinner.Pin(&inst)
+	pinner.Pin(&sc)
+	pinner.Pin(&srv)
+	pinner.Pin(&uni)
+
+	comCall(d3dCtx, ctxOMSetRenderTargets, 1, uintptr(unsafe.Pointer(&rtv)), 0)
 	comCall(d3dCtx, ctxRSSetViewports, 1, uintptr(unsafe.Pointer(&vp)))
 	if !defaultB.skipClear {
 		color := [4]float32{1, 1, 1, 1}
 		if native.GetHost().TransparentBackground {
 			color = [4]float32{}
 		}
+		pinner.Pin(&color[0])
 		comCall(d3dCtx, ctxClearRenderTargetView, target.rtv, uintptr(unsafe.Pointer(&color[0])))
 	}
 
-	stride := uint32(unsafe.Sizeof(Quad{}))
-	off := uint32(0)
-	inst := d3dInst
 	comCall(d3dCtx, ctxIASetVertexBuffers, 0, 1, uintptr(unsafe.Pointer(&inst)), uintptr(unsafe.Pointer(&stride)), uintptr(unsafe.Pointer(&off)))
 
 	for i := range batches {
@@ -584,10 +622,10 @@ func gpuSubmit(dest unsafe.Pointer, w, h int, quads []Quad, batches []Batch, upl
 		if cw <= 0 || ch <= 0 {
 			continue
 		}
-		sc := d3dRect{int32(x), int32(y), int32(x + cw), int32(y + ch)}
+		sc = d3dRect{int32(x), int32(y), int32(x + cw), int32(y + ch)}
 		comCall(d3dCtx, ctxRSSetScissorRects, 1, uintptr(unsafe.Pointer(&sc)))
 
-		srv := d3dWhiteSRV
+		srv = d3dWhiteSRV
 		mode := uint32(0)
 		switch b.TexKind {
 		case texGlyph:
@@ -604,7 +642,7 @@ func gpuSubmit(dest unsafe.Pointer, w, h int, quads []Quad, batches []Batch, upl
 		}
 		comCall(d3dCtx, ctxPSSetShaderResources, 0, 1, uintptr(unsafe.Pointer(&srv)))
 
-		uni := d3dUni{
+		uni = d3dUni{
 			ViewportX: float32(w), ViewportY: float32(h),
 			Mode: mode, ClipN: uint32(b.ClipN),
 			ClipRect: b.ClipRect, ClipRad: b.ClipRad,
@@ -845,18 +883,14 @@ func createTex(w, h int, format, bind, misc uint32, pix []byte, stride int) (tex
 		SysMem                   uintptr
 		SysMemPitch, SysMemSlice uint32
 	}
-	if len(pix) > 0 {
-		initBuf.SysMem = uintptr(unsafe.Pointer(&pix[0]))
-		initBuf.SysMemPitch = uint32(stride)
-		init = &initBuf
-	}
-	var initArg uintptr
-	if init != nil {
-		initArg = uintptr(unsafe.Pointer(init))
-	}
 	// desc, tex and srv cross as addresses; initBuf.SysMem holds the address of
 	// the caller's pixels, which Direct3D reads out of that field during the
 	// call rather than from an argument.
+	//
+	// The pixels are pinned before the address of them is taken, not after.
+	// Pinning afterwards leaves a window in which the store has already
+	// happened and nothing is holding the memory, and it is the kind of
+	// ordering mistake that reads as correct: the pin is right there.
 	var pinner runtime.Pinner
 	defer pinner.Unpin()
 	pinner.Pin(&desc)
@@ -865,6 +899,13 @@ func createTex(w, h int, format, bind, misc uint32, pix []byte, stride int) (tex
 	if len(pix) > 0 {
 		pinner.Pin(&pix[0])
 		pinner.Pin(&initBuf)
+		initBuf.SysMem = uintptr(unsafe.Pointer(&pix[0]))
+		initBuf.SysMemPitch = uint32(stride)
+		init = &initBuf
+	}
+	var initArg uintptr
+	if init != nil {
+		initArg = uintptr(unsafe.Pointer(init))
 	}
 	hr := comCall(d3dDev, devCreateTexture2D, uintptr(unsafe.Pointer(&desc)), initArg, uintptr(unsafe.Pointer(&tex)))
 	if failed(hr) || tex == 0 {

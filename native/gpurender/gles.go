@@ -320,6 +320,13 @@ func glesBuildProgram() error {
 func glesCompile(kind uint32, src string) (uint32, error) {
 	sh := glCreateShader(kind)
 	csrc := append([]byte(src), 0)
+	// glShaderSource is reached through a purego-registered func value, which
+	// carries no //go:uintptrescapes, and p holds the address as a bare
+	// uintptr: nothing else refers to csrc once it does, so the driver could
+	// be reading freed memory while it compiles.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+	pinner.Pin(&csrc[0])
 	p := uintptr(unsafe.Pointer(&csrc[0]))
 	glShaderSource(sh, 1, &p, nil)
 	glCompileShader(sh)
