@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/go-webgpu/goffi/ffi"
+	"github.com/ebitengine/purego"
 
 	"github.com/bbmumford/mullion/internal/tray/darwin"
 )
@@ -322,7 +322,7 @@ func registerGoSystrayTarget() (darwin.Class, error) {
 
 		// Add trayClicked: method — called when the status bar button is clicked.
 		// ObjC signature: -(void)trayClicked:(id)sender → "v@:@"
-		trayClickedIMP := ffi.NewCallback(func(self, sel, sender uintptr) uintptr {
+		trayClickedIMP := purego.NewCallback(func(self, sel, sender uintptr) uintptr {
 			trayRegistryMu.RLock()
 			t := trayRegistryMap[self]
 			trayRegistryMu.RUnlock()
@@ -338,7 +338,7 @@ func registerGoSystrayTarget() (darwin.Class, error) {
 		// Add menuItemClicked: method — called when a menu item is clicked.
 		// We use the sender's tag to look up the Go callback.
 		// ObjC signature: -(void)menuItemClicked:(NSMenuItem*)sender → "v@:@"
-		menuClickedIMP := ffi.NewCallback(func(self, sel, sender uintptr) uintptr {
+		menuClickedIMP := purego.NewCallback(func(self, sel, sender uintptr) uintptr {
 			trayRegistryMu.RLock()
 			t := trayRegistryMap[self]
 			trayRegistryMu.RUnlock()
@@ -362,7 +362,7 @@ func registerGoSystrayTarget() (darwin.Class, error) {
 
 		// Add drainUpdates: method — called on main thread via performSelectorOnMainThread.
 		// Drains the pendingUpdates channel and applies AppKit changes safely.
-		drainUpdatesIMP := ffi.NewCallback(func(self, sel, sender uintptr) uintptr {
+		drainUpdatesIMP := purego.NewCallback(func(self, sel, sender uintptr) uintptr {
 			trayRegistryMu.RLock()
 			t := trayRegistryMap[self]
 			trayRegistryMu.RUnlock()

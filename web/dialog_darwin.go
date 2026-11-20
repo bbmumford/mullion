@@ -39,6 +39,13 @@ func (w *webview) SaveFile(opts FileDialogOptions) (string, error) {
 // presentOpenPanel builds and runs an NSOpenPanel on the UI thread and returns
 // the selected filesystem paths (empty when cancelled).
 func (w *webview) presentOpenPanel(opts FileDialogOptions, canFiles, canDirs, multiple bool) []string {
+	return presentOpenPanelFor(opts, canFiles, canDirs, multiple)
+}
+
+// presentOpenPanelFor is presentOpenPanel without a WebView. The panel is
+// application-modal, so there was never anything of the window in it; the
+// Go-drawn surface opens the same panel through this.
+func presentOpenPanelFor(opts FileDialogOptions, canFiles, canDirs, multiple bool) []string {
 	var paths []string
 	// performOnMain, not Dispatch plus a wait: called from the main thread
 	// (a menu item, a WebKit callback) the wait would starve the very queue
@@ -58,6 +65,12 @@ func (w *webview) presentOpenPanel(opts FileDialogOptions, canFiles, canDirs, mu
 // presentSavePanel builds and runs an NSSavePanel on the UI thread and returns
 // the chosen path (empty when cancelled).
 func (w *webview) presentSavePanel(opts FileDialogOptions) string {
+	return presentSavePanelFor(opts)
+}
+
+// presentSavePanelFor is presentSavePanel without a WebView, for the same
+// reason as presentOpenPanelFor.
+func presentSavePanelFor(opts FileDialogOptions) string {
 	var path string
 	performOnMain(func() {
 		autorelease(func() {

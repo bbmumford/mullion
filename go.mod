@@ -10,7 +10,6 @@ require (
 	github.com/ebitengine/purego v0.11.3
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-text/typesetting v0.3.4
-	github.com/go-webgpu/goffi v0.6.3
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/jezek/xgb v1.1.1
 	go.hasen.dev/generic v0.1.8
