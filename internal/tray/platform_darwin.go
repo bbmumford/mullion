@@ -265,13 +265,14 @@ func (t *darwinTray) Create() error {
 
 	// Create status item with variable length.
 	// [statusBar statusItemWithLength:NSVariableStatusItemLength]
-	t.statusItem = t.statusBar.SendDouble(darwinSels.statusItemWithLen, nsVariableStatusItemLength)
+	t.statusItem = retainAcrossPools(
+		t.statusBar.SendDouble(darwinSels.statusItemWithLen, nsVariableStatusItemLength))
 	if t.statusItem.IsNil() {
 		return errors.New("darwin: failed to create NSStatusItem")
 	}
 
 	// Get the button associated with the status item.
-	t.btn = t.statusItem.Send(darwinSels.button)
+	t.btn = retainAcrossPools(t.statusItem.Send(darwinSels.button))
 	if t.btn.IsNil() {
 		return errors.New("darwin: NSStatusItem has no button")
 	}
@@ -452,6 +453,33 @@ func createNSImage(png []byte, template bool) darwin.ID {
 	}
 
 	return nsImage
+}
+
+// retainAcrossPools takes ownership of an object this struct keeps between
+// calls.
+//
+// statusItemWithLength: returns an autoreleased NSStatusItem, and holding it in
+// a Go field is not a reference the Objective-C runtime can see. Whether that
+// matters depends on who drains the autorelease pool: under the tray's own
+// [NSApp run] the item survived long enough to look correct, but when the
+// process's loop belongs to the Go-drawn surface every frame is an AppKit
+// callback with a pool around it, so an item created during one frame is gone
+// by the next and the following setToolTip: lands on freed memory.
+//
+// The button is retained for the same reason: it is only kept alive by the
+// status item, which this process is now responsible for keeping.
+func retainAcrossPools(id darwin.ID) darwin.ID {
+	if id.IsNil() {
+		return id
+	}
+	return id.Send(darwin.RegisterSelector("retain"))
+}
+
+// releaseRetained gives up what retainAcrossPools took.
+func releaseRetained(id darwin.ID) {
+	if !id.IsNil() {
+		id.Send(darwin.RegisterSelector("release"))
+	}
 }
 
 // SetTooltip sets the hover tooltip text.
@@ -753,12 +781,13 @@ func (t *darwinTray) Show() error {
 		return errors.New("darwin: tray not created")
 	}
 
-	t.statusItem = t.statusBar.SendDouble(darwinSels.statusItemWithLen, nsVariableStatusItemLength)
+	t.statusItem = retainAcrossPools(
+		t.statusBar.SendDouble(darwinSels.statusItemWithLen, nsVariableStatusItemLength))
 	if t.statusItem.IsNil() {
 		return errors.New("darwin: failed to re-create NSStatusItem")
 	}
 
-	t.btn = t.statusItem.Send(darwinSels.button)
+	t.btn = retainAcrossPools(t.statusItem.Send(darwinSels.button))
 
 	// Restore icon if we had one.
 	if len(t.iconData) > 0 {
@@ -791,6 +820,9 @@ func (t *darwinTray) Hide() error {
 
 	// [statusBar removeStatusItem:statusItem]
 	t.statusBar.SendPtr(darwinSels.removeStatusItem, t.statusItem.Ptr())
+	releaseRetained(t.btn)
+	releaseRetained(t.statusItem)
+	t.btn = 0
 	t.statusItem = 0
 	t.btn = 0
 
@@ -873,10 +905,15 @@ func (t *darwinTray) Destroy() {
 // destroyOnMainThread performs the actual AppKit cleanup.
 // MUST be called on the main thread.
 func (t *darwinTray) destroyOnMainThread() {
-	// Remove the status item from the menu bar.
+	// Remove the status item from the menu bar, then give up the references
+	// retainAcrossPools took.
 	if !t.statusBar.IsNil() && !t.statusItem.IsNil() {
 		t.statusBar.SendPtr(darwinSels.removeStatusItem, t.statusItem.Ptr())
 	}
+	releaseRetained(t.btn)
+	releaseRetained(t.statusItem)
+	t.btn = 0
+	t.statusItem = 0
 
 	// Unregister from tray registry before releasing the target. Only the final
 	// tray owns shutdown of the shared application event loop.
