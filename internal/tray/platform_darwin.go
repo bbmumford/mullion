@@ -394,6 +394,9 @@ func (t *darwinTray) SetIcon(png []byte) error {
 	if nsImage.IsNil() {
 		return errors.New("darwin: failed to create NSImage from PNG data")
 	}
+	// setImage: retains the image for itself, so the reference createNSImage
+	// handed over is ours to give up; without this every icon change leaks one.
+	defer releaseRetained(nsImage)
 
 	// [button setImage:nsImage]
 	t.btn.SendPtr(darwinSels.setImage, nsImage.Ptr())
@@ -415,6 +418,9 @@ func (t *darwinTray) SetTemplateIcon(png []byte) error {
 	if nsImage.IsNil() {
 		return errors.New("darwin: failed to create template NSImage")
 	}
+	// setImage: retains the image for itself, so the reference createNSImage
+	// handed over is ours to give up; without this every icon change leaks one.
+	defer releaseRetained(nsImage)
 
 	// [button setImage:nsImage]
 	t.btn.SendPtr(darwinSels.setImage, nsImage.Ptr())
@@ -443,6 +449,15 @@ func createNSImage(png []byte, template bool) darwin.ID {
 	if nsImage.IsNil() {
 		return 0
 	}
+	// The NSData is deliberately not released: NewNSData builds it with
+	// +[NSData dataWithBytes:length:], a class convenience constructor, so it
+	// comes back autoreleased and this code never owned it. Releasing it is an
+	// over-release, and the crash lands inside [NSApp run] when AppKit next
+	// draws the image rather than at the call that caused it.
+	//
+	// NewNSString is the opposite -- alloc plus initWithUTF8String:, so +1 and
+	// the caller's to release -- which is why the strings here are released and
+	// this is not.
 
 	// [nsImage setSize:NSMakeSize(22, 22)] — standard menu bar icon size
 	nsImage.SendSize(darwinSels.setSize, darwin.NSSize{Width: 22, Height: 22})
@@ -492,6 +507,11 @@ func (t *darwinTray) SetTooltip(text string) error {
 	if nsStr.IsNil() {
 		return errors.New("darwin: failed to create NSString for tooltip")
 	}
+	// NewNSString returns an object this code owns, and setToolTip: copies what
+	// it is given, so the string is finished with when the call returns. Without
+	// the release every tooltip update leaks one, which a tray that reports
+	// something once a second does several thousand times a day.
+	defer releaseRetained(nsStr)
 
 	// [button setToolTip:nsString]
 	t.btn.SendPtr(darwinSels.setToolTip, nsStr.Ptr())
@@ -509,6 +529,7 @@ func (t *darwinTray) SetMenu(menu *Menu) error {
 		// Remove the menu. When no menu is set, the button action (trayClicked:)
 		// fires on click.
 		t.statusItem.SendPtr(darwinSels.setMenu, 0)
+		releaseRetained(t.nsMenu)
 		t.nsMenu = 0
 		return nil
 	}
@@ -526,7 +547,12 @@ func (t *darwinTray) SetMenu(menu *Menu) error {
 		return errors.New("darwin: failed to build NSMenu")
 	}
 
+	// The menu built here is owned by this struct, which keeps it so Show can
+	// put it back; the one it replaces is nobody's after this, so it goes.
+	// setMenu: takes its own reference, so the status item is unaffected.
+	previous := t.nsMenu
 	t.nsMenu = nsMenu
+	defer releaseRetained(previous)
 
 	// [statusItem setMenu:nsMenu]
 	t.statusItem.SendPtr(darwinSels.setMenu, nsMenu.Ptr())
@@ -548,6 +574,8 @@ func (t *darwinTray) buildNSMenu(title string, menu *Menu, counter *int) darwin.
 
 	if title != "" {
 		nsTitle := darwin.NewNSString(title)
+		// initWithTitle: copies the string, so this one is finished with.
+		defer releaseRetained(nsTitle)
 		nsMenu = nsMenu.SendPtr(darwinSels.initWithTitle, nsTitle.Ptr())
 	} else {
 		nsMenu = nsMenu.Send(darwinSels.init)
@@ -571,6 +599,9 @@ func (t *darwinTray) buildNSMenu(title string, menu *Menu, counter *int) darwin.
 			// Create a placeholder NSMenuItem for the submenu.
 			nsLabel := darwin.NewNSString(snapshot.label)
 			emptyKey := darwin.NewNSString("")
+			// initWithTitle:action:keyEquivalent: copies both strings.
+			defer releaseRetained(nsLabel)
+			defer releaseRetained(emptyKey)
 			nsItem := darwinClasses.NSMenuItem.Send(darwinSels.alloc)
 			nsItem = darwin.MsgSend3Ptr(nsItem, darwinSels.initWithTitleActionKeyEquiv,
 				nsLabel.Ptr(), 0, emptyKey.Ptr())
@@ -601,6 +632,9 @@ func (t *darwinTray) buildNSMenu(title string, menu *Menu, counter *int) darwin.
 
 			nsLabel := darwin.NewNSString(snapshot.label)
 			emptyKey := darwin.NewNSString("")
+			// initWithTitle:action:keyEquivalent: copies both strings.
+			defer releaseRetained(nsLabel)
+			defer releaseRetained(emptyKey)
 			nsItem := darwinClasses.NSMenuItem.Send(darwinSels.alloc)
 
 			// Set action to menuItemClicked: on our target.

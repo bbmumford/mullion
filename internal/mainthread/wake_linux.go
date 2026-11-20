@@ -23,18 +23,22 @@ var linuxWake = sync.OnceValue(func() func() {
 	if err != nil {
 		return func() {}
 	}
-	// g_main_context_invoke_full(NULL, ...) runs the callback on the thread that
-	// owns the default context, which under GTK is the thread that called
-	// gtk_init -- the one pinned here.
-	var invokeFull func(context uintptr, priority int32, fn uintptr, data uintptr, notify uintptr)
-	purego.RegisterLibFunc(&invokeFull, lib, "g_main_context_invoke_full")
+	// g_idle_add, and deliberately not g_main_context_invoke_full: that one
+	// runs the callback immediately when the caller already owns the context,
+	// which is the main thread in every case that matters here. A wake is
+	// supposed to mean "drain at the loop's next turn", and running inline
+	// instead would drain before the loop had started -- bringing the tray and
+	// the menu bar up before there was a loop to attach them to, and running
+	// work queued from the main thread on the spot rather than in order.
+	// g_idle_add always queues.
+	var idleAdd func(fn uintptr, data uintptr) uint32
+	purego.RegisterLibFunc(&idleAdd, lib, "g_idle_add")
 
-	// Returning G_SOURCE_REMOVE (0) makes GLib drop the callback after it runs,
+	// Returning G_SOURCE_REMOVE (0) makes GLib drop the source after it runs,
 	// so each wake is one Drain.
 	work := purego.NewCallback(func(uintptr) uintptr {
 		Drain()
 		return 0
 	})
-	const gPriorityDefault = 0
-	return func() { invokeFull(0, gPriorityDefault, work, 0, 0) }
+	return func() { idleAdd(work, 0) }
 })

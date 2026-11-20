@@ -196,8 +196,11 @@ func RegisterClassPair(cls Class) {
 	rt.registerClassPair(cls)
 }
 
-// NewNSString creates an NSString from a Go string. The caller owns the result
-// and is responsible for releasing it.
+// NewNSString creates an NSString from a Go string.
+//
+// The caller owns the result and must release it: this uses alloc plus
+// initWithUTF8String:, so it comes back with a retain count of one that belongs
+// to the caller. Contrast NewNSData, which does not.
 func NewNSString(s string) ID {
 	if initRuntime() != nil {
 		return 0
@@ -220,8 +223,13 @@ func NewNSString(s string) ID {
 	return nsstr.SendPtr(RegisterSelector("initWithUTF8String:"), uintptr(unsafe.Pointer(&cstr[0])))
 }
 
-// NewNSData creates an NSData from a byte slice, through
-// [NSData dataWithBytes:length:].
+// NewNSData creates an NSData from a byte slice.
+//
+// The caller does NOT own the result and must not release it: this goes through
+// +[NSData dataWithBytes:length:], a class convenience constructor, so the
+// object comes back autoreleased. Releasing it is an over-release whose crash
+// surfaces later, inside the event loop, where nothing points back to the call
+// that caused it. Contrast NewNSString, which the caller does own.
 func NewNSData(data []byte) ID {
 	if initRuntime() != nil || len(data) == 0 {
 		return 0
