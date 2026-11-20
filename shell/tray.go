@@ -158,7 +158,14 @@ func (t *Tray) Notify(title, body string) error {
 }
 
 // Bounds is the icon's position and size on screen, for putting a popup window
-// under it. It reads zero width and height where the platform will not say.
+// under it, in the platform's own screen coordinates -- on macOS that means the
+// origin is the bottom left of the primary screen.
+//
+// Ask for it once the event loop is running. A notification area places its
+// icons as part of running, so a read taken between Show and the loop can come
+// back partly filled; from a click handler, or any other point where the loop
+// is going, it is complete. Zero width or height means the platform would not
+// say, rather than an icon of no size.
 func (t *Tray) Bounds() (x, y, w, h int) {
 	if t.impl == nil {
 		return 0, 0, 0, 0

@@ -118,3 +118,151 @@ func goString(cstr uintptr) string {
 	}
 	return string(unsafe.Slice((*byte)(unsafe.Pointer(cstr)), n))
 }
+
+// The rest of this file covers the calls an ABI mistake breaks silently: a
+// wrongly-placed bool, int or double does not fail, it arrives as something
+// else and the tray simply misbehaves. Each case reads the value back out of
+// Objective-C rather than only checking that the call returned.
+
+// SendBool places a BOOL, which is a signed char on arm64 and not a word.
+func TestSendBoolPlacesTheArgument(t *testing.T) {
+	img := GetClass("NSImage").Send(RegisterSelector("alloc")).
+		SendSize(RegisterSelector("initWithSize:"), NSSize{Width: 10, Height: 10})
+	if img.IsNil() {
+		t.Fatal("could not make an NSImage")
+	}
+	for _, want := range []bool{true, false} {
+		img.SendBool(RegisterSelector("setTemplate:"), want)
+		got := img.Send(RegisterSelector("isTemplate"))
+		if (uintptr(got) != 0) != want {
+			t.Errorf("setTemplate:%v read back as %v", want, uintptr(got) != 0)
+		}
+	}
+}
+
+// SendInt places an NSInteger. NSStatusItem's length is a double, so the
+// integer case uses NSNumber, where the value comes straight back.
+func TestSendIntPlacesTheArgument(t *testing.T) {
+	for _, want := range []int64{0, 1, 42, -7, 1 << 40} {
+		num := GetClass("NSNumber").Send(RegisterSelector("alloc")).
+			SendInt(RegisterSelector("initWithInteger:"), want)
+		if num.IsNil() {
+			t.Fatalf("initWithInteger:%d returned nil", want)
+		}
+		got := num.Send(RegisterSelector("integerValue"))
+		if int64(got) != want {
+			t.Errorf("initWithInteger:%d read back as %d", want, int64(got))
+		}
+	}
+}
+
+// SendDouble places a float, which goes in a floating-point register. Getting
+// this wrong is how a status item ends up with a nonsense width.
+func TestSendDoublePlacesTheArgument(t *testing.T) {
+	for _, want := range []float64{0, 1, 22.5, -3.25, 1e9} {
+		num := GetClass("NSNumber").Send(RegisterSelector("alloc")).
+			SendDouble(RegisterSelector("initWithDouble:"), want)
+		if num.IsNil() {
+			t.Fatalf("initWithDouble:%v returned nil", want)
+		}
+		got := sendForDouble(num, RegisterSelector("doubleValue"))
+		if got != want {
+			t.Errorf("initWithDouble:%v read back as %v", want, got)
+		}
+	}
+}
+
+// MsgSend3Ptr places three word arguments. NSMenuItem's designated initialiser
+// takes exactly that shape and is what the tray builds every item with.
+func TestMsgSend3PtrPlacesThreeArguments(t *testing.T) {
+	title := NewNSString("Item title")
+	key := NewNSString("k")
+	if title.IsNil() || key.IsNil() {
+		t.Fatal("could not make the strings")
+	}
+	item := GetClass("NSMenuItem").Send(RegisterSelector("alloc"))
+	if item.IsNil() {
+		t.Fatal("[NSMenuItem alloc] returned nil")
+	}
+	item = MsgSend3Ptr(item, RegisterSelector("initWithTitle:action:keyEquivalent:"),
+		title.Ptr(), 0, key.Ptr())
+	if item.IsNil() {
+		t.Fatal("initWithTitle:action:keyEquivalent: returned nil")
+	}
+	// The first and third arguments arrived if the item carries them back.
+	gotTitle := item.Send(RegisterSelector("title"))
+	if s := nsStringGoValue(gotTitle); s != "Item title" {
+		t.Errorf("title read back as %q, want %q", s, "Item title")
+	}
+	gotKey := item.Send(RegisterSelector("keyEquivalent"))
+	if s := nsStringGoValue(gotKey); s != "k" {
+		t.Errorf("keyEquivalent read back as %q, want %q", s, "k")
+	}
+}
+
+// A class made at runtime with a Go callback for its method is how every tray
+// click reaches Go. If the callback is not installed the menu is simply dead,
+// with nothing reported.
+func TestAClassCanBeCreatedWithAGoCallbackForItsMethod(t *testing.T) {
+	cls := AllocateClassPair(GetClass("NSObject"), "mullionObjcTestTarget")
+	if cls == 0 {
+		t.Fatal("AllocateClassPair returned 0")
+	}
+	called := make(chan struct{}, 1)
+	imp := newTestCallback(func() {
+		select {
+		case called <- struct{}{}:
+		default:
+		}
+	})
+	sel := RegisterSelector("mullionTestFire:")
+	if !ClassAddMethod(cls, sel, imp, "v@:@") {
+		t.Fatal("ClassAddMethod reported failure")
+	}
+	RegisterClassPair(cls)
+
+	if GetClass("mullionObjcTestTarget") == 0 {
+		t.Fatal("the registered class cannot be looked up by name")
+	}
+	obj := ID(cls).Send(RegisterSelector("alloc"))
+	if obj.IsNil() {
+		t.Fatal("alloc on the new class returned nil")
+	}
+	obj.SendPtr(sel, 0)
+	select {
+	case <-called:
+	default:
+		t.Error("the method was dispatched but the Go callback did not run")
+	}
+}
+
+// PostAppDefinedEvent is the one call with no second way to check it: it is
+// what lets Remove return from the event loop. Here there is no loop, so what
+// is checked is that the nine-argument call -- a struct, a double and mixed
+// integer widths -- builds an event and posts it without faulting.
+func TestPostAppDefinedEventBuildsAndPostsAnEvent(t *testing.T) {
+	app := GetClass("NSApplication").Send(RegisterSelector("sharedApplication"))
+	if app.IsNil() {
+		t.Skip("no NSApplication in this process")
+	}
+	PostAppDefinedEvent(app)
+
+	// The event is in the queue; take it back out, which both proves it was
+	// posted and leaves the queue as it was found.
+	const anyMask = ^uint64(0)
+	distantPast := GetClass("NSDate").Send(RegisterSelector("distantPast"))
+	ev := sendForEvent(app, RegisterSelector("nextEventMatchingMask:untilDate:inMode:dequeue:"),
+		anyMask, distantPast, NewNSString("kCFRunLoopDefaultMode"), true)
+	if ev.IsNil() {
+		t.Fatal("nothing was posted to the application's event queue")
+	}
+	// NSEventTypeApplicationDefined is 15.
+	if got := ev.Send(RegisterSelector("type")); uintptr(got) != 15 {
+		t.Errorf("the queued event has type %d, want 15 (application defined)", uintptr(got))
+	}
+}
+
+// PostAppDefinedEvent must do nothing with no application, rather than fault.
+func TestPostAppDefinedEventIgnoresANilApplication(t *testing.T) {
+	PostAppDefinedEvent(0)
+}

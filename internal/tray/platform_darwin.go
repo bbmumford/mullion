@@ -50,6 +50,8 @@ var darwinSels struct {
 
 	// NSStatusItem
 	button  darwin.SEL
+	window  darwin.SEL
+	frame   darwin.SEL
 	setMenu darwin.SEL // setMenu:
 
 	// NSStatusBarButton (NSButton subclass)
@@ -127,6 +129,8 @@ func initDarwinSels() {
 
 		// NSStatusItem
 		darwinSels.button = darwin.RegisterSelector("button")
+		darwinSels.window = darwin.RegisterSelector("window")
+		darwinSels.frame = darwin.RegisterSelector("frame")
 		darwinSels.setMenu = darwin.RegisterSelector("setMenu:")
 
 		// NSStatusBarButton (NSButton)
@@ -866,10 +870,32 @@ func (t *darwinTray) Hide() error {
 // Bounds returns the tray icon's screen position.
 // On macOS, NSStatusItem does not provide a direct API for this.
 // Returns zeros; callers should not depend on this for positioning.
+// Bounds is the status item's position and size on screen, for putting a popup
+// under it.
+//
+// It reads [[[statusItem button] window] frame]: the button's own frame is in
+// its window's coordinates and says nothing about where on screen the item is,
+// so the window is the thing to ask. The coordinates are AppKit's, with the
+// origin at the bottom left of the primary screen.
+//
+// It is only meaningful once the event loop is running. AppKit lays a status
+// item out as part of running, not as part of creating it, so a read taken
+// between Show and the loop gives a partly-filled frame: measured here, 38x0 at
+// the origin before the loop and 38x33 at its real screen position a moment
+// after. Callers wanting a popup under the icon should ask from a click
+// handler or anywhere else the loop is already going.
+//
+// Zeroes mean the answer is not available rather than a position of zero.
 func (t *darwinTray) Bounds() (int, int, int, int) {
-	// NSStatusItem window frame could be queried via [[[statusItem button] window] frame],
-	// but this requires NSRect return handling. For v1, return zeros.
-	return 0, 0, 0, 0
+	if t.btn.IsNil() {
+		return 0, 0, 0, 0
+	}
+	window := t.btn.Send(darwinSels.window)
+	if window.IsNil() {
+		return 0, 0, 0, 0
+	}
+	f := window.Frame(darwinSels.frame)
+	return int(f.X), int(f.Y), int(f.Width), int(f.Height)
 }
 
 // Run blocks the calling goroutine, running the Cocoa event loop ([NSApp run]).

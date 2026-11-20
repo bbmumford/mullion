@@ -54,6 +54,29 @@ type nsPoint struct {
 	Y float64
 }
 
+// NSRect is an origin and a size, as AppKit lays it out: four doubles.
+type NSRect struct {
+	_      structs.HostLayout
+	X      float64
+	Y      float64
+	Width  float64
+	Height float64
+}
+
+// Frame reads a view's or window's frame.
+//
+// A struct of four doubles comes back in floating-point registers rather than
+// the integer one the Send methods here use, so it needs the typed form of
+// objc_msgSend. That is one generic call with purego and was a hand-built call
+// interface with the FFI library this package used to go through, which is why
+// the status item's position was left unanswered until now.
+func (id ID) Frame(sel SEL) NSRect {
+	if id.IsNil() {
+		return NSRect{}
+	}
+	return objc.Send[NSRect](objc.ID(id), objc.SEL(sel))
+}
+
 // runtimeState holds what has to be loaded before any class can be looked up.
 type runtimeState struct {
 	once sync.Once
