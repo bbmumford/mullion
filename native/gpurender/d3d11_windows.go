@@ -4,6 +4,7 @@ package gpurender
 
 import (
 	"fmt"
+	"runtime"
 	"syscall"
 	"time"
 	"unicode/utf16"
@@ -626,6 +627,8 @@ func uploadQuads(quads []Quad) error {
 		return nil
 	}
 	bytes := n * int(unsafe.Sizeof(Quad{}))
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 	if d3dInst == 0 || d3dInstBytes < bytes {
 		releaseCOM(&d3dInst)
 		cap := bytes * 2
@@ -633,6 +636,7 @@ func uploadQuads(quads []Quad) error {
 			cap = 4096
 		}
 		bd := bufDesc{ByteWidth: uint32(cap), Usage: d3dUsageDynamic, BindFlags: d3dBindVertexBuf, CPUAccess: d3dCPUWrite}
+		pinner.Pin(&bd)
 		hr := comCall(d3dDev, devCreateBuffer, uintptr(unsafe.Pointer(&bd)), 0, uintptr(unsafe.Pointer(&d3dInst)))
 		if failed(hr) || d3dInst == 0 {
 			return fmt.Errorf("CreateBuffer inst hr=%s", hrStr(hr))
@@ -640,6 +644,7 @@ func uploadQuads(quads []Quad) error {
 		d3dInstBytes = cap
 	}
 	var mapped mappedSub
+	pinner.Pin(&mapped)
 	hr := comCall(d3dCtx, ctxMap, d3dInst, 0, d3dMapWriteDiscard, 0, uintptr(unsafe.Pointer(&mapped)))
 	if failed(hr) || mapped.Data == 0 {
 		return fmt.Errorf("Map inst hr=%s", hrStr(hr))
@@ -650,6 +655,10 @@ func uploadQuads(quads []Quad) error {
 }
 
 func applyUploads(uploads []gpuUpload) {
+	// One Pinner for the batch: box is remade each time round and the pixels
+	// belong to the caller's upload, and Direct3D reads both during the call.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 	for i := range uploads {
 		u := &uploads[i]
 		if len(u.pix) == 0 || u.w <= 0 || u.h <= 0 {
@@ -672,6 +681,8 @@ func applyUploads(uploads []gpuUpload) {
 			continue
 		}
 		box := d3dBox{uint32(u.x), uint32(u.y), 0, uint32(u.x + u.w), uint32(u.y + u.h), 1}
+		pinner.Pin(&box)
+		pinner.Pin(&u.pix[0])
 		comCall(d3dCtx, ctxUpdateSubresource, tex, 0, uintptr(unsafe.Pointer(&box)),
 			uintptr(unsafe.Pointer(&u.pix[0])), uintptr(u.stride), 0)
 		_ = bpp
@@ -728,6 +739,9 @@ func PresentDC(dest unsafe.Pointer) (uintptr, error) {
 		return 0, fmt.Errorf("no GDI surface")
 	}
 	var hdc uintptr
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+	pinner.Pin(&hdc)
 	hr := comCall(target.surf, surf1GetDC, 0, uintptr(unsafe.Pointer(&hdc)))
 	if failed(hr) || hdc == 0 {
 		return 0, fmt.Errorf("IDXGISurface1.GetDC hr=%s", hrStr(hr))
@@ -790,6 +804,9 @@ func (target *d3dTarget) ensure(w, h int) error {
 		return fmt.Errorf("GDI_COMPATIBLE: %w", err)
 	}
 	var rtv uintptr
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+	pinner.Pin(&rtv)
 	hr := comCall(d3dDev, devCreateRenderTargetView, tex, 0, uintptr(unsafe.Pointer(&rtv)))
 	if failed(hr) || rtv == 0 {
 		releaseCOM(&tex)
@@ -837,6 +854,18 @@ func createTex(w, h int, format, bind, misc uint32, pix []byte, stride int) (tex
 	if init != nil {
 		initArg = uintptr(unsafe.Pointer(init))
 	}
+	// desc, tex and srv cross as addresses; initBuf.SysMem holds the address of
+	// the caller's pixels, which Direct3D reads out of that field during the
+	// call rather than from an argument.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+	pinner.Pin(&desc)
+	pinner.Pin(&tex)
+	pinner.Pin(&srv)
+	if len(pix) > 0 {
+		pinner.Pin(&pix[0])
+		pinner.Pin(&initBuf)
+	}
 	hr := comCall(d3dDev, devCreateTexture2D, uintptr(unsafe.Pointer(&desc)), initArg, uintptr(unsafe.Pointer(&tex)))
 	if failed(hr) || tex == 0 {
 		return 0, 0, fmt.Errorf("CreateTexture2D %dx%d fmt=%d hr=%s", w, h, format, hrStr(hr))
@@ -856,6 +885,9 @@ func zeroTex(tex uintptr, w, h, bpp int) {
 		return
 	}
 	z := make([]byte, w*h*bpp)
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+	pinner.Pin(&z[0])
 	comCall(d3dCtx, ctxUpdateSubresource, tex, 0, 0, uintptr(unsafe.Pointer(&z[0])), uintptr(w*bpp), 0)
 }
 
@@ -875,13 +907,19 @@ func pickAdapter() (uintptr, error) {
 		vendor uint32
 	}
 	var hw []cand
+	// One Pinner for the whole enumeration: the adapters are few, and pinning
+	// per iteration would unpin while the next call is still being set up.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 	for i := uintptr(0); ; i++ {
 		var adp uintptr
+		pinner.Pin(&adp)
 		hr := comCall(fac, 7, i, uintptr(unsafe.Pointer(&adp)))
 		if failed(hr) || adp == 0 {
 			break
 		}
 		var desc adapterDesc
+		pinner.Pin(&desc)
 		if failed(comCall(adp, dxgiAdpGetDesc, uintptr(unsafe.Pointer(&desc)))) {
 			releaseCOM(&adp)
 			continue
@@ -965,12 +1003,16 @@ func adapterName(dev uintptr) string {
 	}
 	defer releaseCOM(&dxgiDev)
 	var adp uintptr
+	var desc adapterDesc
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+	pinner.Pin(&adp)
+	pinner.Pin(&desc)
 	hr := comCall(dxgiDev, dxgiDevGetAdapter, uintptr(unsafe.Pointer(&adp)))
 	if failed(hr) || adp == 0 {
 		return ""
 	}
 	defer releaseCOM(&adp)
-	var desc adapterDesc
 	hr = comCall(adp, dxgiAdpGetDesc, uintptr(unsafe.Pointer(&desc)))
 	if failed(hr) {
 		return ""
@@ -989,6 +1031,15 @@ func utf16z(s []uint16) string {
 	return string(utf16.Decode(s[:n]))
 }
 
+// comCall invokes slot idx of obj's COM vtable.
+//
+// Its uintptr arguments do not keep what they point at alive. syscall.SyscallN
+// below carries //go:uintptrescapes, but that directive only covers a
+// conversion written in the argument list of the call it annotates: by the time
+// an address reaches this function it has been through an ordinary parameter,
+// so the compiler no longer knows it is a pointer. A caller handing over the
+// address of Go memory must therefore pin it with runtime.Pinner for the
+// duration of the call, which is what the Pinners in this file are for.
 func comCall(obj uintptr, idx int, args ...uintptr) uintptr {
 	if obj == 0 {
 		return 0x80004003

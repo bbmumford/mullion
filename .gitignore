@@ -1,10 +1,20 @@
-# Build output
-/examples/*/examples
-/examples/*/*.app
+# Compiled example programs.
+#
+# `go build ./examples/native-window/` writes its binary into the directory it
+# is run from, which is the repository root, not next to the source. Three such
+# binaries were committed before this pattern was right, so match the names
+# rather than a path under examples/.
+/native-window
+/web-window
+/tray-only
+/full-shell
+
+# Snapshot comparisons a failing render writes beside its reference.
+*.actual.png
+
+# Go build and test output
 *.exe
 *.wasm
-
-# Go
 *.test
 *.out
 

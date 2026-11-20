@@ -213,21 +213,82 @@ func analyse(fset *token.FileSet, files []*ast.File, paths []string, cfg Config)
 	return findings
 }
 
+// fileFindings walks one file, including the bodies of function literals.
+//
+// Visiting only top-level function declarations would miss a whole shape of
+// code: FFI bound inside a package-level literal, such as
+// `var load = sync.OnceValue(func() ...)`, which is how a library resolves its
+// symbols once. Those bodies hold some of the most pointer-heavy code there is,
+// and they are not reachable from a scan of FuncDecls.
 func fileFindings(fset *token.FileSet, file *ast.File, rel string, procs map[string]bool, globals map[string]*ast.ValueSpec, cfg Config) []Finding {
 	var findings []Finding
-	for _, decl := range file.Decls {
-		fn, ok := decl.(*ast.FuncDecl)
-		if !ok || fn.Body == nil {
-			continue
-		}
-		pins := pinsInBody(fset, fn.Body)
-		var stack []ast.Node
-		ast.Inspect(fn.Body, func(n ast.Node) bool {
-			if n == nil {
-				stack = stack[:len(stack)-1]
+	var (
+		stack []ast.Node
+		names []string // enclosing function names, outermost first
+		pins  []pinSet // one per enclosing function body
+	)
+	// A pin in an enclosing function is still in effect inside a literal that
+	// runs before its Unpin, so a conversion is covered by any of them.
+	covers := func(expr string, operand ast.Expr, offset int) bool {
+		for _, p := range pins {
+			if p.covers(expr, operand, offset) {
 				return true
 			}
-			stack = append(stack, n)
+		}
+		return false
+	}
+	funcName := func() string {
+		if len(names) == 0 {
+			return "<file>"
+		}
+		return strings.Join(names, ".")
+	}
+	// A package-level literal is named after the variable holding it, so a
+	// finding inside one can be found again.
+	varName := func(n ast.Node) string {
+		if vs, ok := n.(*ast.ValueSpec); ok && len(vs.Names) > 0 {
+			return vs.Names[0].Name
+		}
+		return ""
+	}
+
+	ast.Inspect(file, func(n ast.Node) bool {
+		if n == nil {
+			last := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			switch last.(type) {
+			case *ast.FuncDecl, *ast.FuncLit:
+				names = names[:len(names)-1]
+				pins = pins[:len(pins)-1]
+			case *ast.ValueSpec:
+				if varName(last) != "" {
+					names = names[:len(names)-1]
+				}
+			}
+			return true
+		}
+		stack = append(stack, n)
+
+		switch v := n.(type) {
+		case *ast.FuncDecl:
+			names = append(names, v.Name.Name)
+			pins = append(pins, pinsInBody(fset, v.Body))
+			return true
+		case *ast.FuncLit:
+			names = append(names, "func")
+			pins = append(pins, pinsInBody(fset, v.Body))
+			return true
+		case *ast.ValueSpec:
+			if name := varName(v); name != "" {
+				names = append(names, name)
+			}
+			return true
+		}
+		if len(pins) == 0 {
+			// Not inside any function body: a type or a constant.
+			return true
+		}
+		{
 
 			// A conversion written into somewhere that outlives the statement.
 			// Checked before the argument case because the store is the hazard
@@ -235,14 +296,15 @@ func fileFindings(fset *token.FileSet, file *ast.File, rel string, procs map[str
 			if operand, ok := pointerToUintptr(n); ok {
 				if where, stored := storedBeyondTheCall(stack, globals); stored {
 					expr := exprString(fset, operand)
+					at := fset.Position(n.Pos())
 					f := Finding{
-						File: rel, Line: fset.Position(n.Pos()).Line, Func: fn.Name.Name,
+						File: rel, Line: at.Line, Func: funcName(),
 						Expr: expr, Kind: KindStored,
 						Why: "the address is written into " + where +
 							", which native code reads outside any argument list, so no call keeps the referent alive: pin it for as long as native code holds it",
-						Key: rel + ":" + fn.Name.Name + ":stored " + expr,
+						Key: rel + ":" + funcName() + ":stored " + expr,
 					}
-					if !covered(f, expr, operand, pins, fset.Position(n.Pos()).Offset, cfg) {
+					if _, allowed := cfg.Allow[f.Key]; !allowed && !covers(expr, operand, at.Offset) {
 						findings = append(findings, f)
 					}
 					return true
@@ -260,28 +322,20 @@ func fileFindings(fset *token.FileSet, file *ast.File, rel string, procs map[str
 				return true
 			}
 			expr := exprString(fset, addr)
+			at := fset.Position(n.Pos())
 			f := Finding{
-				File: rel, Line: fset.Position(n.Pos()).Line, Func: fn.Name.Name,
+				File: rel, Line: at.Line, Func: funcName(),
 				Expr: expr, Kind: KindArgument,
 				Why: "this call does not carry //go:uintptrescapes, so the referent is neither kept alive nor held still: pin it with runtime.Pinner before the call",
-				Key: rel + ":" + fn.Name.Name + ":" + expr,
+				Key: rel + ":" + funcName() + ":" + expr,
 			}
-			if !covered(f, expr, addr, pins, fset.Position(n.Pos()).Offset, cfg) {
+			if _, allowed := cfg.Allow[f.Key]; !allowed && !covers(expr, addr, at.Offset) {
 				findings = append(findings, f)
 			}
-			return true
-		})
-	}
-	return findings
-}
-
-// covered reports whether a conversion is already accounted for: pinned before
-// it is made, or allowed by name.
-func covered(f Finding, expr string, operand ast.Expr, pins pinSet, offset int, cfg Config) bool {
-	if _, ok := cfg.Allow[f.Key]; ok {
+		}
 		return true
-	}
-	return pins.covers(expr, operand, offset)
+	})
+	return findings
 }
 
 // pinSet records what runtime.Pinner was asked to pin, and where.
@@ -308,8 +362,15 @@ func (p pinSet) covers(expr string, operand ast.Expr, offset int) bool {
 }
 
 // pinsInBody collects the argument of every X.Pin(arg) call, by position.
+//
+// A nil body is a declaration whose implementation is elsewhere -- assembly, or
+// a linkname -- and has nothing to collect. It still gets an empty set, because
+// the caller keeps one per enclosing function and the stack has to balance.
 func pinsInBody(fset *token.FileSet, body *ast.BlockStmt) pinSet {
 	pins := pinSet{exact: map[string]int{}, roots: map[string]int{}}
+	if body == nil {
+		return pins
+	}
 	note := func(m map[string]int, key string, at int) {
 		if key == "" {
 			return
@@ -336,8 +397,15 @@ func pinsInBody(fset *token.FileSet, body *ast.BlockStmt) pinSet {
 	return pins
 }
 
-// rootIdent walks &x.f[i], x.f, &x and so on down to the identifier the memory
-// belongs to.
+// rootIdent walks &x.f, x.f, &x and so on down to the identifier the memory
+// belongs to, and returns "" if it cannot get there.
+//
+// It stops at an index. &s[0] on a slice points into a backing array that is a
+// different object from the slice header s, so pinning s would not pin it;
+// pinning an array a does cover &a[0], but telling a slice from an array needs
+// type information this analysis does not have. Refusing to walk through an
+// index keeps it from accepting a pin that protects the wrong object, at the
+// cost of asking for &a[0] to be pinned as written.
 func rootIdent(e ast.Expr) string {
 	for {
 		switch v := e.(type) {
@@ -347,7 +415,7 @@ func rootIdent(e ast.Expr) string {
 			}
 			e = v.X
 		case *ast.IndexExpr:
-			e = v.X
+			return ""
 		case *ast.SelectorExpr:
 			e = v.X
 		case *ast.ParenExpr:
@@ -455,18 +523,31 @@ func addressToUintptr(n ast.Node) (ast.Expr, bool) {
 // keepsReferentAlive reports whether call is one of the few whose uintptr
 // arguments the compiler keeps alive and unmoved.
 //
-// The set is deliberately short, and what is absent from it is the point:
-// purego.SyscallN, objc.Send and objc.ID.Send, goffi's CallFunction, and every
-// func value produced by purego.RegisterLibFunc are ordinary Go calls with no
-// //go:uintptrescapes on them.
+// The set is short, and what is absent from it is the point. objc.Send and
+// objc.ID.Send reach objc_msgSend through a func value built by
+// purego.RegisterFunc, every func value produced by purego.RegisterLibFunc is
+// an ordinary Go call, and goffi's CallFunction is Go code: none of them carries
+// //go:uintptrescapes.
+//
+// What the set does include is any function annotated with that directive and
+// called directly, which is syscall.Syscall* and -- this is easy to get wrong
+// -- purego.SyscallN, which carries it too (purego/syscall.go). The directive
+// only reaches a conversion written in the argument list of the annotated call
+// itself, so a wrapper of any of these loses it; that is why the check looks at
+// the immediate parent call and no further.
 func keepsReferentAlive(call *ast.CallExpr, procs map[string]bool) bool {
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	if !ok {
 		return false
 	}
-	// syscall.Syscall, Syscall6, Syscall9, SyscallN: all carry the directive.
-	if pkg, ok := sel.X.(*ast.Ident); ok && pkg.Name == "syscall" && strings.HasPrefix(sel.Sel.Name, "Syscall") {
-		return true
+	// syscall.Syscall, Syscall6, Syscall9, SyscallN, and purego.SyscallN.
+	if pkg, ok := sel.X.(*ast.Ident); ok {
+		if pkg.Name == "syscall" && strings.HasPrefix(sel.Sel.Name, "Syscall") {
+			return true
+		}
+		if pkg.Name == "purego" && sel.Sel.Name == "SyscallN" {
+			return true
+		}
 	}
 	if sel.Sel.Name != "Call" {
 		return false

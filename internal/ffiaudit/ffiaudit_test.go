@@ -60,9 +60,14 @@ func viaWrapper(x int)        { send(uintptr(unsafe.Pointer(&x))) }
 	wants(t, got, "&x", "&x")
 }
 
-// purego and objc are the reason this module needs the audit at all: neither
-// carries the directive, so an address through them must be pinned.
-func TestPuregoAndObjcAreNotTreatedAsSafe(t *testing.T) {
+// purego.SyscallN carries //go:uintptrescapes, so a conversion written in its
+// own argument list is safe -- easy to assume otherwise, and asserting the
+// wrong way round here would have the audit demand pins that buy nothing.
+//
+// objc is the opposite: Send reaches objc_msgSend through a func value built by
+// RegisterFunc, which has no directive on it, and that is the mechanism most of
+// this module's macOS code goes through.
+func TestPuregoSyscallNIsSafeAndObjcIsNot(t *testing.T) {
 	got := scan(t, `
 import (
 	"unsafe"
@@ -74,7 +79,97 @@ import (
 func viaPurego(x int)  { purego.SyscallN(0, uintptr(unsafe.Pointer(&x))) }
 func viaObjc(id objc.ID, sel objc.SEL, x int) { id.Send(sel, uintptr(unsafe.Pointer(&x))) }
 `, Config{})
-	wants(t, got, "&x", "&x")
+	wants(t, got, "&x")
+}
+
+// A wrapper around an annotated call loses the directive, which is the whole
+// reason a COM or msgSend helper cannot be trusted with an address.
+func TestAWrapperAroundSyscallNLosesTheDirective(t *testing.T) {
+	got := scan(t, `
+import (
+	"unsafe"
+
+	"github.com/ebitengine/purego"
+)
+
+func call(fn uintptr, args ...uintptr) uintptr {
+	r, _, _ := purego.SyscallN(fn, args...)
+	return r
+}
+
+func viaWrapper(x int) { call(0, uintptr(unsafe.Pointer(&x))) }
+`, Config{})
+	wants(t, got, "&x")
+}
+
+// FFI bound inside a package-level literal is where a library resolves its
+// symbols, and a scan of top-level declarations alone never enters it.
+func TestConversionsInsideFunctionLiteralsAreFound(t *testing.T) {
+	got := scan(t, `
+import (
+	"sync"
+	"unsafe"
+)
+
+func send(a uintptr) { _ = a }
+
+var load = sync.OnceValue(func() int {
+	var x int
+	send(uintptr(unsafe.Pointer(&x)))
+	return x
+})
+`, Config{})
+	wants(t, got, "&x")
+}
+
+// The name has to lead back to the code, so a literal is reported under the
+// variable that holds it.
+func TestAFindingInsideALiteralIsNamedAfterItsVariable(t *testing.T) {
+	findings, err := ScanSource("p.go", `package p
+
+import (
+	"sync"
+	"unsafe"
+)
+
+func send(a uintptr) { _ = a }
+
+var load = sync.OnceValue(func() int {
+	var x int
+	send(uintptr(unsafe.Pointer(&x)))
+	return x
+})
+`, Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(findings) != 1 {
+		t.Fatalf("reported %d findings, want 1", len(findings))
+	}
+	if got := findings[0].Func; got != "load.func" {
+		t.Errorf("Func = %q, want %q so the name leads back to the code", got, "load.func")
+	}
+}
+
+// A pin in the enclosing function is still in effect inside a literal that runs
+// before its Unpin.
+func TestAPinOutsideALiteralCoversInsideIt(t *testing.T) {
+	got := scan(t, `
+import (
+	"runtime"
+	"unsafe"
+)
+
+func send(a uintptr) { _ = a }
+
+func outer(x int) {
+	var p runtime.Pinner
+	p.Pin(&x)
+	defer p.Unpin()
+	func() { send(uintptr(unsafe.Pointer(&x))) }()
+}
+`, Config{})
+	wants(t, got)
 }
 
 func TestPinnedBeforeTheCallIsAccepted(t *testing.T) {
@@ -107,9 +202,14 @@ func pinnedTooLate(x int) {
 	wants(t, got, "&x")
 }
 
-// Pinning an object pins all of it, so an address into a field or an element of
-// something already pinned is not a finding. Without this, correct code is
-// reported and the allowlist fills up with entries that mean nothing.
+// Pinning an object pins all of it, so an address into a field of something
+// already pinned is not a finding. Without this, correct code is reported and
+// the allowlist fills up with entries that mean nothing.
+//
+// An index is the exception, and &v.g[0] below is reported even though pinning
+// v does cover an embedded array: with a slice field the same syntax would not
+// be covered at all, and the difference is not visible without type
+// information. See TestPinningASliceDoesNotCoverItsElements.
 func TestPinningTheRootCoversAddressesInsideIt(t *testing.T) {
 	got := scan(t, procPreamble+`
 type s struct{ f int; g [4]byte }
@@ -131,7 +231,28 @@ func pinnedElement(b []byte) {
 	send(uintptr(unsafe.Pointer(&b[0])))
 }
 `, Config{})
-	wants(t, got)
+	// &v.f is covered by the pin of v; &v.g[0] is an index, so it is asked for
+	// by name even though pinning v happens to cover it.
+	wants(t, got, "&v.g[0]")
+}
+
+// Pinning a slice pins its header, which is a different object from the
+// backing array &b[0] points into: accepting it would wave through a fix that
+// protects the wrong memory. Telling a slice from an array needs type
+// information this analysis does not have, so it refuses both and asks for the
+// element to be pinned as written.
+func TestPinningASliceDoesNotCoverItsElements(t *testing.T) {
+	got := scan(t, procPreamble+`
+func send(a uintptr) { _ = a }
+
+func pinnedHeaderOnly(b []byte) {
+	var p runtime.Pinner
+	p.Pin(&b)
+	defer p.Unpin()
+	send(uintptr(unsafe.Pointer(&b[0])))
+}
+`, Config{})
+	wants(t, got, "&b[0]")
 }
 
 // An address of a package-level variable is safe: its storage is static or kept
