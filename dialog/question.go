@@ -1,6 +1,9 @@
 package dialog
 
-import "unsafe"
+import (
+	"errors"
+	"unsafe"
+)
 
 // A Question is a yes/no prompt: a short question the person answers before
 // anything else happens.
@@ -36,6 +39,29 @@ type Question struct {
 	Parent unsafe.Pointer
 }
 
+// ErrNotShown reports that the question never reached anybody: this platform
+// has no alert, or its toolkit would not build one.
+//
+// Every failure from Ask wraps it, so one errors.Is separates the answer false
+// from the no-answer false:
+//
+//	ok, err := dialog.Ask(q)
+//	switch {
+//	case errors.Is(err, dialog.ErrNotShown):
+//		// Nobody was asked. Do not record a refusal. Treat it as not granted
+//		// if that is your policy, and say that the prompt could not be shown.
+//	case err != nil:
+//		// Asked, but something else went wrong.
+//	case ok:
+//		// The person agreed.
+//	default:
+//		// The person declined.
+//	}
+//
+// errors.Is(err, errors.ErrUnsupported) narrows it further, to a platform that
+// will never ask rather than one that failed this time.
+var ErrNotShown = errors.New("dialog: the question was not shown to anybody")
+
 // Ask shows the question and returns what the person answered: true for the
 // affirmative button, false for the negative one.
 //
@@ -47,15 +73,18 @@ type Question struct {
 // The error is the one thing a caller must not skip, because false carries two
 // different meanings and only the error separates them:
 //
-//	false, nil  the person answered no
-//	false, err  the question was never put to anybody
+//	false, nil                            the person answered no
+//	false, wrapping ErrNotShown           the question was never put to anybody
 //
-// A prompt that could not be shown -- no alert on this platform, a toolkit that
-// would not build one -- returns the second. Reporting it as a plain false
-// would attribute an answer to someone who was never asked, which for a consent
-// prompt means recording a refusal nobody made. Failing closed is usually right
-// for consent, so treating the pair as a no is a fine thing to do; doing it
-// knowingly, and logging the error, is the difference.
+// Reporting the second as a plain false would attribute an answer to someone
+// who was never asked, which for a consent prompt means recording a refusal
+// nobody made. Failing closed is usually right for consent, so treating the
+// pair as not granted is a fine thing to do; doing it knowingly, and saying the
+// prompt could not be shown rather than that the person declined, is the
+// difference. See ErrNotShown.
+//
+// A non-nil error always comes with false, so a caller cannot be handed a true
+// it should not act on.
 //
 // It blocks the calling goroutine until the person answers, and may be called
 // from the main thread as well, where it runs the prompt in place rather than
