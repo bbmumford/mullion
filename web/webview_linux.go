@@ -29,9 +29,6 @@ import (
 const (
 	gtkWindowToplevel = 0
 
-	gPriorityHighIdle = 100
-	gSourceRemove     = 0
-
 	injectTopFrame        = 1 // WEBKIT_USER_CONTENT_INJECT_TOP_FRAME
 	injectAtDocumentStart = 0 // WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START
 
@@ -58,7 +55,6 @@ type gdkGeometry struct {
 // --- bound C functions -----------------------------------------------------
 
 var (
-	gIdleAddFull                     func(priority int, function, data, notify uintptr) uint32
 	gMainContextIteration            func(context uintptr, mayBlock bool) bool
 	gFree                            func(ptr uintptr)
 	gGetPrgname                      func() uintptr
@@ -167,7 +163,6 @@ var (
 	uiThreadOnce sync.Once
 	uiThreadID   int // the GTK thread, for onUIThread
 
-	dispatchSourceFn uintptr
 	messageHandlerFn uintptr
 	windowDestroyFn  uintptr
 	loadChangedFn    uintptr
@@ -260,7 +255,6 @@ func ensureInit() error {
 
 		gtkLib, glibLib, webkitLib = gtk, glib, webkit
 
-		purego.RegisterLibFunc(&gIdleAddFull, glib, "g_idle_add_full")
 		purego.RegisterLibFunc(&gMainContextIteration, glib, "g_main_context_iteration")
 		purego.RegisterLibFunc(&gFree, glib, "g_free")
 		purego.RegisterLibFunc(&gGetPrgname, glib, "g_get_prgname")
@@ -375,16 +369,6 @@ func ensureInit() error {
 // newCallbacks creates the C-callable trampolines once: purego callbacks are
 // a fixed pool that is never freed.
 func newCallbacks() {
-	dispatchSourceFn = purego.NewCallback(func(data uintptr) uintptr {
-		dispatchMu.Lock()
-		f := dispatchMap[data]
-		delete(dispatchMap, data)
-		dispatchMu.Unlock()
-		if f != nil {
-			f()
-		}
-		return gSourceRemove
-	})
 	messageHandlerFn = purego.NewCallback(func(manager, jsResult, userData uintptr) uintptr {
 		w := lookupEngine(userData)
 		if w != nil {
@@ -581,10 +565,6 @@ var (
 	regMu     sync.Mutex
 	registry  = map[uintptr]*webview{}
 	engineSeq uintptr
-
-	dispatchMu  sync.Mutex
-	dispatchMap = map[uintptr]func(){}
-	dispatchSeq uintptr
 )
 
 func registerEngine(w *webview) uintptr {
@@ -608,13 +588,13 @@ func lookupEngine(id uintptr) *webview {
 	return registry[id]
 }
 
+// dispatchMain runs f on the main thread, through GLib's idle source.
+//
+// It is internal/mainthread.Post, which binds that source for the whole module
+// at the same G_PRIORITY_HIGH_IDLE this used. This package had its own binding,
+// its own callback and its own id registry doing the same work.
 func dispatchMain(f func()) {
-	dispatchMu.Lock()
-	dispatchSeq++
-	id := dispatchSeq
-	dispatchMap[id] = f
-	dispatchMu.Unlock()
-	gIdleAddFull(gPriorityHighIdle, dispatchSourceFn, id, 0)
+	mainthread.Post(f)
 }
 
 // --- webview ---------------------------------------------------------------

@@ -23,7 +23,22 @@ func Wake() {
 	}
 }
 
-const wmMainthreadDrain = 0x0400 + 0x0A11 // WM_APP + a value unlikely to collide
+const (
+	wmMainthreadDrain = 0x0400 + 0x0A11 // WM_APP + a value unlikely to collide
+	wmMainthreadPost  = 0x0400 + 0x0A12
+)
+
+// postToPlatform hands a posted call to the message-only window, and reports
+// whether it could. The id travels as wParam, which is how the callback finds
+// the closure again.
+func postToPlatform(id uintptr) bool {
+	w := windowsPost()
+	if w == nil {
+		return false
+	}
+	w(id)
+	return true
+}
 
 var windowsWake = sync.OnceValue(func() func() {
 	user32 := windows.NewLazySystemDLL("user32.dll")
@@ -33,8 +48,12 @@ var windowsWake = sync.OnceValue(func() func() {
 	postMessage := user32.NewProc("PostMessageW")
 
 	proc := windows.NewCallback(func(hwnd uintptr, msg uint32, wparam, lparam uintptr) uintptr {
-		if msg == wmMainthreadDrain {
+		switch msg {
+		case wmMainthreadDrain:
 			Drain()
+			return 0
+		case wmMainthreadPost:
+			runPosted(wparam)
 			return 0
 		}
 		r, _, _ := defWindowProc.Call(hwnd, uintptr(msg), wparam, lparam)
@@ -70,5 +89,15 @@ var windowsWake = sync.OnceValue(func() func() {
 	if hwnd == 0 {
 		return nil
 	}
+	windowsPostFn = func(id uintptr) { postMessage.Call(hwnd, wmMainthreadPost, id, 0) }
 	return func() { postMessage.Call(hwnd, wmMainthreadDrain, 0, 0) }
 })
+
+// windowsPostFn is set alongside the wake, by the same resolution, so Post and
+// Wake share the one window and the one window procedure.
+var windowsPostFn func(id uintptr)
+
+func windowsPost() func(id uintptr) {
+	windowsWake() // resolves the window and sets windowsPostFn
+	return windowsPostFn
+}

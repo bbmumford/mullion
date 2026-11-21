@@ -11,3 +11,7 @@ package mainthread
 // needs a platform call. A platform that gains a second loop owner needs a real
 // wake in a file of its own.
 func Wake() {}
+
+// postToPlatform reports that there is no platform queue to post to, which
+// makes Post fall back to Do.
+func postToPlatform(id uintptr) bool { return false }

@@ -127,10 +127,6 @@ var (
 	initOnce sync.Once
 	initErr  error
 
-	dispatchAsyncF func(queue, context, work uintptr)
-	mainQueue      uintptr
-	dispatchWork   uintptr
-
 	appDelegateClass, scriptHandlerClass, windowDelegateClass, uiDelegateClass objc.Class
 	paintHandlerClass, paintCoverClass                                         objc.Class
 	schemeHandlerClass, firstMouseViewClass, navDelegateClass                  objc.Class
@@ -154,23 +150,10 @@ func ensureInit() error {
 				return
 			}
 		}
-		q, err := purego.Dlsym(purego.RTLD_DEFAULT, "_dispatch_main_q")
-		if err != nil {
-			initErr = fmt.Errorf("webview: resolve _dispatch_main_q: %w", err)
-			return
-		}
-		mainQueue = q
-		purego.RegisterLibFunc(&dispatchAsyncF, purego.RTLD_DEFAULT, "dispatch_async_f")
-		dispatchWork = purego.NewCallback(func(ctx uintptr) uintptr {
-			dispatchMu.Lock()
-			f := dispatchMap[ctx]
-			delete(dispatchMap, ctx)
-			dispatchMu.Unlock()
-			if f != nil {
-				f()
-			}
-			return 0
-		})
+		// libdispatch is bound in internal/mainthread, which posts to the same
+		// main queue for its own wake. It resolves lazily and falls back, so
+		// this no longer fails init when the symbol is missing -- on macOS it
+		// never is, and the check was defensive.
 		initErr = registerClasses()
 	})
 	return initErr
@@ -547,19 +530,14 @@ func lookupEngine(id objc.ID) *webview {
 
 // --- libdispatch -----------------------------------------------------------
 
-var (
-	dispatchMu  sync.Mutex
-	dispatchMap = map[uintptr]func(){}
-	dispatchSeq uintptr
-)
-
+// dispatchMain runs f on the main thread, through libdispatch's main queue.
+//
+// It is internal/mainthread.Post, which binds that queue for the whole module.
+// This package had its own binding of the same two symbols, its own callback
+// and its own id registry, all doing what Post does; the queue, the semantics
+// and the ordering relative to AppKit's own callbacks are unchanged.
 func dispatchMain(f func()) {
-	dispatchMu.Lock()
-	dispatchSeq++
-	id := dispatchSeq
-	dispatchMap[id] = f
-	dispatchMu.Unlock()
-	dispatchAsyncF(mainQueue, id, dispatchWork)
+	mainthread.Post(f)
 }
 
 // onMainThread reports whether the caller runs on the process main thread —
