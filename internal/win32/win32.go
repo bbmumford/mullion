@@ -19,20 +19,16 @@
 // NewLazySystemDLL, not NewLazyDLL: it loads from the system directory only, so
 // a user32.dll planted next to the executable cannot be picked up instead.
 //
-// # What is deliberately not here
-//
-// The menu entry points -- CreateMenu, CreatePopupMenu, AppendMenuW,
-// DestroyMenu -- are bound twice in this module and stay that way. The tray
-// calls them through LazyProc.Call with uintptr arguments; the application menu
-// bar binds them as typed purego functions whose pointer parameters are real Go
-// pointers, which the collector can see, so it needs no directive and no
-// pinning at all. Sharing one set would mean choosing one calling style, and
-// the only style that suits both is the uintptr one -- which would take the
-// menu bar's pointer safety away to remove a duplicate. The duplication is the
-// cheaper of the two.
+// The menu entry points are wrapped rather than exported raw, so both callers
+// can share one binding without either giving up a safety property it had. See
+// the Menus block below.
 package win32
 
-import "golang.org/x/sys/windows"
+import (
+	"unsafe"
+
+	"golang.org/x/sys/windows"
+)
 
 var user32 = windows.NewLazySystemDLL("user32.dll")
 
@@ -44,3 +40,52 @@ var (
 	DefWindowProcW   = user32.NewProc("DefWindowProcW")
 	PostMessageW     = user32.NewProc("PostMessageW")
 )
+
+// Menus. Typed at the Go boundary, so a caller hands over a real *uint16 the
+// collector can see for the length of the call, and the uintptr conversion
+// happens below in the argument list of LazyProc.Call, where
+// //go:uintptrescapes keeps the referent alive and unmoved. That is both
+// properties at once, and it is why these are wrappers where the window
+// plumbing above is not.
+//
+// The two callers had drifted into different conventions for the same four
+// entry points: the tray passed addresses as uintptr and depended on the
+// directive, and the menu bar bound typed purego functions and depended on the
+// pointer being visible. Neither was wrong, but one of them had to be chosen to
+// share a binding, and a typed wrapper over a directive-carrying Call is
+// stronger than either alone.
+var (
+	createMenu      = user32.NewProc("CreateMenu")
+	createPopupMenu = user32.NewProc("CreatePopupMenu")
+	appendMenuW     = user32.NewProc("AppendMenuW")
+	destroyMenu     = user32.NewProc("DestroyMenu")
+)
+
+// CreateMenu makes an empty menu bar. It reads 0 on failure.
+func CreateMenu() uintptr {
+	h, _, _ := createMenu.Call()
+	return h
+}
+
+// CreatePopupMenu makes an empty pop-up menu, for a context menu or a submenu.
+// It reads 0 on failure.
+func CreatePopupMenu() uintptr {
+	h, _, _ := createPopupMenu.Call()
+	return h
+}
+
+// AppendMenu adds one item to the end of menu and reports whether it was added.
+//
+// item is a command id for an ordinary item, or the submenu's handle when flags
+// carry MF_POPUP. text may be nil, which is what a separator wants.
+func AppendMenu(menu uintptr, flags uint32, item uintptr, text *uint16) bool {
+	r, _, _ := appendMenuW.Call(menu, uintptr(flags), item, uintptr(unsafe.Pointer(text)))
+	return r != 0
+}
+
+// DestroyMenu frees a menu and everything under it, and reports whether it did.
+// SetMenu does not free the bar it replaces, so a caller swapping one has to.
+func DestroyMenu(menu uintptr) bool {
+	r, _, _ := destroyMenu.Call(menu)
+	return r != 0
+}

@@ -134,9 +134,6 @@ var (
 
 	procSetForegroundWindow         = user32.NewProc("SetForegroundWindow")
 	procTrackPopupMenu              = user32.NewProc("TrackPopupMenu")
-	procCreatePopupMenu             = user32.NewProc("CreatePopupMenu")
-	procAppendMenuW                 = user32.NewProc("AppendMenuW")
-	procDestroyMenu                 = user32.NewProc("DestroyMenu")
 	procRegisterWindowMessageW      = user32.NewProc("RegisterWindowMessageW")
 	procGetCursorPos                = user32.NewProc("GetCursorPos")
 	procGetModuleHandleW            = kernel32.NewProc("GetModuleHandleW")
@@ -467,7 +464,7 @@ func (t *win32Tray) SetMenu(menu *Menu) error {
 
 	// Destroy old HMENU if any.
 	if t.hmenu != 0 {
-		if ret, _, _ := procDestroyMenu.Call(t.hmenu); ret == 0 {
+		if !win32.DestroyMenu(t.hmenu) {
 			slog.Warn("systray: DestroyMenu failed during menu replacement")
 		}
 		t.hmenu = 0
@@ -732,13 +729,13 @@ func (t *win32Tray) reAddIcon() {
 // buildHMENU creates a Win32 HMENU from the internal Menu structure.
 // Command IDs are globally unique across all submenus (allocated from t.nextCmdID).
 func (t *win32Tray) buildHMENU(menu *Menu) (uintptr, error) {
-	hmenu, _, _ := procCreatePopupMenu.Call()
+	hmenu := win32.CreatePopupMenu()
 	if hmenu == 0 {
 		return 0, fmt.Errorf("CreatePopupMenu failed")
 	}
 
 	if err := t.populateMenu(hmenu, menu); err != nil {
-		if ret, _, _ := procDestroyMenu.Call(hmenu); ret == 0 {
+		if !win32.DestroyMenu(hmenu) {
 			slog.Warn("systray: DestroyMenu failed during error cleanup")
 		}
 		return 0, err
@@ -756,13 +753,7 @@ func (t *win32Tray) populateMenu(hmenu uintptr, menu *Menu) error {
 		snapshot := item.snapshot()
 		switch snapshot.itemType {
 		case MenuItemSeparator:
-			ret, _, _ := procAppendMenuW.Call(
-				hmenu,
-				uintptr(mfSeparator),
-				0,
-				0,
-			)
-			if ret == 0 {
+			if !win32.AppendMenu(hmenu, mfSeparator, 0, nil) {
 				return fmt.Errorf("AppendMenuW separator failed at index %d", i)
 			}
 			pos++
@@ -777,21 +768,15 @@ func (t *win32Tray) populateMenu(hmenu uintptr, menu *Menu) error {
 			}
 			label, err := windows.UTF16PtrFromString(snapshot.label)
 			if err != nil {
-				_, _, _ = procDestroyMenu.Call(subHMenu)
+				win32.DestroyMenu(subHMenu)
 				return fmt.Errorf("utf16 submenu label %q: %w", snapshot.label, err)
 			}
 			flags := uintptr(mfString | mfPopup)
 			if snapshot.disabled {
 				flags |= mfGrayed
 			}
-			ret, _, _ := procAppendMenuW.Call(
-				hmenu,
-				flags,
-				subHMenu,
-				uintptr(unsafe.Pointer(label)),
-			)
-			if ret == 0 {
-				_, _, _ = procDestroyMenu.Call(subHMenu)
+			if !win32.AppendMenu(hmenu, uint32(flags), subHMenu, label) {
+				win32.DestroyMenu(subHMenu)
 				return fmt.Errorf("AppendMenuW submenu %q failed", snapshot.label)
 			}
 
@@ -816,13 +801,7 @@ func (t *win32Tray) populateMenu(hmenu uintptr, menu *Menu) error {
 			}
 			cmdID := t.nextCmdID
 			t.nextCmdID++
-			ret, _, _ := procAppendMenuW.Call(
-				hmenu,
-				flags,
-				uintptr(cmdID),
-				uintptr(unsafe.Pointer(label)),
-			)
-			if ret == 0 {
+			if !win32.AppendMenu(hmenu, uint32(flags), uintptr(cmdID), label) {
 				return fmt.Errorf("AppendMenuW item %q failed", snapshot.label)
 			}
 			t.itemIDs[item.ID()] = cmdID
@@ -942,7 +921,7 @@ func trayWndProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			t.hicon = 0
 		}
 		if t.hmenu != 0 {
-			procDestroyMenu.Call(t.hmenu)
+			win32.DestroyMenu(t.hmenu)
 			t.hmenu = 0
 		}
 		t.hwnd = 0

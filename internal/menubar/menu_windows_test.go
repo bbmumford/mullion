@@ -1,6 +1,10 @@
 package menubar
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/bbmumford/mullion/internal/win32"
+)
 
 // TestCommandRouting builds a menu with an OnClick item, then sends the
 // WM_COMMAND that Windows posts on a click straight to the subclass procedure and
@@ -27,7 +31,7 @@ func TestCommandRouting(t *testing.T) {
 	if bar == 0 {
 		t.Fatal("CreateMenu returned 0")
 	}
-	defer destroyMenu(bar)
+	defer win32.DestroyMenu(bar)
 
 	// "Ping" is the first item with a callback, so it got id 1. Deliver its
 	// WM_COMMAND (HIWORD 0 = from a menu).

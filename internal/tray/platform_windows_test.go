@@ -3,6 +3,7 @@
 package tray
 
 import (
+	"github.com/bbmumford/mullion/internal/win32"
 	"testing"
 	"unsafe"
 
@@ -94,7 +95,7 @@ func TestUpdateItem_SubmenuContainer_Label(t *testing.T) {
 	if err := tray.SetMenu(root); err != nil {
 		t.Fatalf("SetMenu: %v", err)
 	}
-	defer procDestroyMenu.Call(tray.hmenu)
+	defer win32.DestroyMenu(tray.hmenu)
 
 	// Native layout: Top(0), separator(1), Options(2), Bottom(3).
 	pos, ok := tray.itemPos[container.ID()]
@@ -128,7 +129,7 @@ func TestUpdateItem_SubmenuContainer_Disabled(t *testing.T) {
 	if err := tray.SetMenu(root); err != nil {
 		t.Fatalf("SetMenu: %v", err)
 	}
-	defer procDestroyMenu.Call(tray.hmenu)
+	defer win32.DestroyMenu(tray.hmenu)
 
 	pos, ok := tray.itemPos[container.ID()]
 	if !ok {
@@ -172,7 +173,7 @@ func TestUpdateItem_SubmenuContainer_Nested(t *testing.T) {
 	if err := tray.SetMenu(root); err != nil {
 		t.Fatalf("SetMenu: %v", err)
 	}
-	defer procDestroyMenu.Call(tray.hmenu)
+	defer win32.DestroyMenu(tray.hmenu)
 
 	// container1 lives inside the root submenu's HMENU at position 0.
 	pos1, ok := tray.itemPos[container1.ID()]
@@ -235,7 +236,7 @@ func TestUpdateItem_NormalItem_Regression(t *testing.T) {
 	if err := tray.SetMenu(root); err != nil {
 		t.Fatalf("SetMenu: %v", err)
 	}
-	defer procDestroyMenu.Call(tray.hmenu)
+	defer win32.DestroyMenu(tray.hmenu)
 
 	// Root-level item resolves by command ID.
 	top.Label = "Tops"
@@ -272,7 +273,7 @@ func TestPopulateMenu_NilSubmenu_DoesNotShiftPositions(t *testing.T) {
 	if err := tray.SetMenu(root); err != nil {
 		t.Fatalf("SetMenu: %v", err)
 	}
-	defer procDestroyMenu.Call(tray.hmenu)
+	defer win32.DestroyMenu(tray.hmenu)
 
 	if _, ok := tray.itemPos[broken.ID()]; ok {
 		t.Error("nil-submenu item should not be registered in itemPos")

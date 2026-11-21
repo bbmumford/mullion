@@ -17,6 +17,7 @@ package menubar
 import (
 	"errors"
 	"fmt"
+	"github.com/bbmumford/mullion/internal/win32"
 	"sync"
 	"syscall"
 
@@ -37,12 +38,8 @@ var (
 	initOnce sync.Once
 	initErr  error
 
-	createMenu        func() uintptr
-	createPopupMenu   func() uintptr
-	appendMenuW       func(hMenu uintptr, flags uint32, idNewItem uintptr, lpNewItem *uint16) int32
 	setMenu           func(hwnd, hMenu uintptr) int32
 	drawMenuBar       func(hwnd uintptr) int32
-	destroyMenu       func(hMenu uintptr) int32
 	setWindowLongPtrW func(hwnd uintptr, index int32, newLong uintptr) uintptr
 	callWindowProcW   func(proc, hwnd, msg, wParam, lParam uintptr) uintptr
 	defWindowProcW    func(hwnd, msg, wParam, lParam uintptr) uintptr
@@ -77,12 +74,8 @@ func ensureInit() error {
 			}
 			purego.RegisterFunc(p, addr)
 		}
-		reg(&createMenu, "CreateMenu")
-		reg(&createPopupMenu, "CreatePopupMenu")
-		reg(&appendMenuW, "AppendMenuW")
 		reg(&setMenu, "SetMenu")
 		reg(&drawMenuBar, "DrawMenuBar")
-		reg(&destroyMenu, "DestroyMenu")
 		reg(&setWindowLongPtrW, "SetWindowLongPtrW")
 		reg(&callWindowProcW, "CallWindowProcW")
 		reg(&defWindowProcW, "DefWindowProcW")
@@ -154,7 +147,7 @@ func set(items []Item, opts Options) (*Menu, error) {
 		setMenu(hwnd, bar)
 		drawMenuBar(hwnd)
 		if prev != 0 {
-			destroyMenu(prev) // SetMenu does not free the old bar
+			win32.DestroyMenu(prev) // SetMenu does not free the old bar
 		}
 	}
 
@@ -175,7 +168,7 @@ func set(items []Item, opts Options) (*Menu, error) {
 			setMenu(hwnd, 0)
 			drawMenuBar(hwnd)
 			if bar != 0 {
-				destroyMenu(bar)
+				win32.DestroyMenu(bar)
 			}
 			cbMu.Lock()
 			callbacks = map[int]func(){}
@@ -203,9 +196,9 @@ func runOnUI(dispatch func(func()), f func()) {
 func buildMenu(items []Item, bar bool) uintptr {
 	var h uintptr
 	if bar {
-		h = createMenu()
+		h = win32.CreateMenu()
 	} else {
-		h = createPopupMenu()
+		h = win32.CreatePopupMenu()
 	}
 	for _, it := range items {
 		addItem(h, it)
@@ -215,7 +208,7 @@ func buildMenu(items []Item, bar bool) uintptr {
 
 func addItem(h uintptr, it Item) {
 	if it.Separator {
-		appendMenuW(h, mfSeparator, 0, nil)
+		win32.AppendMenu(h, mfSeparator, 0, nil)
 		return
 	}
 	if it.Selector != "" || it.Services {
@@ -227,7 +220,7 @@ func addItem(h uintptr, it Item) {
 	text := utf16(it.Title)
 	if len(it.Submenu) > 0 {
 		sub := buildMenu(it.Submenu, false)
-		appendMenuW(h, mfPopup, sub, text)
+		win32.AppendMenu(h, mfPopup, sub, text)
 		return
 	}
 	flags := uint32(mfString)
@@ -242,7 +235,7 @@ func addItem(h uintptr, it Item) {
 		callbacks[cbSeq] = it.OnClick
 		cbMu.Unlock()
 	}
-	appendMenuW(h, flags, id, text)
+	win32.AppendMenu(h, flags, id, text)
 }
 
 // utf16 returns a NUL-terminated UTF-16 pointer for s ("" yields an empty
