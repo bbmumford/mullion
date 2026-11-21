@@ -3,6 +3,7 @@
 package web
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"unsafe"
@@ -94,21 +95,35 @@ func askQuestion(window unsafe.Pointer, opts QuestionOptions) (bool, error) {
 	// Already on the thread that owns GTK: run it here. Queueing the dialog and
 	// then waiting would block the only thread that could run it.
 	if onUIThread() || mainthread.OnMainThread() {
-		return runQuestion(parent, opts), nil
+		return runQuestion(parent, opts)
 	}
-	ch := make(chan bool, 1)
-	mainthread.Do(func() { ch <- runQuestion(parent, opts) })
-	return <-ch, nil
+	type answer struct {
+		ok  bool
+		err error
+	}
+	ch := make(chan answer, 1)
+	mainthread.Do(func() {
+		ok, err := runQuestion(parent, opts)
+		ch <- answer{ok, err}
+	})
+	r := <-ch
+	return r.ok, r.err
 }
 
-func runQuestion(parent uintptr, opts QuestionOptions) bool {
+// runQuestion builds and runs the dialog.
+//
+// A dialog that cannot be built is an error and never a false. The two are the
+// same value to a caller that ignores the error, and for a consent prompt that
+// would turn "the dialog never appeared" into "the person refused" -- a wrong
+// answer attributed to someone who was never asked.
+func runQuestion(parent uintptr, opts QuestionOptions) (bool, error) {
 	flags := gtkDialogModal
 	if parent != 0 {
 		flags |= gtkDialogDestroyChild
 	}
 	dlg := gtkMessageDialogNew(parent, flags, gtkMessageQuestion, gtkButtonsNone, 0)
 	if dlg == 0 {
-		return false
+		return false, errors.New("webview: gtk_message_dialog_new returned nothing")
 	}
 	defer func() {
 		if gtk4 {
@@ -138,7 +153,7 @@ func runQuestion(parent uintptr, opts QuestionOptions) bool {
 	}
 	gtkWindowSetModalFn(dlg, true)
 
-	return runWidgetDialog(dlg) == questionConfirmResponse
+	return runWidgetDialog(dlg) == questionConfirmResponse, nil
 }
 
 // runWidgetDialog shows a GtkDialog and pumps the main context until the person

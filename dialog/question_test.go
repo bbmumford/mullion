@@ -33,3 +33,21 @@ func TestAQuestionNeedsOnlyATitle(t *testing.T) {
 	// The labels are filled further down, in the web package, which has its own
 	// test; what matters here is that Question carries no requirement of its own.
 }
+
+// The two meanings of false are the contract most likely to be read wrong, so
+// it is written down here as well as in the doc comment: a nil error means the
+// person answered, and a non-nil error means nobody was asked.
+func TestFalseWithAnErrorIsNotAnAnswer(t *testing.T) {
+	switch runtime.GOOS {
+	case "darwin", "linux", "windows":
+		t.Skip("this platform has an alert; no failure can be induced without a person")
+	}
+	ok, err := Ask(Question{Title: "Allow?"})
+	if ok || err == nil {
+		t.Fatalf("Ask = (%v, %v), want (false, an error)", ok, err)
+	}
+	// The pair a caller must not collapse into "the person said no".
+	if errors.Is(err, nil) {
+		t.Error("the error is nil, which would make this indistinguishable from a refusal")
+	}
+}

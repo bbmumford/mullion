@@ -50,22 +50,35 @@ func askQuestion(window unsafe.Pointer, opts QuestionOptions) (bool, error) {
 		return false, fmt.Errorf("webview: question message: %w", err)
 	}
 
-	ask := func() uintptr {
+	// MessageBoxW returns 0 when it could not show the box at all, which is a
+	// different thing from No and must not be reported as one: for a consent
+	// prompt that would turn "never asked" into "refused". Every answer it does
+	// give is a positive id.
+	type answer struct {
+		ok  bool
+		err error
+	}
+	ask := func() answer {
 		// The conversions are written in the argument list of a LazyProc.Call,
 		// which carries //go:uintptrescapes and so keeps both strings alive and
 		// unmoved for the duration.
-		r, _, _ := user32MessageBox.Call(
+		r, _, callErr := user32MessageBox.Call(
 			uintptr(window),
 			uintptr(unsafe.Pointer(text)),
 			uintptr(unsafe.Pointer(title)),
 			mbYesNo|mbIconQuestion|mbTaskModal|mbSetForeground)
-		return r
+		if r == 0 {
+			return answer{false, fmt.Errorf("webview: MessageBoxW showed nothing: %w", callErr)}
+		}
+		return answer{r == idYes, nil}
 	}
 
 	if onUIThread() || mainthread.OnMainThread() {
-		return ask() == idYes, nil
+		r := ask()
+		return r.ok, r.err
 	}
-	ch := make(chan uintptr, 1)
+	ch := make(chan answer, 1)
 	mainthread.Do(func() { ch <- ask() })
-	return <-ch == idYes, nil
+	r := <-ch
+	return r.ok, r.err
 }

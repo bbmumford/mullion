@@ -44,13 +44,25 @@ type Question struct {
 // caller never has to tell "no" from "never replied"; there is no third state
 // to handle and no deadline to run.
 //
+// The error is the one thing a caller must not skip, because false carries two
+// different meanings and only the error separates them:
+//
+//	false, nil  the person answered no
+//	false, err  the question was never put to anybody
+//
+// A prompt that could not be shown -- no alert on this platform, a toolkit that
+// would not build one -- returns the second. Reporting it as a plain false
+// would attribute an answer to someone who was never asked, which for a consent
+// prompt means recording a refusal nobody made. Failing closed is usually right
+// for consent, so treating the pair as a no is a fine thing to do; doing it
+// knowingly, and logging the error, is the difference.
+//
 // It blocks the calling goroutine until the person answers, and may be called
 // from the main thread as well, where it runs the prompt in place rather than
 // waiting on a thread it would be blocking.
 //
-// Platform support is macOS, Windows and Linux. Elsewhere it returns false with
-// an error wrapping errors.ErrUnsupported, which a caller should treat as "I
-// could not ask" and not as a no.
+// Platform support is macOS, Windows and Linux; elsewhere the error wraps
+// errors.ErrUnsupported.
 func Ask(q Question) (bool, error) {
 	return askQuestion(q)
 }
