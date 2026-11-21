@@ -119,6 +119,18 @@ type Page struct {
 	// The signatures are the ones the web package accepts: no return, a value,
 	// an error, or a value and an error.
 	Bind map[string]any
+
+	// OnClose runs on the main thread when the person closes the window --
+	// from its title bar, its close button, or the window menu.
+	//
+	// A window that asks a question needs it. Without it, a prompt the person
+	// dismisses instead of answering is indistinguishable from one they have
+	// not reached yet, and the only thing that resolves it is the asker's
+	// deadline: the person is told nothing and waits.
+	//
+	// It does not run for a window closed by Destroy, which the program did
+	// deliberately and already knows about.
+	OnClose func()
 }
 
 // A Session is the running application, handed to OnReady and to the handlers
@@ -330,7 +342,12 @@ func (s *Session) runWeb() error {
 
 // newView builds a WebView window from a Window description.
 func (s *Session) newView(w Window) (web.WebView, error) {
-	view, err := web.New(w.Page.Debug)
+	// NewWithOptions rather than New: the close callback has to be in place
+	// before the window exists, since the person can close it at once.
+	view, err := web.NewWithOptions(web.Options{
+		Debug:   w.Page.Debug,
+		OnClose: w.Page.OnClose,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("mullion: opening a WebView window: %w", err)
 	}

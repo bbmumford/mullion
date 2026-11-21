@@ -1,6 +1,6 @@
 module github.com/bbmumford/mullion
 
-go 1.27.1
+go 1.25.7
 
 require (
 	github.com/anthonynsimon/bild v0.14.0
