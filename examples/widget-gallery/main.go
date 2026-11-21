@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/bbmumford/mullion"
 	"github.com/bbmumford/mullion/examples/internal/appicon"
@@ -45,6 +46,8 @@ type state struct {
 	unit     string
 	clicks   int
 	tree     TreeState
+	due      time.Time
+	dueEdit  DateFieldState
 	sections [2]bool
 	picked   string
 	rows     []*row
@@ -132,6 +135,7 @@ func (s *state) draw() {
 				Form(FormAttrs{LabelWidth: 70}, func() {
 					FormRow("Unit", func() { Select(&s.unit, "choose", "bytes", "lines", "pages") })
 					FormRow("Enabled", func() { CheckBox(&s.checkOn, "") })
+					FormRow("Due", func() { DateField(&s.due, &s.dueEdit, DateFieldAttrs{Width: 110}) })
 				})
 			})
 			AccordionSection(&s.sections[0], "Tree", func() {
