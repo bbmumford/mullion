@@ -1,13 +1,18 @@
 # Compiled example programs.
 #
 # `go build ./examples/native-window/` writes its binary into the directory it
-# is run from, which is the repository root, not next to the source. Three such
-# binaries were committed before this pattern was right, so match the names
-# rather than a path under examples/.
+# is run from, which is the repository root, not next to the source, so these
+# match names rather than a path under examples/. Three such binaries were
+# committed before the pattern was right.
+#
+# A list by name needs a line per example and silently misses a new one, which
+# is how the fifth of them nearly went in. TestNoCompiledBinaryIsTracked is the
+# guard that does not depend on anyone remembering to add the line.
 /native-window
 /web-window
 /tray-only
 /full-shell
+/widget-gallery
 
 # Snapshot comparisons a failing render writes beside its reference.
 *.actual.png
