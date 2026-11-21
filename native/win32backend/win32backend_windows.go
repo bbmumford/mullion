@@ -3,13 +3,13 @@
 // a GDI-compatible DXGI texture (BitBlt via GetDC) when GPU init succeeds,
 // else the software renderer into a top-down 32bpp DIB. Presentation uses
 // GDI BitBlt for opaque windows, UpdateLayeredWindow for transparent windows.
-// SHIREI_GPU=0 forces software.
+// MULLION_GPU=0 forces software.
 //
 // Content-hash skip: when SurfacesHash and client size match the last presented
 // frame, render+present are skipped (same idea as cocoabackend/androidbackend).
 //
-// Instrumentation: SHIREI_PERF=1 prints fps + produce/render/present (µs);
-// optional SHIREI_PERF_LOG=<path> appends the same lines.
+// Instrumentation: MULLION_PERF=1 prints fps + produce/render/present (µs);
+// optional MULLION_PERF_LOG=<path> appends the same lines.
 //
 // Pure Go (no cgo): Win32 entry points via syscall, cross-compiles with
 // GOOS=windows. Half of the GOOS-selected github.com/bbmumford/mullion/native/app wrapper.
@@ -23,10 +23,10 @@ import (
 	"unicode/utf16"
 	"unsafe"
 
-	"github.com/cli/browser"
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/internal/qwerty"
+	"github.com/cli/browser"
+	g "go.hasen.dev/generic"
 )
 
 // glyphCacheBudget caps total cached glyph-bitmap bytes (enables the shared core
@@ -67,7 +67,7 @@ func SetupOverlay() {
 // Run opens the window and runs the Win32 message loop. It must be called
 // from the program's main goroutine (the message loop and window must share
 // one OS thread) and does not return: WM_QUIT ends with generic.ExitWithCleanup
-// so AddExitCleanup handlers run. System fonts are initialized by shirei on
+// so AddExitCleanup handlers run. System fonts are initialized by mullion on
 // the first frame (RunFrameFn), not here.
 func Run(fn native.FrameFn) {
 	runtime.LockOSThread()
@@ -111,7 +111,7 @@ func enableDPIAwareness() {
 
 func createWindow() error {
 	hinstance = getModuleHandle()
-	className, _ := syscall.UTF16PtrFromString("shireiWindowClass")
+	className, _ := syscall.UTF16PtrFromString("mullionWindowClass")
 	cursor, _, _ := procLoadCursorW.Call(0, uintptr(idcArrow))
 
 	wc := wndClassExW{
@@ -436,7 +436,7 @@ func wndProc(hWnd, msg, wparam, lparam uintptr) uintptr {
 		noteInput()
 		return 0
 	case wmImeSetcontext:
-		// Shirei renders preedit inline. Hide only the system composition
+		// Mullion renders preedit inline. Hide only the system composition
 		// window; keep candidate UI bits for the system-drawn candidate list.
 		lparam &^= uintptr(iscShowUICompositionWindow)
 		r, _, _ := procDefWindowProcW.Call(hWnd, msg, wparam, lparam)
@@ -468,7 +468,7 @@ func wndProc(hWnd, msg, wparam, lparam uintptr) uintptr {
 	case wmTimer:
 		// wantsFrame covers in-frame animation; FrameRequested covers
 		// background RequestNextFrame when the last frame settled to idle
-		// (matches cocoa's shireiFrameRequested check on the display link).
+		// (matches cocoa's mullionFrameRequested check on the display link).
 		if currentWindow.dirty || currentWindow.wantsFrame || native.FrameRequested() {
 			currentWindow.dirty = true
 			invalidate()
@@ -573,7 +573,7 @@ func onPaint() {
 	}
 }
 
-// produceFrame runs one shirei frame and returns whether paint can be skipped
+// produceFrame runs one mullion frame and returns whether paint can be skipped
 // because the content hash matches what is already on screen.
 func produceFrame(cw, ch int) (out native.FrameOutputData, skipped bool) {
 	scale := dpiScale()
@@ -770,11 +770,11 @@ func stopTimer() {
 }
 
 // -----------------------------------------------------------------------------
-//  Input translation (Win32 messages -> shirei input globals; sample, not queue)
+//  Input translation (Win32 messages -> mullion input globals; sample, not queue)
 // -----------------------------------------------------------------------------
 
 // onMouse records pointer position (and an optional click/release). lParam packs
-// the client-area position in device pixels; shirei works in logical points.
+// the client-area position in device pixels; mullion works in logical points.
 func onMouse(lparam uintptr, button, action int) {
 	scale := native.GetHost().WindowScale
 	if scale <= 0 {
@@ -801,7 +801,7 @@ func onMouse(lparam uintptr, button, action int) {
 }
 
 // onWheel maps a wheel notch (WHEEL_DELTA == 120 per detent) to a scroll amount.
-// Sign is negated to match shirei's convention (as cocoabackend does); ~30 pts
+// Sign is negated to match mullion's convention (as cocoabackend does); ~30 pts
 // per notch approximates the cocoa feel. horizontal => x axis.
 func onWheel(wparam uintptr, horizontal bool) {
 	delta := float32(int16((wparam>>16)&0xffff)) / 120
@@ -1006,7 +1006,7 @@ func produceInterruptionFrame() {
 	currentWindow.dirty = false
 }
 
-// updateModifiers reads the live modifier-key state and mirrors it into shirei's
+// updateModifiers reads the live modifier-key state and mirrors it into mullion's
 // InputState (both the Modifiers bitfield and DownKeys, which widgets consult).
 func updateModifiers() {
 	var m native.Modifiers
@@ -1045,7 +1045,7 @@ func keyDown(vk int) bool {
 	return int16(s) < 0
 }
 
-// mapKey maps a keystroke to a shirei KeyCode. The writing block resolves by
+// mapKey maps a keystroke to a mullion KeyCode. The writing block resolves by
 // scancode (lParam bits 16-23) — positional, so KeyW is the physical key at
 // the US-QWERTY W position no matter the active layout (virtual-key codes
 // follow the layout: AZERTY's physical Q sends VK_A). Typed text still
@@ -1062,7 +1062,7 @@ func mapKey(vk uint32, lparam uintptr) native.KeyCode {
 	return mapVKey(vk)
 }
 
-// mapVKey maps a Win32 virtual-key code to a shirei KeyCode (special keys;
+// mapVKey maps a Win32 virtual-key code to a mullion KeyCode (special keys;
 // the writing block is handled positionally in mapKey).
 func mapVKey(vk uint32) native.KeyCode {
 	switch vk {

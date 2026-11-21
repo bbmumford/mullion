@@ -1,6 +1,6 @@
 // Package textinput implements the unstable text-input-v3 protocol
 // (zwp_text_input_manager_v3 / zwp_text_input_v3). Hand-written in the same
-// style as cursorshape/: shirei needs only the client half, and owning the
+// style as cursorshape/: mullion needs only the client half, and owning the
 // binding keeps the event loop free of external generators.
 //
 // Protocol: https://wayland.app/protocols/text-input-unstable-v3
@@ -25,7 +25,7 @@ const Interface = "zwp_text_input_manager_v3"
 
 // Content purpose / hint constants used by set_content_type (v1 uses normal).
 const (
-	ContentHintNone     = 0
+	ContentHintNone      = 0
 	ContentPurposeNormal = 0
 )
 

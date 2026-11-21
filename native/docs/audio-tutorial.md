@@ -1,6 +1,6 @@
-# Sound in Shirei Applications
+# Sound in Mullion Applications
 
-How to make a shirei app produce sound: beeps, notes, sound effects, and
+How to make a mullion app produce sound: beeps, notes, sound effects, and
 streamed audio. Companion to [tutorial.md](tutorial.md) (the GUI tutorial); like it,
 this is written to be readable by humans while being practical enough for
 AI coding sessions to follow.
@@ -24,7 +24,7 @@ Sound support is split the same way windows are:
    the platform's audio thread, forever. Mono float32, nothing else. Per
    OS it's AudioQueue (macOS), ALSA (Linux), or waveOut (Windows), but an
    app never sees that.
-2. **`shirei/audio`** — the pure-Go mixing layer you actually program
+2. **`mullion/audio`** — the pure-Go mixing layer you actually program
    against: a `Mixer` of `Voice`s. The mixer's `Fill` method has exactly
    the fill function's shape.
 
@@ -32,8 +32,8 @@ So the entire setup is:
 
 ```go
 import (
-    app "go.hasen.dev/shirei/app"
-    "go.hasen.dev/shirei/audio"
+    app "go.hasen.dev/mullion/app"
+    "go.hasen.dev/mullion/audio"
 )
 
 const SampleRate = 44100

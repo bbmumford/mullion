@@ -26,7 +26,7 @@ var (
 )
 
 func RootView() {
-	pkgs, pkgsReady, pkgsErr := ensureShireiPackages(wd)
+	pkgs, pkgsReady, pkgsErr := ensureMullionPackages(wd)
 	devices, devsReady, devsErr := ensureDevices()
 
 	if key := packageKey(cfg.Package); key != lastPkgKey {
@@ -120,7 +120,7 @@ func RootView() {
 				}
 				if ButtonExt("", ButtonAttrs{Icon: SymRefresh, Disabled: runner.IsBusy()}, DefaultButtonLook()) {
 					invalidatePackages()
-					ensureShireiPackages(wd)
+					ensureMullionPackages(wd)
 				}
 			})
 			if pkgsErr != nil && len(pkgs) == 0 {

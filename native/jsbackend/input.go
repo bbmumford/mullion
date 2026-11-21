@@ -202,7 +202,7 @@ func (a *inputAccum) sample() {
 	}
 
 	if a.scrollX != 0 || a.scrollY != 0 {
-		// WheelEvent is already shirei-space: positive deltaY = scroll down
+		// WheelEvent is already mullion-space: positive deltaY = scroll down
 		// (increase ScrollOffset). Do not negate — Cocoa negates AppKit deltas
 		// because their sign differs from the web event.
 		fi.Scroll = native.Vec2{float32(a.scrollX), float32(a.scrollY)}

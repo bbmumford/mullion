@@ -3,13 +3,13 @@
 #import <UIKit/UIKit.h>
 #import "darkmode_ios.h"
 
-extern void shireiExtDarkmodeIOSUpdate(int isDark);
+extern void mullionExtDarkmodeIOSUpdate(int isDark);
 
-@interface ShireiDarkModeObserver : UIView
+@interface MullionDarkModeObserver : UIView
 - (void)syncAppearance;
 @end
 
-@implementation ShireiDarkModeObserver
+@implementation MullionDarkModeObserver
 
 - (instancetype)init {
     self = [super initWithFrame:CGRectZero];
@@ -39,18 +39,18 @@ extern void shireiExtDarkmodeIOSUpdate(int isDark);
 }
 
 - (void)syncAppearance {
-    shireiExtDarkmodeIOSUpdate(self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
+    mullionExtDarkmodeIOSUpdate(self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
 }
 
 @end
 
-int shirei_ext_darkmode_ios_start_observer(void *rootViewController) {
+int mullion_ext_darkmode_ios_start_observer(void *rootViewController) {
     @autoreleasepool {
         UIViewController *root = (__bridge UIViewController *)rootViewController;
         if (root == nil) {
             return [UITraitCollection currentTraitCollection].userInterfaceStyle == UIUserInterfaceStyleDark;
         }
-        ShireiDarkModeObserver *observer = [[ShireiDarkModeObserver alloc] init];
+        MullionDarkModeObserver *observer = [[MullionDarkModeObserver alloc] init];
         [root.view addSubview:observer];
         return observer.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark;
     }

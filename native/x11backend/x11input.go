@@ -9,14 +9,14 @@ import (
 	"github.com/jezek/xgb"
 	"github.com/jezek/xgb/xproto"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/internal/qwerty"
+	g "go.hasen.dev/generic"
 )
 
-// x11Debug logs raw button/key events when SHIREI_X11_DEBUG=1 — useful for
+// x11Debug logs raw button/key events when MULLION_X11_DEBUG=1 — useful for
 // backend bringup (e.g. confirming the server delivers wheel buttons 4-7).
-var x11Debug = os.Getenv("SHIREI_X11_DEBUG") != ""
+var x11Debug = os.Getenv("MULLION_X11_DEBUG") != ""
 
 // X11 modifier bits (event State field).
 const (
@@ -60,7 +60,7 @@ func keysymAt(kc xproto.Keycode, level int) xproto.Keysym {
 	return keysyms[i]
 }
 
-// handleEvent translates one X event into shirei's input globals (sample, not
+// handleEvent translates one X event into mullion's input globals (sample, not
 // queue) or window state, and reports whether a new frame should be produced.
 func handleEvent(ev xgb.Event) bool {
 	switch e := ev.(type) {

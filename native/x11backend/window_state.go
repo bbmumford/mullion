@@ -3,9 +3,9 @@
 package x11backend
 
 import (
+	"github.com/bbmumford/mullion/native"
 	"github.com/jezek/xgb/shm"
 	"github.com/jezek/xgb/xproto"
-	"github.com/bbmumford/mullion/native"
 )
 
 type windowState struct {

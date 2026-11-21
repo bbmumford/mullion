@@ -13,7 +13,7 @@ import (
 )
 
 // Native objects and snapshots belong to the AppKit thread. Getters never
-// enter Shirei's frame lock; setters queue input for a subsequent frame.
+// enter Mullion's frame lock; setters queue input for a subsequent frame.
 type accessElement struct {
 	window   *windowState
 	object   objc.ID
@@ -49,7 +49,7 @@ func registerAccessClass() error {
 		*c.target = value
 	}
 	var err error
-	accessClass, err = objc.RegisterClass("ShireiAccessElement", objc.GetClass("NSAccessibilityElement"), nil, nil, []objc.MethodDef{
+	accessClass, err = objc.RegisterClass("MullionAccessElement", objc.GetClass("NSAccessibilityElement"), nil, nil, []objc.MethodDef{
 		{Cmd: sel("isAccessibilityElement"), Fn: accessIsElement},
 		{Cmd: sel("accessibilityRole"), Fn: accessRole},
 		{Cmd: sel("accessibilitySubrole"), Fn: accessSubrole},
@@ -401,7 +401,7 @@ func queueAccess(object objc.ID, kind native.AccessActionKind, value float32) bo
 	e.window.accessPending = append(e.window.accessPending, native.AccessAction{ID: e.node.ID, Kind: kind, Value: value})
 	// Schedule asynchronously even on the main thread: notification callbacks
 	// can arrive while the current native snapshot is being published.
-	e.window.gView.Send(sel("performSelector:withObject:afterDelay:"), sel("shireiWakeAndRender"), objc.ID(0), float64(0))
+	e.window.gView.Send(sel("performSelector:withObject:afterDelay:"), sel("mullionWakeAndRender"), objc.ID(0), float64(0))
 	return true
 }
 func flushAccessAction() {

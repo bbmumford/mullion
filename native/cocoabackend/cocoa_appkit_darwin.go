@@ -221,11 +221,11 @@ func ensureAppkit() error {
 }
 
 func registerClasses() error {
-	if c := objc.GetClass("ShireiView"); c != 0 {
+	if c := objc.GetClass("MullionView"); c != 0 {
 		viewClass = c
-		windowClass = objc.GetClass("ShireiWindow")
-		panelClass = objc.GetClass("ShireiPanel")
-		appDelegateClass = objc.GetClass("ShireiAppDelegate")
+		windowClass = objc.GetClass("MullionWindow")
+		panelClass = objc.GetClass("MullionPanel")
+		appDelegateClass = objc.GetClass("MullionAppDelegate")
 		return nil
 	}
 	// NSApplicationDelegate is lazily registered in AppKit and objc_getProtocol
@@ -244,7 +244,7 @@ func registerClasses() error {
 	}
 
 	var err error
-	windowClass, err = objc.RegisterClass("ShireiWindow", objc.GetClass("NSWindow"), nil, nil,
+	windowClass, err = objc.RegisterClass("MullionWindow", objc.GetClass("NSWindow"), nil, nil,
 		[]objc.MethodDef{
 			{Cmd: sel("canBecomeKeyWindow"), Fn: windowCanBecomeKey},
 			{Cmd: sel("canBecomeMainWindow"), Fn: windowCanBecomeMain},
@@ -252,7 +252,7 @@ func registerClasses() error {
 	if err != nil {
 		return err
 	}
-	panelClass, err = objc.RegisterClass("ShireiPanel", objc.GetClass("NSPanel"), nil, nil,
+	panelClass, err = objc.RegisterClass("MullionPanel", objc.GetClass("NSPanel"), nil, nil,
 		[]objc.MethodDef{
 			{Cmd: sel("canBecomeKeyWindow"), Fn: windowCanBecomeKey},
 			{Cmd: sel("canBecomeMainWindow"), Fn: panelCanBecomeMain},
@@ -260,7 +260,7 @@ func registerClasses() error {
 	if err != nil {
 		return err
 	}
-	viewClass, err = objc.RegisterClass("ShireiView", objc.GetClass("NSView"),
+	viewClass, err = objc.RegisterClass("MullionView", objc.GetClass("NSView"),
 		viewProtos,
 		nil,
 		[]objc.MethodDef{
@@ -275,7 +275,7 @@ func registerClasses() error {
 			{Cmd: sel("drawRect:"), Fn: viewDrawRect},
 			{Cmd: sel("renderFrame"), Fn: viewRenderFrameIMP},
 			{Cmd: sel("tick:"), Fn: viewTick},
-			{Cmd: sel("shireiWakeAndRender"), Fn: viewWakeAndRender},
+			{Cmd: sel("mullionWakeAndRender"), Fn: viewWakeAndRender},
 			{Cmd: sel("updateTrackingAreas"), Fn: viewUpdateTrackingAreas},
 			{Cmd: sel("mouseMoved:"), Fn: viewMouseMoved},
 			{Cmd: sel("mouseEntered:"), Fn: viewMouseEntered},
@@ -307,7 +307,7 @@ func registerClasses() error {
 		return err
 	}
 
-	appDelegateClass, err = objc.RegisterClass("ShireiAppDelegate", objc.GetClass("NSObject"),
+	appDelegateClass, err = objc.RegisterClass("MullionAppDelegate", objc.GetClass("NSObject"),
 		appProtos,
 		nil,
 		[]objc.MethodDef{
@@ -656,7 +656,7 @@ func viewSetMarkedText(self objc.ID, _ objc.SEL, str objc.ID, selected, replacem
 	defer leave()
 
 	if replacement.Location != nsNotFound && !currentWindow.loggedReplacementRange {
-		fmt.Fprintf(os.Stderr, "shirei: NSTextInputClient replacementRange unsupported in v1: location=%d length=%d\n",
+		fmt.Fprintf(os.Stderr, "mullion: NSTextInputClient replacementRange unsupported in v1: location=%d length=%d\n",
 			replacement.Location, replacement.Length)
 		currentWindow.loggedReplacementRange = true
 	}

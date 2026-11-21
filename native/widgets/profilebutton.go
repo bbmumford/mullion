@@ -62,7 +62,7 @@ var profilePanel = profilePanelState{position: Vec2{10, 10}}
 // prefix, so profiles from different example programs stay distinguishable).
 // Call it as a direct statement in the UI; it floats like DebugPanel.
 //
-// No-op unless SHIREI_PPROF=1. Safe to leave at every call site permanently.
+// No-op unless MULLION_PPROF=1. Safe to leave at every call site permanently.
 func ProfileButton(prefix ...string) {
 	ProfileButtonStyled(CurrentColorScheme, prefix...)
 }

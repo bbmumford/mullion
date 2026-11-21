@@ -20,7 +20,7 @@ var codeToKey = map[string]native.KeyCode{
 	"Digit8": native.Key8, "Digit9": native.Key9,
 
 	"ArrowLeft": native.KeyLeft, "ArrowRight": native.KeyRight,
-	"ArrowUp":   native.KeyUp, "ArrowDown": native.KeyDown,
+	"ArrowUp": native.KeyUp, "ArrowDown": native.KeyDown,
 
 	"Enter": native.KeyEnter, "NumpadEnter": native.KeyEnter,
 	"Escape": native.KeyEscape, "Tab": native.KeyTab, "Space": native.KeySpace,

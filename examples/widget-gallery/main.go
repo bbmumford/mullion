@@ -205,7 +205,7 @@ func columns() []TableColumn[*row] {
 
 func makeRows(n int) []*row {
 	words := []string{"alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel"}
-	pkgs := []string{"runtime", "widgets", "shirei", "main"}
+	pkgs := []string{"runtime", "widgets", "mullion", "main"}
 	out := make([]*row, 0, n)
 	for i := range n {
 		out = append(out, &row{

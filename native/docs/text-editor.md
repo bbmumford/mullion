@@ -16,7 +16,7 @@ func load(text string, line int) {
 func view() {
     // Under the window root, the editor receives the height left by the toolbar.
     toolbar()
-    widgets.TextEditor(&document, shirei.FontSize(14))
+    widgets.TextEditor(&document, mullion.FontSize(14))
 }
 ```
 
@@ -56,7 +56,7 @@ widget to focus an explicitly opened document.
 
 ```go
 state := widgets.TextEditorExt(&document, widgets.TextEditorAttrs{
-    TextStyle: shirei.TextStyle(shirei.Fonts(shirei.Monospace...), shirei.FontSize(13)),
+    TextStyle: mullion.TextStyle(mullion.Fonts(mullion.Monospace...), mullion.FontSize(13)),
     LineNumbers: true,
     ReadOnly: false,
     NoAutoFocus: true,
@@ -80,12 +80,12 @@ the authority for text and selection.
 ## Gutter, decoration and navigation
 
 `GutterWidth` reserves an extra slot before the line numbers. `GutterView(line)`
-builds ordinary Shirei UI inside that slot for each visible zero-based line.
+builds ordinary Mullion UI inside that slot for each visible zero-based line.
 Gutter clicks do not change text selection. The width uses design units, like
 the editor's font size.
 
 `LineBackground(line)` supplies a row color behind the gutter and text.
-`LineSpans(line, base)` returns `[]shirei.StyleSpan`, built with `ResolveSpan`
+`LineSpans(line, base)` returns `[]mullion.StyleSpan`, built with `ResolveSpan`
 against the provided style. These spans paint text color, background, underline
 and strike; they do not change font metrics. Their offsets use document rune
 coordinates, including when an IME composition is displayed.
@@ -112,7 +112,7 @@ wins and a request to an unrendered view expires after one frame.
   line. Dragging past the viewport scrolls while extending selection.
 - Cmd/Ctrl+A/C/X/V/Z and redo use the same keyboard decoder as TextInput.
   Clipboard paste arrives through the host's normal text-input channel.
-- Cluster-aware movement/deletion uses Shirei's shaping geometry. Japanese
+- Cluster-aware movement/deletion uses Mullion's shaping geometry. Japanese
   IME composition remains display state until its commit arrives as text.
 - Wheel scrolling can leave the caret offscreen. Editing and caret movement
   reveal it again. Scrolling alone does not modify selection.

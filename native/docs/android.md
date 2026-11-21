@@ -1,29 +1,29 @@
-# Running Shirei apps on Android
+# Running Mullion apps on Android
 
-Shirei is a Go GUI framework, and an Android app built with it is an ordinary
+Mullion is a Go GUI framework, and an Android app built with it is an ordinary
 Go program — the same `package main` that runs on the desktop. There is no
 Android Studio, no Gradle, no Kotlin, and you never write Java: the
-`shirei_mobilerun` tool cross-compiles your package with the NDK and assembles
+`mullion-mobilerun` tool cross-compiles your package with the NDK and assembles
 a ready-to-install APK from it.
 
-**Development and release.** `shirei_mobilerun` iterates on a connected device
+**Development and release.** `mullion-mobilerun` iterates on a connected device
 or emulator with debug signing, debuggable APKs, and ad-hoc app ids. For release
-APKs using your keystore with `debuggable=false`, use **`shirei_bundle`**
-([cmd/shirei_bundle/README.md](../cmd/shirei_bundle/README.md)).
+APKs using your keystore with `debuggable=false`, use **`mullion-bundle`**
+([cmd/mullion-bundle/README.md](../cmd/mullion-bundle/README.md)).
 
 Install the tool:
 
 ```sh
-go install go.hasen.dev/shirei/cmd/shirei_mobilerun@latest
+go install go.hasen.dev/mullion/cmd/mullion-mobilerun@latest
 ```
 
 Ensure `$(go env GOPATH)/bin` is on your `PATH`.
 
 This document covers setting up the development environment and getting a
-first app onto a device. For Shirei itself, start with
+first app onto a device. For Mullion itself, start with
 [tutorial.md](tutorial.md). iOS: [ios.md](ios.md).
 
-Camera and other OS features (escape hatches, `shirei.capabilities`):
+Camera and other OS features (escape hatches, `mullion.capabilities`):
 [mobile-extensions.md](mobile-extensions.md).
 
 ---
@@ -32,8 +32,8 @@ Camera and other OS features (escape hatches, `shirei.capabilities`):
 
 | Requirement | Why |
 |---|---|
-| macOS, Linux, or Windows host | `shirei_mobilerun` has host support for all three |
-| Go 1.24+ | building the app (and `shirei_mobilerun` itself); must be on your `PATH` |
+| macOS, Linux, or Windows host | `mullion-mobilerun` has host support for all three |
+| Go 1.24+ | building the app (and `mullion-mobilerun` itself); must be on your `PATH` |
 | A JDK 17+ (OpenJDK / Temurin) | `sdkmanager`, `apksigner`, `keytool`, `javac`, and `d8` are Java programs — you still never write Java. `javac` and `keytool` must be on your `PATH` |
 | Android command-line tools | provides `sdkmanager`, which installs everything below |
 | SDK packages (via `sdkmanager`) | `platform-tools` (adb), an `ndk`, a `build-tools`, and one `platforms;android-NN` |
@@ -42,7 +42,7 @@ Camera and other OS features (escape hatches, `shirei.capabilities`):
 Roughly 3 GB of disk for the SDK pieces, most of it the NDK. A network
 connection is required for the `sdkmanager --install` step.
 
-`shirei_mobilerun` finds the SDK via `$ANDROID_HOME` / `$ANDROID_SDK_ROOT`, or the
+`mullion-mobilerun` finds the SDK via `$ANDROID_HOME` / `$ANDROID_SDK_ROOT`, or the
 per-platform default locations below — install to those and there is nothing
 to configure.
 
@@ -73,7 +73,7 @@ which sdkmanager adb
 
 The command-line-tools cask lands under
 `/opt/homebrew/share/android-commandlinetools` (Apple Silicon) or
-`/usr/local/share/android-commandlinetools` (Intel). `shirei_mobilerun` also
+`/usr/local/share/android-commandlinetools` (Intel). `mullion-mobilerun` also
 searches `~/Library/Android/sdk` (Android Studio’s default).
 
 Continue with [§3](#3-common-sdk-packages-all-hosts). Use the `sdkmanager` that
@@ -91,7 +91,7 @@ clang. There is no supported official NDK host build for Linux arm64.
 | Your setup | What to do |
 |---|---|
 | Linux **x86_64** | Follow this section as written |
-| Linux **arm64** (Parallels ARM VM, etc.) | Use a **x86_64** Linux VM, or build/run `shirei_mobilerun` on the **macOS host** (Apple Silicon is fine — the Darwin NDK prebuilts are universal) |
+| Linux **arm64** (Parallels ARM VM, etc.) | Use a **x86_64** Linux VM, or build/run `mullion-mobilerun` on the **macOS host** (Apple Silicon is fine — the Darwin NDK prebuilts are universal) |
 | Check | `uname -m` → should print `x86_64` for this guide |
 
 1. **JDK** from your distro, for example:
@@ -141,9 +141,9 @@ clang. There is no supported official NDK host build for Linux arm64.
 
    Note: the distro `adb` package may be arm64-native (and can talk to a phone),
    but the **NDK** from `sdkmanager` still will not run on arm64 Linux. Prefer
-   a x86_64 host for the full `shirei_mobilerun` path.
+   a x86_64 host for the full `mullion-mobilerun` path.
 
-`shirei_mobilerun` searches `~/Android/Sdk` and `/usr/lib/android-sdk` when
+`mullion-mobilerun` searches `~/Android/Sdk` and `/usr/lib/android-sdk` when
 `ANDROID_HOME` is unset.
 
 Continue with [§3](#3-common-sdk-packages-all-hosts). Prefer the full path if
@@ -197,7 +197,7 @@ you have not added `cmdline-tools/latest/bin` to PATH:
    $env:Path = "$env:ANDROID_HOME\cmdline-tools\latest\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
    ```
 
-`shirei_mobilerun` searches `%LOCALAPPDATA%\Android\Sdk` when `ANDROID_HOME` is
+`mullion-mobilerun` searches `%LOCALAPPDATA%\Android\Sdk` when `ANDROID_HOME` is
 unset.
 
 If `adb devices` cannot see a physical phone, after §3 also install the
@@ -220,8 +220,8 @@ it is not on PATH:
 
 ## 3. Common SDK packages (all hosts)
 
-Once `sdkmanager` runs, install the pieces `shirei_mobilerun` needs. Exact versions
-are **not** load-bearing: `shirei_mobilerun` picks the newest NDK, build-tools, and
+Once `sdkmanager` runs, install the pieces `mullion-mobilerun` needs. Exact versions
+are **not** load-bearing: `mullion-mobilerun` picks the newest NDK, build-tools, and
 platform it finds. The versions below are a known-good set:
 
 ```sh
@@ -259,31 +259,31 @@ adb version
 4. On Linux, revisit the udev note in §2 if you see `no permissions`.
 
 An emulator works exactly the same way — if `adb devices` lists it,
-`shirei_mobilerun` can target it. (Creating an AVD is outside this doc; Android
+`mullion-mobilerun` can target it. (Creating an AVD is outside this doc; Android
 Studio or `avdmanager` both work.)
 
 ---
 
 ## 5. Build and run
 
-Point `shirei_mobilerun` at any `package main` that uses
-`go.hasen.dev/shirei/app` (path relative to your cwd, or absolute):
+Point `mullion-mobilerun` at any `package main` that uses
+`go.hasen.dev/mullion/app` (path relative to your cwd, or absolute):
 
 ```sh
 # CLI: build, adb install, launch
-shirei_mobilerun -platform android ./demos/theme
+mullion-mobilerun -platform android ./demos/theme
 
 # APK only (no device required)
-shirei_mobilerun -platform android -build-only ./demos/theme
+mullion-mobilerun -platform android -build-only ./demos/theme
 
 # GUI: device picker, package scan, log panel
-shirei_mobilerun
+mullion-mobilerun
 ```
 
-From a local checkout of the shirei module you can also
-`go run ./cmd/shirei_mobilerun` instead of installing.
+From a local checkout of the mullion module you can also
+`go run ./cmd/mullion-mobilerun` instead of installing.
 
-First build takes a couple of minutes (all of Shirei compiles for
+First build takes a couple of minutes (all of Mullion compiles for
 `GOOS=android`); after that it is seconds.
 
 Useful CLI flags:
@@ -296,7 +296,7 @@ Useful CLI flags:
 | `-logcat` | stream the app's filtered log output after launch |
 | `-serial S` | pick a device when several are connected |
 | `-arch arm` | 32-bit ARM build (default is arm64) |
-| `-id`, `-label` | application id (default `dev.shirei.<folder>`) and launcher label |
+| `-id`, `-label` | application id (default `dev.mullion.<folder>`) and launcher label |
 | `-icon path` | launcher icon image (default `<package>/icon.png` when present) |
 
 Build products land in `bin/android/<app>/` at the workspace root (`go.work`
@@ -324,9 +324,9 @@ Use this to verify the instructions on a clean host:
 2. `java -version` / `javac -version` / `keytool` work
 3. `sdkmanager --version` (or `sdkmanager.bat`)
 4. §3 packages installed; `adb version` works
-5. `shirei_mobilerun -platform android -build-only ./demos/theme` → APK under `bin/android/theme/`
+5. `mullion-mobilerun -platform android -build-only ./demos/theme` → APK under `bin/android/theme/`
 6. With a device: `adb devices` shows `device`, then
-   `shirei_mobilerun -platform android ./demos/theme` (or the GUI with no args)
+   `mullion-mobilerun -platform android ./demos/theme` (or the GUI with no args)
 
 If step 5 fails, the log line above the error usually names the missing tool
 (`NDK not found`, `javac`, `aapt2`, …).
@@ -336,7 +336,7 @@ If step 5 fails, the log line above the error usually names the missing tool
 ## 6. What works
 
 - Rendering via GLES (`gpurender`) at the device's native resolution and
-  density scale; `SHIREI_GPU=0` or EGL init failure falls back to the
+  density scale; `MULLION_GPU=0` or EGL init failure falls back to the
   software renderer.
 - Touch: every finger fills `InputState.Touches` (multi-contact data + hit
   queries such as `IsTouched`); the primary finger also synthesizes mouse and
@@ -367,28 +367,28 @@ selection sync). The 32-bit build has a flag but little mileage.
 ## 7. Debugging
 
 Go's stdout and stderr — including panics — are redirected to logcat under
-the `shirei` tag:
+the `mullion` tag:
 
 ```sh
-adb logcat -s shirei:V threaded_app:V AndroidRuntime:E DEBUG:I
+adb logcat -s mullion:V threaded_app:V AndroidRuntime:E DEBUG:I
 ```
 
 `threaded_app` is the NativeActivity glue's lifecycle chatter,
 `AndroidRuntime`/`DEBUG` catch Java exceptions and native crashes.
-`shirei_mobilerun -platform android -logcat …` starts exactly this filter for you.
+`mullion-mobilerun -platform android -logcat …` starts exactly this filter for you.
 
 For headless verification, `-screencap` (or `adb exec-out screencap -p`)
-captures what is actually on the screen — Shirei's `--png` convention works
+captures what is actually on the screen — Mullion's `--png` convention works
 on-device too, in spirit: build, launch, screenshot, look.
 
 ---
 
 ## 8. How it works, briefly
 
-`shirei_mobilerun` builds your package with `-buildmode=c-shared` using the NDK's
-clang, producing one `.so` that contains your app, Shirei, and the Go
+`mullion-mobilerun` builds your package with `-buildmode=c-shared` using the NDK's
+clang, producing one `.so` that contains your app, Mullion, and the Go
 runtime. The APK wraps that library with an `android.app.NativeActivity`
-subclass — the one Java class in the system, embedded in `shirei_mobilerun` and
+subclass — the one Java class in the system, embedded in `mullion-mobilerun` and
 compiled at build time — which exists to host the soft keyboard's
 `InputConnection` and the clipboard. Rendering locks the `ANativeWindow`
 buffer and rasterizes into it directly; there is no GL/Vulkan layer. The

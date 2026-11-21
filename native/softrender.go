@@ -191,7 +191,7 @@ type SoftRenderer struct {
 	regionAlphaPrev []float32
 	regionMaskArena [][]byte
 
-	regionVerifyRaster regionRaster // scratch for SHIREI_REGION_VERIFY re-render
+	regionVerifyRaster regionRaster // scratch for MULLION_REGION_VERIFY re-render
 }
 
 // RegionCacheBytes reports the number of cached region bitmaps and their total

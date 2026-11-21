@@ -14,10 +14,10 @@ import (
 )
 
 // Full-UI PNG snapshot helpers for headless RenderToImage goldens and the
-// optional SHIREI_SNAP_REPORT JSONL channel used by review UIs.
+// optional MULLION_SNAP_REPORT JSONL channel used by review UIs.
 //
 // Snapshot / CompareImage return data only; callers map SnapResult onto
-// testing.T (or any other harness). When SHIREI_SNAP_REPORT is set,
+// testing.T (or any other harness). When MULLION_SNAP_REPORT is set,
 // ReportSnap appends one SnapEvent line per assertion.
 //
 // Missing golden -> Status Created (caller usually passes). Mismatch ->
@@ -25,7 +25,7 @@ import (
 // Goldens include host system fonts: refactor guard-rails, not portable artifacts.
 
 // EnvSnapReport is the path to an append-only JSONL file of SnapEvent lines.
-const EnvSnapReport = "SHIREI_SNAP_REPORT"
+const EnvSnapReport = "MULLION_SNAP_REPORT"
 
 // SnapResult statuses (also SnapEvent.Status).
 const (
@@ -46,7 +46,7 @@ type SnapResult struct {
 	Reason string // skip (or other) explanation
 }
 
-// SnapEvent is one snapshot assertion for SHIREI_SNAP_REPORT.
+// SnapEvent is one snapshot assertion for MULLION_SNAP_REPORT.
 type SnapEvent struct {
 	Pkg    string `json:"pkg"`              // absolute package directory
 	Test   string `json:"test"`             // caller-supplied name, e.g. testing.T.Name()
@@ -74,7 +74,7 @@ func SnapAbsPath(path string) string {
 	return abs
 }
 
-// ReportSnap appends one SnapEvent when SHIREI_SNAP_REPORT is set.
+// ReportSnap appends one SnapEvent when MULLION_SNAP_REPORT is set.
 // testName is stored in SnapEvent.Test (pass testing.T.Name() from go test).
 func ReportSnap(testName string, r SnapResult) {
 	reportPath := os.Getenv(EnvSnapReport)

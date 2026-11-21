@@ -203,7 +203,7 @@ func SharedResources() *Resources {
 // (or GetInputState / GetFrameInput); swapping ui is the only context switch.
 func bindUI(u *UI) {
 	if u == nil {
-		panic("shirei: bindUI(nil)")
+		panic("mullion: bindUI(nil)")
 	}
 	ui = u
 	activeUI.Store(u)

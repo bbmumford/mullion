@@ -10,9 +10,9 @@ import (
 )
 
 // Pointer input. Wayland delivers pointer coordinates in surface-local *logical*
-// units (already scaled), which is exactly what shirei wants — so, unlike X11
+// units (already scaled), which is exactly what mullion wants — so, unlike X11
 // (device pixels ÷ scale), we pass them straight through. Buttons arrive as Linux
-// evdev codes; scroll as wl_pointer.axis. Input is sampled into the shirei globals
+// evdev codes; scroll as wl_pointer.axis. Input is sampled into the mullion globals
 // and consumed by the next frame (sample, not queue).
 
 // Linux evdev button codes (linux/input-event-codes.h).
@@ -22,7 +22,7 @@ const (
 	btnMiddle = 0x112
 )
 
-// wheelScale converts a wl_pointer.axis value (logical pixels) into shirei scroll
+// wheelScale converts a wl_pointer.axis value (logical pixels) into mullion scroll
 // points. Tunable to taste; ~2 lands close to the X11 backend's per-notch feel.
 const wheelScale = 2
 
@@ -157,7 +157,7 @@ func (*handler) HandlePointerAxis(ev wl.PointerAxisEvent) {
 
 	switch ev.Axis {
 	case wl.PointerAxisVerticalScroll:
-		scroll(0, ev.Value*wheelScale) // Wayland: +value = down, matches shirei
+		scroll(0, ev.Value*wheelScale) // Wayland: +value = down, matches mullion
 	case wl.PointerAxisHorizontalScroll:
 		scroll(ev.Value*wheelScale, 0)
 	}

@@ -1,7 +1,7 @@
 //go:build ios
 
 // Package iosbackend is a direct-iOS (UIKit) backend for native. UIKit provides
-// the window, run loop, and touch input. Metal (shirei/gpurender) is the default
+// the window, run loop, and touch input. Metal (mullion/gpurender) is the default
 // compositor into a CAMetalLayer drawable; SoftRenderer + CALayer.contents is
 // the fallback if Metal init fails.
 //
@@ -34,9 +34,9 @@ import (
 	"unicode/utf8"
 	"unsafe"
 
-	"go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/gpurender"
+	"go.hasen.dev/generic"
 )
 
 // glyphCacheBudget caps total cached glyph-bitmap bytes (enables the shared core
@@ -199,15 +199,15 @@ func Run(fn native.FrameFn) {
 	C.ios_attach()
 }
 
-//export shireiExitWithCleanup
-func shireiExitWithCleanup() {
+//export mullionExitWithCleanup
+func mullionExitWithCleanup() {
 	// UIApplicationMain owns the process; ios_attach observes
 	// UIApplicationWillTerminate and calls this so AddExitCleanup runs.
 	generic.ExitWithCleanup(0)
 }
 
-//export shireiFrameRequested
-func shireiFrameRequested() C.int {
+//export mullionFrameRequested
+func mullionFrameRequested() C.int {
 	if native.FrameRequested() || pendingPark || pendingPaste != "" ||
 		pendingText != "" || pendingDeleteCount > 0 || pendingAccessoryKey != 0 ||
 		clickHeld || touchState != touchIdle {
@@ -226,8 +226,8 @@ func accessoryPrimaryMod() native.Modifiers {
 	return native.ModCtrl
 }
 
-//export shireiAccessoryAction
-func shireiAccessoryAction(action C.int) {
+//export mullionAccessoryAction
+func mullionAccessoryAction(action C.int) {
 	switch int(action) {
 	case accessoryLeft:
 		pendingAccessoryKey = native.KeyLeft
@@ -578,8 +578,8 @@ func synthFromPrimary(pt native.Vec2, phase int) {
 	}
 }
 
-//export shireiTouch
-func shireiTouch(x, y C.double, phase C.int, osKey C.uintptr_t) {
+//export mullionTouch
+func mullionTouch(x, y C.double, phase C.int, osKey C.uintptr_t) {
 	// Always maintain InputState.Touches. Independently, the first finger that
 	// begins while the synthesizer is idle also drives mouse/scroll.
 	pt := native.Vec2{float32(x), float32(y)}
@@ -646,8 +646,8 @@ func shireiTouch(x, y C.double, phase C.int, osKey C.uintptr_t) {
 	}
 }
 
-//export shireiInsertText
-func shireiInsertText(ctext *C.char) {
+//export mullionInsertText
+func mullionInsertText(ctext *C.char) {
 	if ctext == nil {
 		return
 	}
@@ -659,16 +659,16 @@ func shireiInsertText(ctext *C.char) {
 	native.RequestNextFrame()
 }
 
-//export shireiDeleteBackward
-func shireiDeleteBackward() {
+//export mullionDeleteBackward
+func mullionDeleteBackward() {
 	pendingDeleteCount++
 	native.RequestNextFrame()
 }
 
 // UTF-16 unit offsets (UIKit / NSString), same contract as cocoabackend.
 //
-//export shireiSetComposition
-func shireiSetComposition(cchars *C.char, startUTF16 C.int, endUTF16 C.int) {
+//export mullionSetComposition
+func mullionSetComposition(cchars *C.char, startUTF16 C.int, endUTF16 C.int) {
 	text := ""
 	if cchars != nil {
 		text = C.GoString(cchars)
@@ -676,8 +676,8 @@ func shireiSetComposition(cchars *C.char, startUTF16 C.int, endUTF16 C.int) {
 	setCompositionFromUTF16Offsets(text, int(startUTF16), int(endUTF16))
 }
 
-//export shireiClearComposition
-func shireiClearComposition() {
+//export mullionClearComposition
+func mullionClearComposition() {
 	if native.GetInputState().Composition == "" && native.GetInputState().CompositionSel == [2]int{} {
 		return
 	}
@@ -686,18 +686,18 @@ func shireiClearComposition() {
 	native.RequestNextFrame()
 }
 
-//export shireiCaretX
-func shireiCaretX() C.double {
+//export mullionCaretX
+func mullionCaretX() C.double {
 	return C.double(native.GetHost().CaretPos[0])
 }
 
-//export shireiCaretY
-func shireiCaretY() C.double {
+//export mullionCaretY
+func mullionCaretY() C.double {
 	return C.double(native.GetHost().CaretPos[1])
 }
 
-//export shireiCaretHeight
-func shireiCaretHeight() C.double {
+//export mullionCaretHeight
+func mullionCaretHeight() C.double {
 	return C.double(native.GetHost().CaretHeight)
 }
 
@@ -747,8 +747,8 @@ func textInputOK(s string) bool {
 	return true
 }
 
-//export shireiProduceAndPresent
-func shireiProduceAndPresent(w, h C.double) {
+//export mullionProduceAndPresent
+func mullionProduceAndPresent(w, h C.double) {
 	// w,h from the tick are layout size (WindowSize). Drawable may be taller
 	// (full safe area) while the keyboard is up — present into that so the
 	// layer never scales a short buffer into a tall view or vice versa.

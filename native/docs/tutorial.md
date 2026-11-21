@@ -1,7 +1,7 @@
-# Building Applications with Shirei
+# Building Applications with Mullion
 
 This tutorial explains how to build a small utility-style GUI application with
-Shirei. It is meant to be readable by humans, while still being practical enough
+Mullion. It is meant to be readable by humans, while still being practical enough
 for AI coding sessions to use as a guide.
 
 Good example programs to study, referenced throughout:
@@ -41,8 +41,8 @@ An initial version was written with Fugu (SakanaAI).
 
 ## 1. UI as a function of state
 
-Shirei uses a **plain-data, immediate-mode** application model. Your program
-describes what the whole UI should look like right now whenever Shirei
+Mullion uses a **plain-data, immediate-mode** application model. Your program
+describes what the whole UI should look like right now whenever Mullion
 evaluates a requested update:
 
 ```go
@@ -66,15 +66,15 @@ if Button(SymRefresh, "Refresh") {
 If the button was clicked during the update, `Button` returns `true`. If not,
 it returns `false`. The UI is just a function of the current application state.
 
-Shirei calls a requested update a **frame**. View code builds a transient
-container tree for that update, then Shirei performs layout and rendering in
+Mullion calls a requested update a **frame**. View code builds a transient
+container tree for that update, then Mullion performs layout and rendering in
 deferred passes.
 
-A typical Shirei program therefore has two layers:
+A typical Mullion program therefore has two layers:
 
 1. **Application state** — your own structs, slices, maps, selected item,
    filters, sort mode, etc.
-2. **View functions** — Shirei layout code that builds the current tree of
+2. **View functions** — Mullion layout code that builds the current tree of
    containers whenever an update is requested (§4).
 
 ```go
@@ -88,7 +88,7 @@ type AppState struct {
 var appData = &AppState{showGrid: true}
 ```
 
-This is the central idea: **keep durable data in your own structs; use Shirei
+This is the central idea: **keep durable data in your own structs; use Mullion
 to describe and interact with it during each requested update.**
 
 ### Data is just data
@@ -99,17 +99,17 @@ cannot simply mutate an ordinary variable; you have to shape your data the
 way the framework approves of, so it can notice changes and schedule
 updates.
 
-Shirei deliberately has none of that. Application state is ordinary Go data
+Mullion deliberately has none of that. Application state is ordinary Go data
 — structs, slices, maps — mutated however you like, because plain data is
 much easier to manage. On each requested frame, the whole UI is rebuilt from
 the application data, so the next frame reflects whatever the data says. Any
 variable can drive the UI.
 
-The trade is explicitness about *when frames run*. Shirei does not render in
+The trade is explicitness about *when frames run*. Mullion does not render in
 a continuous loop: a frame runs when input arrives, when the previous
 frame's output changed (so built-in animations keep flowing), or when one is
 explicitly requested. An idle app renders nothing and costs nothing. And
-because your data is just data, Shirei cannot see you change it — when a
+because your data is just data, Mullion cannot see you change it — when a
 change happens outside the input loop, you must say so:
 
 ```go
@@ -124,7 +124,7 @@ You need it exactly when change originates outside user input:
   elapsed-time clock — where each frame requests the next.
 
 You do not need it for ordinary interactions: input produces a frame by
-itself, and Shirei requests follow-ups for its own animations automatically.
+itself, and Mullion requests follow-ups for its own animations automatically.
 Geometry that depends on last frame's layout settles inside the same
 presented frame for the common case (§7) — you do not call
 `RequestNextFrame` just because a size query started at zero.
@@ -134,16 +134,16 @@ exchange, you tell it when the data changed behind its back.
 
 ## 2. A minimal app
 
-Most Shirei applications start with this shape:
+Most Mullion applications start with this shape:
 
 ```go
 package main
 
 import (
-    app "go.hasen.dev/shirei/app"
+    app "go.hasen.dev/mullion/app"
 
-    . "go.hasen.dev/shirei"
-    . "go.hasen.dev/shirei/widgets"
+    . "go.hasen.dev/mullion"
+    . "go.hasen.dev/mullion/widgets"
 )
 
 func main() {
@@ -183,10 +183,10 @@ Container(Attrs(Row, Expand, CrossMid, Gap(10), Pad(12)), func() {
 
 ## 3. Verify as you go: headless rendering
 
-Headless snapshots always use Shirei's software rasterizer (`SoftRenderer`), so
+Headless snapshots always use Mullion's software rasterizer (`SoftRenderer`), so
 a frame can be rendered **without opening a window** and without a GPU.
 Windowed paint is separate: GPU compositor by default (Metal / GLES / D3D11 /
-WebGL2); X11 stays software; `SHIREI_GPU=0` or init failure falls back to
+WebGL2); X11 stays software; `MULLION_GPU=0` or init failure falls back to
 software. For AI agents especially, it's recommended to build a PNG path into
 the app from the start — it gives a very fast feedback loop for everything
 else in this tutorial:
@@ -634,7 +634,7 @@ Text("The word orange is colored.", TextStyle(),
 discovered automatically, with per-rune fallback — CJK and bidi text work out
 of the box).
 
-Shirei also bundles two icon fonts — **Typicons** and **Microns** — as
+Mullion also bundles two icon fonts — **Typicons** and **Microns** — as
 `IconGlyph` values in `widgets` (`TypArrowUpThick`, `TypFolderOpen`,
 `SymRefresh`, …; see `widgets/typicons.go` and `widgets/microns.go`).
 Each value pairs a font family with a codepoint so PUA icons from different
@@ -652,7 +652,7 @@ header, alternating light rows, light detail panel.
 
 ## 6. Interaction
 
-Shirei input is **data, not events**: each frame the backend publishes the
+Mullion input is **data, not events**: each frame the backend publishes the
 current input state, and your code queries it inline. `InputState` holds
 cumulative state (mouse position, held keys, modifiers); `FrameInput` holds
 what happened *this frame* (a click, a key press, typed text, scroll).
@@ -722,7 +722,7 @@ every active contact is published as multi-touch **data** —
 `TouchingIds` / `TouchById` (same timing idea as hover). Prefer
 `IsTouched` when several fingers matter; while `InputState.MouseFromTouch` is
 set, ignore the synthetic mouse for hold-style logic so a delayed mouse-up
-cannot re-press after lift (see `examples/piano`). Shirei does **not** yet
+cannot re-press after lift (see `examples/piano`). Mullion does **not** yet
 ship built-in multi-finger *gestures* (pinch, two-finger pan, rotate) —
 those are ordinary app code over the contact table if you need them.
 
@@ -892,7 +892,7 @@ yank the list under the cursor.
 
 ## 7. State across frames: identity, hooks, settling, animation
 
-This section is the heart of writing *correct* Shirei code. Everything in it
+This section is the heart of writing *correct* Mullion code. Everything in it
 follows from one fact: the UI is rebuilt from scratch for each requested frame,
 so anything that persists — hover, focus, scroll offsets, widget state,
 animation — is keyed by **container identity**, maintained in a persistent
@@ -920,7 +920,7 @@ A key is any comparable value you own; it's matched by Go value equality
 (pointers by pointer, strings by content) and is **scoped to the parent**: the
 same key under two different parents is two distinct containers. The one rule:
 keys must be **unique among siblings** within a frame — a duplicate is a program
-bug, and shirei reports it loudly on stderr rather than behaving erratically.
+bug, and mullion reports it loudly on stderr rather than behaving erratically.
 
 A key reconciles the container across frames; to *address* the container after
 the fact — focus, hover, geometry, popup anchors — you use its **`ContainerId`**,
@@ -978,7 +978,7 @@ sibling geometry” layouts. In practice the runtime handles the common case:
 
 1. Your builder runs and may query geometry that is not known yet.
 2. Layout runs and records sizes for this pass.
-3. If any geometry query was unanswered, Shirei **re-runs the same frame**
+3. If any geometry query was unanswered, Mullion **re-runs the same frame**
    (a settle pass) without presenting the incomplete intermediate result.
 4. The second pass reads the first pass's sizes, so the frame that reaches
    the screen is already settled for direct dependencies.
@@ -1032,7 +1032,7 @@ See `examples/see_pprof` (`MainContent`) for a real split pane that reads
 ### Animation: on by default
 
 When a container's geometry changes between frames (position, size, padding,
-corners, border width, transparency), Shirei **animates** it toward the new
+corners, border width, transparency), Mullion **animates** it toward the new
 values — this is why UI changes feel fluid with zero effort. A container
 appearing for the first time does not animate (there is nothing to animate
 from).
@@ -1193,7 +1193,7 @@ background instead.
 
 ## 11. Background work and live data
 
-If a goroutine updates UI state, publish the result under Shirei's frame lock
+If a goroutine updates UI state, publish the result under Mullion's frame lock
 and then request a new frame:
 
 ```go
@@ -1218,7 +1218,7 @@ Rules:
 - Mutate shared UI state inside `WithFrameLock`.
 - Call `RequestNextFrame()` after publishing.
 - App code should not call backend-specific wake functions — backends poll
-  Shirei's requested-frame state, keeping the dependency direction clean.
+  Mullion's requested-frame state, keeping the dependency direction clean.
 
 For live monitors, avoid burst sampling: keep the previous sample and compute
 deltas from the next one, one collection per refresh interval. (Burst
@@ -1419,17 +1419,17 @@ includes it.
 
 ### Layout warnings on stderr
 
-Set `SHIREI_LAYOUT_WARN=1` **before starting the program** to enable layout
+Set `MULLION_LAYOUT_WARN=1` **before starting the program** to enable layout
 warnings. The flag is read at process startup and is off by default.
 
 ```sh
-SHIREI_LAYOUT_WARN=1 go run .
+MULLION_LAYOUT_WARN=1 go run .
 ```
 
-For a working demonstration, run this from the `shirei` directory:
+For a working demonstration, run this from the `mullion` directory:
 
 ```sh
-SHIREI_LAYOUT_WARN=1 go run ./demos/layout-warnings
+MULLION_LAYOUT_WARN=1 go run ./demos/layout-warnings
 ```
 
 The [layout-warnings demo](../demos/layout-warnings) shows a collapsed container
@@ -1437,16 +1437,16 @@ beside its corrected version. **Recreate examples** gives them new identities
 so the warning can be observed again.
 
 Warnings go to **stderr**, so they appear in the terminal running the app.
-To keep them in a file, use `SHIREI_LAYOUT_WARN=1 go run . 2>layout.log`
+To keep them in a file, use `MULLION_LAYOUT_WARN=1 go run . 2>layout.log`
 (the file also receives other stderr output). In PowerShell, set
-`$env:SHIREI_LAYOUT_WARN = "1"` before `go run .`.
+`$env:MULLION_LAYOUT_WARN = "1"` before `go run .`.
 
 The check reports a clipped extrinsic container whose width or height is zero
 while its content needs positive space on that axis and its parent has space
 available. For example:
 
 ```text
-shirei: layout warning: clipped content in zero-height extrinsic container #42
+mullion: layout warning: clipped content in zero-height extrinsic container #42
   builder location: /path/to/project/main.go:28
   resolved: 240 x 0
   content: 30 x 20
@@ -1523,11 +1523,11 @@ Symptoms: chart density changes when the sampling rate changes.
 
 Fix: bucket timestamped samples into fixed time windows (§14).
 
-## 17. A good workflow for building a Shirei app
+## 17. A good workflow for building a Mullion app
 
 1. Define your durable app model.
 2. If the data source is uncertain, build a terminal prototype first.
-3. Create a simple Shirei shell: header, toolbar, main panel, detail panel.
+3. Create a simple Mullion shell: header, toolbar, main panel, detail panel.
 4. Add the `--png` flag on day one (§3); render as you go.
 5. Render static or fake data first if needed.
 6. Add live background data with `WithFrameLock` and `RequestNextFrame`.
@@ -1538,13 +1538,13 @@ Fix: bucket timestamped samples into fixed time windows (§14).
 11. Add charts or visual summaries.
 12. Snapshot-test the screens you care about; polish layout and styling last.
 
-The most successful Shirei apps share this shape:
+The most successful Mullion apps share this shape:
 
 ```text
 platform/data acquisition
     -> common processing
         -> stable app-owned model
             -> derived visible rows/charts
-                -> Shirei view functions
+                -> Mullion view functions
                     -> deferred layout and rendering
 ```

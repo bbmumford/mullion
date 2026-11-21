@@ -19,7 +19,7 @@ import (
 // correctness-neutral by construction: rendering a region into its own buffer and
 // src-over-blitting it back is pixel-identical to rendering it inline (the invariant
 // the golden test guards), so the hit/miss/inline policy only ever affects speed,
-// never output. collectRegions also produces the stability stats the SHIREI_PERF
+// never output. collectRegions also produces the stability stats the MULLION_PERF
 // printer reports.
 
 // regionVerify re-rasterizes every cache hit and compares it to the stored bitmap,
@@ -28,7 +28,7 @@ import (
 // (an image finishing its async decode, a glyph re-rastered) — the "dangerous
 // middle". It defeats the cache's speedup (it does the work we cache to avoid), so
 // it is a correctness switch to run once, not a steady-state mode.
-var regionVerify = os.Getenv("SHIREI_REGION_VERIFY") != ""
+var regionVerify = os.Getenv("MULLION_REGION_VERIFY") != ""
 
 // RegionStats is a snapshot of the measurement counters, accumulated across frames
 // since the last fetch. A backend's perf printer reads and resets it once a second.

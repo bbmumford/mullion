@@ -12,7 +12,7 @@ var DEBUG_ENV = g.EnvTruthy("DEBUG")
 
 // PROFILE_ENV enables the in-app CPU profiler panel (widgets.ProfileButton).
 // Independent of DEBUG so a profile is not mixed with DebugPanel labels.
-var PROFILE_ENV = g.EnvTruthy("SHIREI_PPROF")
+var PROFILE_ENV = g.EnvTruthy("MULLION_PPROF")
 
 // FPS_ENV enables the in-app frame-time panel (widgets.FPSCounter).
 var FPS_ENV = g.EnvTruthy("FPS_COUNTER")

@@ -3,10 +3,10 @@
 package x11backend
 
 import (
+	"github.com/bbmumford/mullion/native"
 	"github.com/jezek/xgb"
 	"github.com/jezek/xgb/xinerama"
 	"github.com/jezek/xgb/xproto"
-	"github.com/bbmumford/mullion/native"
 )
 
 // placePopupWindow constrains placement to the owner's monitor and the desktop

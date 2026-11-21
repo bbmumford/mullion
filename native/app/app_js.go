@@ -12,7 +12,7 @@ import (
 // SetupWindow records the document title and preferred CSS-pixel content size.
 // Call it before Run. On a top-level desktop-sized page the floating shell grows
 // by the titlebar so the app body keeps that size; iframe embeds stay exact-fit.
-// Mobile hosts and short/narrow host slots fill #shirei-root (no CSD). Pass 0,0
+// Mobile hosts and short/narrow host slots fill #mullion-root (no CSD). Pass 0,0
 // to fill the host slot instead.
 func SetupWindow(title string, width, height int) {
 	native.GetHost().WindowSize = native.Vec2{float32(width), float32(height)}

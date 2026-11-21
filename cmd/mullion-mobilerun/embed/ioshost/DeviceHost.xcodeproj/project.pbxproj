@@ -8,14 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* main.m */; };
-		A10000000000000000000002 /* libshirei.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* libshirei.a */; };
+		A10000000000000000000002 /* libmullion.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* libmullion.a */; };
 		A10000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A10000000000000000000010 /* shirei.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = shirei.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000010 /* mullion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mullion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000011 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		A10000000000000000000012 /* libshirei.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libshirei.a; sourceTree = "<group>"; };
+		A10000000000000000000012 /* libmullion.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmullion.a; sourceTree = "<group>"; };
 		A10000000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10000000000000000000014 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -25,7 +25,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000000000000000000002 /* libshirei.a in Frameworks */,
+				A10000000000000000000002 /* libmullion.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -36,7 +36,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000011 /* main.m */,
-				A10000000000000000000012 /* libshirei.a */,
+				A10000000000000000000012 /* libmullion.a */,
 				A10000000000000000000013 /* Info.plist */,
 				A10000000000000000000014 /* Assets.xcassets */,
 				A10000000000000000000031 /* Products */,
@@ -46,7 +46,7 @@
 		A10000000000000000000031 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000010 /* shirei.app */,
+				A10000000000000000000010 /* mullion.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -54,9 +54,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A10000000000000000000040 /* shirei */ = {
+		A10000000000000000000040 /* mullion */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A10000000000000000000060 /* Build configuration list for PBXNativeTarget "shirei" */;
+			buildConfigurationList = A10000000000000000000060 /* Build configuration list for PBXNativeTarget "mullion" */;
 			buildPhases = (
 				A10000000000000000000041 /* Sources */,
 				A10000000000000000000020 /* Frameworks */,
@@ -66,9 +66,9 @@
 			);
 			dependencies = (
 			);
-			name = shirei;
-			productName = shirei;
-			productReference = A10000000000000000000010 /* shirei.app */;
+			name = mullion;
+			productName = mullion;
+			productReference = A10000000000000000000010 /* mullion.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -98,7 +98,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A10000000000000000000040 /* shirei */,
+				A10000000000000000000040 /* mullion */,
 			);
 		};
 /* End PBXProject section */
@@ -178,7 +178,7 @@
 				);
 				MARKETING_VERSION = 0.1;
 				OTHER_LDFLAGS = (
-					"-lshirei",
+					"-lmullion",
 					"-framework",
 					UIKit,
 					"-framework",
@@ -207,8 +207,8 @@
 					GameController,
 					"-lresolv",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.shirei.app;
-				PRODUCT_NAME = shirei;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.mullion.app;
+				PRODUCT_NAME = mullion;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -235,7 +235,7 @@
 				);
 				MARKETING_VERSION = 0.1;
 				OTHER_LDFLAGS = (
-					"-lshirei",
+					"-lmullion",
 					"-framework",
 					UIKit,
 					"-framework",
@@ -264,8 +264,8 @@
 					GameController,
 					"-lresolv",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.shirei.app;
-				PRODUCT_NAME = shirei;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.mullion.app;
+				PRODUCT_NAME = mullion;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -273,7 +273,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A10000000000000000000060 /* Build configuration list for PBXNativeTarget "shirei" */ = {
+		A10000000000000000000060 /* Build configuration list for PBXNativeTarget "mullion" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A10000000000000000000072 /* Debug */,

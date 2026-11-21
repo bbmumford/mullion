@@ -1,6 +1,6 @@
 // iOS camera picker (experiment). Called from Go with a UIViewController*.
-#ifndef SHIREI_CAMERA_IOS_H
-#define SHIREI_CAMERA_IOS_H
+#ifndef MULLION_CAMERA_IOS_H
+#define MULLION_CAMERA_IOS_H
 
 #include <stdint.h>
 

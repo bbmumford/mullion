@@ -61,7 +61,7 @@ type AccessNode struct {
 // must not start with '#' (that prefix is an identity serial).
 func NextAccessName(name string) {
 	if strings.HasPrefix(name, "#") {
-		fmt.Fprintf(os.Stderr, "shirei: access name %q must not start with #\n", name)
+		fmt.Fprintf(os.Stderr, "mullion: access name %q must not start with #\n", name)
 		return
 	}
 	ui.nextAccess.Name = name
@@ -112,7 +112,7 @@ func warnLeftoverAccess() {
 	if a == (AccessAttrs{}) {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "shirei: leftover NextAccess* (name=%q role=%q) without AssignAccess\n", a.Name, a.Role)
+	fmt.Fprintf(os.Stderr, "mullion: leftover NextAccess* (name=%q role=%q) without AssignAccess\n", a.Name, a.Role)
 	ui.nextAccess = AccessAttrs{}
 }
 

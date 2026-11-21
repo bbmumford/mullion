@@ -15,8 +15,8 @@ import (
 	"github.com/bbmumford/mullion/native"
 )
 
-//export shireiExtDarkmodeIOSUpdate
-func shireiExtDarkmodeIOSUpdate(isDark C.int) {
+//export mullionExtDarkmodeIOSUpdate
+func mullionExtDarkmodeIOSUpdate(isDark C.int) {
 	setDarkMode(isDark == 1)
 }
 
@@ -25,6 +25,6 @@ func initPlatform() {
 	if ctx, ok := native.GetHost().EscapeHatchBackendContext.(interface{ RootViewController() unsafe.Pointer }); ok {
 		root = ctx.RootViewController()
 	}
-	isDark := C.shirei_ext_darkmode_ios_start_observer(root)
+	isDark := C.mullion_ext_darkmode_ios_start_observer(root)
 	setDarkMode(isDark == 1)
 }

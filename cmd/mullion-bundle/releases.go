@@ -14,7 +14,7 @@ import (
 var releaseLogMu sync.Mutex
 
 // ReleaseLog is the persisted history of successful bundles (separate from app config).
-// File: <configDir>/shirei/bundle-releases.json
+// File: <configDir>/mullion/bundle-releases.json
 type ReleaseLog struct {
 	// Apps is keyed by App.ID from the config store.
 	Apps map[string]*AppReleaseRecord `json:"apps"`
@@ -67,7 +67,7 @@ func releasesPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "shirei", "bundle-releases.json"), nil
+	return filepath.Join(dir, "mullion", "bundle-releases.json"), nil
 }
 
 func loadReleaseLog() ReleaseLog {

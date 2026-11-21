@@ -1,4 +1,4 @@
-// Package x11backend is a direct-X11 backend for shirei: it opens a window via
+// Package x11backend is a direct-X11 backend for mullion: it opens a window via
 // the X11 core protocol (pure Go, github.com/jezek/xgb), routes input, and
 // presents the core software renderer's BGRA buffer with PutImage. It mirrors
 // cocoabackend/win32backend minus the rasterizer, and is one half of the Linux

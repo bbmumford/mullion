@@ -2,7 +2,7 @@
 
 // Package jsbackend is the browser/wasm shell for native. The page owns the
 // event loop (requestAnimationFrame). Present is GLES/WebGL2 via gpurender
-// unless SHIREI_GPU=0 or WebGL2 init fails; then SoftRenderer + putImageData.
+// unless MULLION_GPU=0 or WebGL2 init fails; then SoftRenderer + putImageData.
 //
 // Text uses the same pure-Go shaping/glyph path as every other backend. The
 // shell embeds a default Noto Sans face so demos render without a system font
@@ -18,9 +18,9 @@ import (
 
 	_ "embed"
 
-	"go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/gpurender"
+	"go.hasen.dev/generic"
 )
 
 //go:embed NotoSans-Regular.ttf
@@ -66,7 +66,7 @@ var (
 // SetupWindow records title and preferred CSS-pixel content size (same contract
 // as macOS/Win32). On a top-level desktop-sized page a floating shell draws CSD
 // and is taller by titlebarHeight so the app body keeps the requested size; it is
-// shrunk if that would overflow the host slot (#shirei-root). Mobile hosts and
+// shrunk if that would overflow the host slot (#mullion-root). Mobile hosts and
 // short/narrow host slots fill that slot with no chrome (same as iOS/Android).
 // Zero width or height also fills the slot (iframe embeds still shrink-wrap to w×h).
 func SetupWindow(title string, width, height int) {
@@ -112,7 +112,7 @@ func Run(fn native.FrameFn) {
 	input = newInputAccum(apple)
 
 	if err := native.UseFontBytes(defaultFontBytes); err != nil {
-		js.Global().Get("console").Call("error", "shirei: default font: "+err.Error())
+		js.Global().Get("console").Call("error", "mullion: default font: "+err.Error())
 	}
 
 	doc := js.Global().Get("document")
@@ -129,7 +129,7 @@ func Run(fn native.FrameFn) {
 	installTextField(doc)
 
 	// Export a small hook so the HTML loader can inject extra font bytes later.
-	js.Global().Set("shireiUseFontBytes", js.FuncOf(func(this js.Value, args []js.Value) any {
+	js.Global().Set("mullionUseFontBytes", js.FuncOf(func(this js.Value, args []js.Value) any {
 		if len(args) < 1 {
 			return nil
 		}
@@ -138,7 +138,7 @@ func Run(fn native.FrameFn) {
 		buf := make([]byte, n)
 		js.CopyBytesToGo(buf, src)
 		if err := native.UseFontBytes(buf); err != nil {
-			js.Global().Get("console").Call("error", "shireiUseFontBytes: "+err.Error())
+			js.Global().Get("console").Call("error", "mullionUseFontBytes: "+err.Error())
 		} else {
 			native.RequestNextFrame()
 		}
@@ -167,7 +167,7 @@ func Run(fn native.FrameFn) {
 	// window crossing the full-bleed threshold picks the right shell.
 	resizeCB = js.FuncOf(func(this js.Value, args []js.Value) any {
 		doc := js.Global().Get("document")
-		root := doc.Call("getElementById", "shirei-root")
+		root := doc.Call("getElementById", "mullion-root")
 		applyShellLayout(doc, root, canvas)
 		native.RequestNextFrame()
 		return nil
@@ -178,21 +178,21 @@ func Run(fn native.FrameFn) {
 	select {}
 }
 
-// ensureShell finds or creates #shirei-root > #shirei-canvas and applies
+// ensureShell finds or creates #mullion-root > #mullion-canvas and applies
 // SetupWindow size: a clamped floating CSD shell inside the host slot on a
 // top-level desktop-sized page, exact-fit in an iframe, otherwise fill the slot.
 func ensureShell(doc js.Value) js.Value {
 	body := doc.Get("body")
 	if !body.Truthy() {
-		js.Global().Get("console").Call("error", "shirei: document.body missing")
+		js.Global().Get("console").Call("error", "mullion: document.body missing")
 	}
 
-	root := doc.Call("getElementById", "shirei-root")
-	canvas := doc.Call("getElementById", "shirei-canvas")
+	root := doc.Call("getElementById", "mullion-root")
+	canvas := doc.Call("getElementById", "mullion-canvas")
 
 	if !root.Truthy() {
 		root = doc.Call("createElement", "div")
-		root.Set("id", "shirei-root")
+		root.Set("id", "mullion-root")
 		if body.Truthy() {
 			if canvas.Truthy() && canvas.Get("parentNode").Truthy() {
 				canvas.Get("parentNode").Call("insertBefore", root, canvas)
@@ -204,14 +204,14 @@ func ensureShell(doc js.Value) js.Value {
 	}
 	if !canvas.Truthy() {
 		canvas = doc.Call("createElement", "canvas")
-		canvas.Set("id", "shirei-canvas")
+		canvas.Set("id", "mullion-canvas")
 		root.Call("appendChild", canvas)
-	} else if parent := canvas.Get("parentNode"); parent.Truthy() && parent.Get("id").String() != "shirei-root" {
+	} else if parent := canvas.Get("parentNode"); parent.Truthy() && parent.Get("id").String() != "mullion-root" {
 		root.Call("appendChild", canvas)
 	}
 
 	// Drop any leftover HTML chrome frame from earlier experiments.
-	if frame := doc.Call("getElementById", "shirei-window"); frame.Truthy() {
+	if frame := doc.Call("getElementById", "mullion-window"); frame.Truthy() {
 		parent := frame.Get("parentNode")
 		if parent.Truthy() && root.Truthy() {
 			parent.Call("insertBefore", root, frame)
@@ -277,14 +277,14 @@ func applyShellLayout(doc, root, canvas js.Value) {
 		cs.Set("boxShadow", "none")
 		cs.Set("borderRadius", "0")
 		if html.Truthy() {
-			html.Call("setAttribute", "data-shirei-width", strconv.Itoa(winW))
-			html.Call("setAttribute", "data-shirei-height", strconv.Itoa(winH))
+			html.Call("setAttribute", "data-mullion-width", strconv.Itoa(winW))
+			html.Call("setAttribute", "data-mullion-height", strconv.Itoa(winH))
 		}
 		notifyParentSize(winW, winH)
 		return
 	}
 
-	// Top-level: #shirei-root fills leftover space in the page (any in-flow
+	// Top-level: #mullion-root fills leftover space in the page (any in-flow
 	// siblings keep theirs). The floating window is the canvas inside that slot.
 	if html.Truthy() {
 		hs := html.Get("style")
@@ -336,8 +336,8 @@ func applyShellLayout(doc, root, canvas js.Value) {
 		cs.Set("boxShadow", "0 0 0 1px rgba(0,0,0,0.12), 0 8px 28px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08)")
 		cs.Set("borderRadius", "6px")
 		if html.Truthy() {
-			html.Call("setAttribute", "data-shirei-width", strconv.Itoa(winW))
-			html.Call("setAttribute", "data-shirei-height", strconv.Itoa(winH))
+			html.Call("setAttribute", "data-mullion-width", strconv.Itoa(winW))
+			html.Call("setAttribute", "data-mullion-height", strconv.Itoa(winH))
 		}
 		notifyParentSize(winW, winH)
 		return
@@ -346,8 +346,8 @@ func applyShellLayout(doc, root, canvas js.Value) {
 	floatingShell = false
 	shellInflated = false
 	if html.Truthy() {
-		html.Call("removeAttribute", "data-shirei-width")
-		html.Call("removeAttribute", "data-shirei-height")
+		html.Call("removeAttribute", "data-mullion-width")
+		html.Call("removeAttribute", "data-mullion-height")
 	}
 	rs.Set("background", "#fff")
 	cs.Set("position", "relative")
@@ -369,7 +369,7 @@ func isEmbeddedFrame() bool {
 // notifyParentSize tells an embedding page the SetupWindow CSS size so it can
 // resize the iframe. Message shape:
 //
-//	{ source: "shirei", type: "resize", width: N, height: N }
+//	{ source: "mullion", type: "resize", width: N, height: N }
 func notifyParentSize(w, h int) {
 	if w <= 0 || h <= 0 {
 		return
@@ -379,7 +379,7 @@ func notifyParentSize(w, h int) {
 		return
 	}
 	msg := map[string]any{
-		"source": "shirei",
+		"source": "mullion",
 		"type":   "resize",
 		"width":  w,
 		"height": h,
@@ -390,10 +390,10 @@ func notifyParentSize(w, h int) {
 
 func installTextField(doc js.Value) {
 	// Hidden input captures IME composition and text commits (Latin + CJK).
-	inp := doc.Call("getElementById", "shirei-text")
+	inp := doc.Call("getElementById", "mullion-text")
 	if !inp.Truthy() {
 		inp = doc.Call("createElement", "input")
-		inp.Set("id", "shirei-text")
+		inp.Set("id", "mullion-text")
 		inp.Set("type", "text")
 		inp.Set("autocomplete", "off")
 		inp.Set("autocorrect", "off")
@@ -655,10 +655,10 @@ func isMobileHost() bool {
 }
 
 func gpuForcedOff() bool {
-	if generic.EnvFalsy("SHIREI_GPU") {
+	if generic.EnvFalsy("MULLION_GPU") {
 		return true
 	}
-	if g := js.Global().Get("SHIREI_GPU"); g.Truthy() && g.Type() != js.TypeUndefined {
+	if g := js.Global().Get("MULLION_GPU"); g.Truthy() && g.Type() != js.TypeUndefined {
 		s := strings.ToLower(g.String())
 		if s == "0" || s == "false" || s == "off" || s == "no" {
 			return true
@@ -666,7 +666,7 @@ func gpuForcedOff() bool {
 	}
 	if loc := js.Global().Get("location"); loc.Truthy() {
 		q := strings.ToLower(loc.Get("search").String())
-		if strings.Contains(q, "shirei_gpu=0") {
+		if strings.Contains(q, "mullion_gpu=0") {
 			return true
 		}
 	}
@@ -674,7 +674,7 @@ func gpuForcedOff() bool {
 }
 
 func tryGPU(canvas js.Value) {
-	mark := func(v string) { canvas.Call("setAttribute", "data-shirei-gpu", v) }
+	mark := func(v string) { canvas.Call("setAttribute", "data-mullion-gpu", v) }
 	if gpuForcedOff() {
 		mark("off")
 		return
@@ -771,13 +771,13 @@ func tick(canvas js.Value) {
 	// demo with AutoFocus text (e.g. theme) would vacuum every keystroke on a
 	// gallery page.
 	doc := js.Global().Get("document")
-	inp := doc.Call("getElementById", "shirei-text")
+	inp := doc.Call("getElementById", "mullion-text")
 	if host.WantsKeyboard && inp.Truthy() && documentHasFocus() {
 		// Anchor near caret for IME candidate windows.
 		st := inp.Get("style")
 		st.Set("left", ftoa(host.CaretPos[0])+"px")
 		st.Set("top", ftoa(host.CaretPos[1])+"px")
-		if doc.Get("activeElement").Get("id").String() != "shirei-text" {
+		if doc.Get("activeElement").Get("id").String() != "mullion-text" {
 			inp.Call("focus")
 		}
 	}

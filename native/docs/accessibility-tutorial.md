@@ -7,7 +7,7 @@ native verification tools.
 
 A screen reader needs a control's meaning and an action interface: its spoken
 label, role, current state, and the operations it supports. Keyboard handling
-alone does not supply that information. Shirei's desktop backends translate
+alone does not supply that information. Mullion's desktop backends translate
 these records and actions into the platform accessibility APIs.
 
 ## Start with the widget's existing support
@@ -36,16 +36,16 @@ meaning is a checkbox, regardless of its visual shape. Pointer, keyboard, and
 screen-reader activation all use `ProcessToggleEvents` and update the same
 boolean.
 
-Save this as `main.go` in a Shirei application module and run `go run .`.
+Save this as `main.go` in a Mullion application module and run `go run .`.
 
 ```go
 package main
 
 import (
-    "go.hasen.dev/shirei/app"
+    "go.hasen.dev/mullion/app"
 
-    . "go.hasen.dev/shirei"
-    . "go.hasen.dev/shirei/widgets"
+    . "go.hasen.dev/mullion"
+    . "go.hasen.dev/mullion/widgets"
 )
 
 var sound, locked bool
@@ -122,7 +122,7 @@ The order inside `SoundTile` matters:
 
 The explicit label keeps the spoken name stable as the visible On/Off text
 changes. `NextAccessChecked` supplies the changing state separately. For a
-button with a single visible label, Shirei can derive the name from its child
+button with a single visible label, Mullion can derive the name from its child
 text when the assigned record has no explicit label. Icon glyphs are decorative.
 
 `NextAccessName("sound")` is an optional query name for automation; it is not
@@ -132,7 +132,7 @@ so native accessibility objects continue to refer to the same item.
 
 `NextAccessDescription` can add helpful context. Set metadata on every build,
 including false state values, so the completed frame describes the current
-control. Shirei derives bounds, focus, and hierarchy from its container tree.
+control. Mullion derives bounds, focus, and hierarchy from its container tree.
 
 ## Reuse actions, or implement them explicitly
 
@@ -157,7 +157,7 @@ pressedByScreenReader := requested && action.Kind == AccessPress
 Feed `pressedByScreenReader` into the same activation path as pointer and
 keyboard input. `ProcessAccessAction` advertises the supplied actions and
 consumes matching requests once across frame settling passes. It handles focus
-requests through Shirei's normal focus/reveal path; your code applies other
+requests through Mullion's normal focus/reveal path; your code applies other
 returned actions to application state. Your interaction code also owns keyboard
 navigation, pointer behavior, and disabled handling for those input sources.
 
@@ -193,7 +193,7 @@ state. Include repeated frame builds and disabled requests to catch duplicate
 activation or stale metadata. A query name makes the control easy to find with
 `QueryContainer` or the [drive tools](drive-tutorial.md).
 
-Tree and action checks verify Shirei's semantic path. Native accessibility
+Tree and action checks verify Mullion's semantic path. Native accessibility
 clients and a screen reader also exercise the platform bridge and spoken
 experience. The [accessibility reference](accessibility.md#scope-and-testing)
 describes the native clients and manual form checks.

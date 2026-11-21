@@ -4,7 +4,7 @@ This tutorial covers application appearance: choosing light and dark palettes,
 matching surfaces and text, and customizing stock widgets. It assumes the
 containers, attributes, and widget calls in the [main tutorial](tutorial.md).
 
-Shirei starts with the cool light preset, so appearance setup is optional.
+Mullion starts with the cool light preset, so appearance setup is optional.
 When customizing shared colors, start with a complete preset and edit its
 fields; a widget's `Styled` entry point supplies paint for one control. For
 custom control geometry and interaction, continue with the
@@ -29,11 +29,11 @@ stays in application state, so OS changes do not override a manual choice.
 package main
 
 import (
-    "go.hasen.dev/shirei/app"
-    "go.hasen.dev/shirei/ext/darkmode"
+    "go.hasen.dev/mullion/app"
+    "go.hasen.dev/mullion/ext/darkmode"
 
-    . "go.hasen.dev/shirei"
-    . "go.hasen.dev/shirei/widgets"
+    . "go.hasen.dev/mullion"
+    . "go.hasen.dev/mullion/widgets"
 )
 
 var (
@@ -85,7 +85,7 @@ platform details. An application with only manual light/dark selection can
 pass its setting directly to `SetDarkMode` without importing that extension.
 
 The runnable [dark-mode probe](../demos/darkmode-probe/main.go) adds a warm-palette
-switch. From the Shirei directory, run:
+switch. From the Mullion directory, run:
 
 ```sh
 go run ./demos/darkmode-probe
@@ -455,10 +455,10 @@ independent override for the themed layer.
 `Toast` and `ToastExt` resolve paint when the card is drawn, so queued toasts
 follow live scheme changes. `ToastStyled` stores a copy of its explicit style.
 
-With `widgets` imported, `shirei.Modal` resolves its panel and scrim from the
-active scheme through `shirei.DefaultModalStyle`. For an explicit surface,
+With `widgets` imported, `mullion.Modal` resolves its panel and scrim from the
+active scheme through `mullion.DefaultModalStyle`. For an explicit surface,
 call `ModalStyled(width, dismiss, ModalStyleForScheme(scheme), body)` or pass a
-`shirei.ModalStyle` directly. The body owns its widget styling.
+`mullion.ModalStyle` directly. The body owns its widget styling.
 
 ## Focus appearance
 

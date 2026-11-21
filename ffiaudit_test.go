@@ -50,7 +50,7 @@ var ffiPointerAllowed = map[string]string{
 // not approved -- nobody has been through them -- they are recorded so that the
 // audit fails on anything new while these are worked through.
 //
-// All of them are in code carried in from go-shirei and glaze, and all but
+// All of them are in code carried in from go-mullion and glaze, and all but
 // three are on paths this machine cannot build or run: Direct3D 11, the Win32
 // accessibility bridge, WebView2 and the Windows audio output. Reviewing one
 // means reading the native call's contract to see how long it keeps the

@@ -4,21 +4,21 @@ import (
 	"os"
 	"strconv"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
+	g "go.hasen.dev/generic"
 )
 
-// SetupDrive listens for shirei/drive when SHIREI_DRIVE_PORT is set.
+// SetupDrive listens for mullion/drive when MULLION_DRIVE_PORT is set.
 // Call after SetupWindow, before Run. No port (or a non-positive value)
-// is a no-op. SetupQuiet unless SHIREI_DRIVE_FOREGROUND is on
+// is a no-op. SetupQuiet unless MULLION_DRIVE_FOREGROUND is on
 // (1 / true / yes / on), so go test does not steal focus.
 func SetupDrive() {
-	p, err := strconv.Atoi(os.Getenv("SHIREI_DRIVE_PORT"))
+	p, err := strconv.Atoi(os.Getenv("MULLION_DRIVE_PORT"))
 	if err != nil || p <= 0 {
 		return
 	}
 	native.AcceptInputCommands(p)
-	if !g.EnvTruthy("SHIREI_DRIVE_FOREGROUND") {
+	if !g.EnvTruthy("MULLION_DRIVE_FOREGROUND") {
 		SetupQuiet()
 	}
 }

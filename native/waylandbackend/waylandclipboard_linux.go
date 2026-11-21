@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/cli/browser"
 	"github.com/bbmumford/mullion/native/internal/wayland/wl"
 	"github.com/bbmumford/mullion/native/internal/wayland/wlclient"
+	"github.com/cli/browser"
 )
 
 // openURL opens url in the system browser (FrameOutputData.OpenURL). Errors ignored.

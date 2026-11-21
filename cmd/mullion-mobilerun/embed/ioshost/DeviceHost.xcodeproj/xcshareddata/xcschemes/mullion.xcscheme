@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A10000000000000000000040"
-               BuildableName = "shirei.app"
-               BlueprintName = "shirei"
+               BuildableName = "mullion.app"
+               BlueprintName = "mullion"
                ReferencedContainer = "container:DeviceHost.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -44,8 +44,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A10000000000000000000040"
-            BuildableName = "shirei.app"
-            BlueprintName = "shirei"
+            BuildableName = "mullion.app"
+            BlueprintName = "mullion"
             ReferencedContainer = "container:DeviceHost.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -61,8 +61,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A10000000000000000000040"
-            BuildableName = "shirei.app"
-            BlueprintName = "shirei"
+            BuildableName = "mullion.app"
+            BlueprintName = "mullion"
             ReferencedContainer = "container:DeviceHost.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

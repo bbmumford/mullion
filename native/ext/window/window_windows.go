@@ -32,7 +32,7 @@ var (
 
 const (
 	wmGetMinMaxInfo = 0x0024
-	subclassID      = 0x534D // "SM" Shirei MinSize
+	subclassID      = 0x534D // "SM" Mullion MinSize
 	swpNoZOrder     = 0x0004
 	swpNoActivate   = 0x0010
 	swpNoSize       = 0x0001

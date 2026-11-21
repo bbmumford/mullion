@@ -14,10 +14,10 @@ import (
 	"github.com/bbmumford/mullion/native/internal/wayland/wlclient"
 	zxdg "github.com/bbmumford/mullion/native/internal/wayland/xdg"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/gpurender"
 	"github.com/bbmumford/mullion/native/internal/atspi"
+	g "go.hasen.dev/generic"
 )
 
 // glyphCacheBudget caps total cached glyph-bitmap bytes (enables the shared core
@@ -121,21 +121,21 @@ func Run(fn native.FrameFn) {
 	leave()
 
 	// Pump events until the toplevel is closed. Wayland delivers a batch of
-	// events per DisplayDispatch; input handlers update the shirei globals and set
+	// events per DisplayDispatch; input handlers update the mullion globals and set
 	// `dirty`. While animating, the frame callback drives redraws (and consumes
 	// input); when idle, a redraw here reacts to input the moment it arrives.
 	//
 	// Dispatch is time-bounded (~60 Hz) so a background RequestNextFrame — e.g.
 	// process_monitor's sampler, LogView appends, async image decode — is
 	// noticed without requiring pointer motion. Cocoa's CADisplayLink does the
-	// same via shireiFrameRequested(); a pure blocking pump would sleep forever
+	// same via mullionFrameRequested(); a pure blocking pump would sleep forever
 	// once wantsFrame settles. Timeout wakes do no produce/paint work unless
 	// dirty or FrameRequested. (RunTimeout cannot split events: the deadline
 	// only guards the header wait.)
 	//
 	// (A held-modifier staleness on the Parallels VM was chased to Parallels
 	// itself withholding lone modifier presses from the guest — no client-side
-	// dispatch trick can help. SHIREI_WL_DEBUG prints event timing.)
+	// dispatch trick can help. MULLION_WL_DEBUG prints event timing.)
 	const framePoll = 16 * time.Millisecond
 	exitCode := 0
 	wlDebug("wl backend build: 2026-07-13-idle-frame-wake (timeout dispatch)")
@@ -228,13 +228,13 @@ func (*handler) HandleRegistryGlobal(ev wl.RegistryGlobalEvent) {
 	case "zxdg_output_manager_v1":
 		bindOutputManager(ev.Name, ev.Version)
 	case "wp_fractional_scale_manager_v1", "wp_viewporter":
-		if !g.EnvFalsy("SHIREI_FRACTIONAL_SCALE") {
+		if !g.EnvFalsy("MULLION_FRACTIONAL_SCALE") {
 			bindScaleManager(ev.Name, ev.Interface)
 		}
 	case "xdg_activation_v1":
 		bindActivation(ev.Name)
 	case "zwlr_layer_shell_v1":
-		if !g.EnvFalsy("SHIREI_LAYER_SHELL") {
+		if !g.EnvFalsy("MULLION_LAYER_SHELL") {
 			bindLayerShell(ev.Name, ev.Version)
 		}
 	case "zxdg_decoration_manager_v1":
@@ -570,7 +570,7 @@ func (b *wlBuffer) destroy() {
 	b.busy = false
 }
 
-// drawFrame produces one shirei frame, rasterizes it (GLES dmabuf or shm), and
+// drawFrame produces one mullion frame, rasterizes it (GLES dmabuf or shm), and
 // presents it; it also arms the next frame callback when animation is wanted.
 func drawFrame() {
 	if framesInProgress != 0 || !currentWindow.ready || currentWindow.closed || currentWindow.closing {

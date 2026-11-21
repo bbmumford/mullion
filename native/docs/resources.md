@@ -1,11 +1,11 @@
 # App resources
 
-Shirei apps keep non-code assets (icons, images, data files) in a **`Resources/`**
+Mullion apps keep non-code assets (icons, images, data files) in a **`Resources/`**
 directory next to `package main`. The same paths work under `go run` and in a
 desktop release package: call sites use `app.ResourcePath` and never hardcode
 `.app/Contents/Resources` or similar layout details.
 
-Desktop packaging via [`shirei_bundle`](../cmd/shirei_bundle/README.md) copies
+Desktop packaging via [`mullion-bundle`](../cmd/mullion-bundle/README.md) copies
 that directory into the platform resource root. The runtime API is the source of
 truth; the bundler follows the same convention.
 
@@ -25,10 +25,10 @@ myapp/
 Name the directory **`Resources`** (capital R). Nested folders inside it are
 fine; paths passed to `ResourcePath` are relative to that root.
 
-## API (`go.hasen.dev/shirei/app`)
+## API (`go.hasen.dev/mullion/app`)
 
 ```go
-import app "go.hasen.dev/shirei/app"
+import app "go.hasen.dev/mullion/app"
 
 app.SetupIcon(app.ResourcePath("icon.png"))
 Image(app.ResourcePath("assets/photo.png"), Vec2{0, 120})
@@ -42,13 +42,13 @@ root := app.ResourcesDir() // absolute directory, or "" if none found
 | **`ResourcesDir()`** | Absolute path to that root, or `""` if unresolved |
 | **`SetResourcesDir(dir)`** | Pin the root for this process (tests / odd layouts); empty clears the pin |
 
-Environment override: **`SHIREI_RESOURCES`** — absolute or relative path to the
+Environment override: **`MULLION_RESOURCES`** — absolute or relative path to the
 root. Useful in tests. Not a bundler setting.
 
 ## Resolution order
 
 1. `SetResourcesDir` pin
-2. `SHIREI_RESOURCES`
+2. `MULLION_RESOURCES`
 3. macOS `.app`: `Contents/Resources` next to the executable
 4. `<exeDir>/Resources` when that directory exists (Linux/Windows packages, loose binaries)
 5. Dev probe for `go run ./pkg` from a module or monorepo root:
@@ -64,7 +64,7 @@ root. Useful in tests. Not a bundler setting.
 Call sites always go through `ResourcePath` / `ResourcesDir`. Do not open
 `Contents/Resources` or `<exeDir>/Resources` by hand.
 
-## Packaging (`shirei_bundle`)
+## Packaging (`mullion-bundle`)
 
 When you add an app in the bundler UI, the icon field defaults to
 `Resources/icon.png` if that file exists (otherwise `icon.png` beside the
@@ -81,7 +81,7 @@ platform resource root:
 | Windows | `<exeDir>/Resources/` inside the zip |
 
 No bundler config field: presence of the directory is enough. Details and CLI/GUI
-workflow: [shirei_bundle README](../cmd/shirei_bundle/README.md).
+workflow: [mullion-bundle README](../cmd/mullion-bundle/README.md).
 
 ## Tips
 

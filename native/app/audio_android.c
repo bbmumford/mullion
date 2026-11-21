@@ -1,5 +1,5 @@
-// AAudio output for shirei on Android. libaaudio.so is dlopen'd at runtime:
-// AAudio is API 26+, but shirei APKs run down to minSdk 21 — on older devices
+// AAudio output for mullion on Android. libaaudio.so is dlopen'd at runtime:
+// AAudio is API 26+, but mullion APKs run down to minSdk 21 — on older devices
 // the library is absent and audio cleanly reports unavailable (app runs
 // silent). The header is included for types and enum constants only; no
 // symbol links against libaaudio at build time.
@@ -10,7 +10,7 @@
 
 #include "_cgo_export.h"
 
-#define ALOG(...) __android_log_print(ANDROID_LOG_INFO, "shirei", __VA_ARGS__)
+#define ALOG(...) __android_log_print(ANDROID_LOG_INFO, "mullion", __VA_ARGS__)
 
 typedef aaudio_result_t (*fn_createBuilder)(AAudioStreamBuilder**);
 typedef void (*fn_builderSetInt)(AAudioStreamBuilder*, int32_t);
@@ -72,13 +72,13 @@ static aaudio_data_callback_result_t on_data(AAudioStream* stream, void* user,
 	void* audioData, int32_t numFrames) {
 	(void)stream;
 	(void)user;
-	shireiAudioFill((float*)audioData, (int)numFrames);
+	mullionAudioFill((float*)audioData, (int)numFrames);
 	return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
 // Disconnect (route change, headphones, device sleep) just logs: callbacks
 // stop flowing, the shared audio watchdog notices the stall and rebuilds via
-// shirei_aaudio_restart. Never close the stream from this thread (AAudio
+// mullion_aaudio_restart. Never close the stream from this thread (AAudio
 // forbids it from the error callback).
 static void on_error(AAudioStream* stream, void* user, aaudio_result_t error) {
 	(void)stream;
@@ -116,15 +116,15 @@ static int open_stream(void) {
 	return 0;
 }
 
-int shirei_aaudio_start(int sampleRate) {
+int mullion_aaudio_start(int sampleRate) {
 	if (!load_aaudio()) return -100;
 	gSampleRate = sampleRate;
 	return open_stream();
 }
 
-// shirei_aaudio_restart tears down and reopens the stream. Called from the
+// mullion_aaudio_restart tears down and reopens the stream. Called from the
 // audio watchdog goroutine after a fill stall (never from AAudio threads).
-int shirei_aaudio_restart(void) {
+int mullion_aaudio_restart(void) {
 	if (!A.lib) return -100;
 	if (gStream) {
 		A.closeStream(gStream);

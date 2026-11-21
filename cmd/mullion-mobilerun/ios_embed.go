@@ -35,10 +35,10 @@ func ensureRuntime() (RuntimeDirs, error) {
 	if err != nil {
 		return zero, err
 	}
-	root := filepath.Join(cacheRoot, "shirei", "mobilerun-ios-runtime", sum)
+	root := filepath.Join(cacheRoot, "mullion", "mobilerun-ios-runtime", sum)
 	script := filepath.Join(root, "ios-run.sh")
 	host := filepath.Join(root, "ioshost")
-	build := filepath.Join(cacheRoot, "shirei", "ios-build")
+	build := filepath.Join(cacheRoot, "mullion", "ios-build")
 	marker := filepath.Join(root, ".ok")
 
 	if st, err := os.Stat(marker); err != nil || !st.Mode().IsRegular() {
@@ -136,9 +136,9 @@ func extractEmbed(destRoot string) error {
 	})
 }
 
-// findShireiModule looks for a local github.com/bbmumford/mullion/native module near start
-// (for "+brand.EnvName("MODULE")+" / go.work). Optional — published shirei with iOS works without it.
-func findShireiModule(start string) string {
+// findMullionModule looks for a local github.com/bbmumford/mullion/native module near start
+// (for "+brand.EnvName("MODULE")+" / go.work). Optional — published mullion with iOS works without it.
+func findMullionModule(start string) string {
 	d := start
 	for i := 0; i < 12; i++ {
 		modFile := filepath.Join(d, "go.mod")
@@ -147,12 +147,12 @@ func findShireiModule(start string) string {
 				if _, err := os.Stat(filepath.Join(d, "iosbackend")); err == nil {
 					return d
 				}
-				if filepath.Base(d) == "shirei" {
+				if filepath.Base(d) == "mullion" {
 					return d
 				}
 			}
 		}
-		cand := filepath.Join(d, "shirei")
+		cand := filepath.Join(d, "mullion")
 		if data, err := os.ReadFile(filepath.Join(cand, "go.mod")); err == nil {
 			if modulePath(string(data)) == "github.com/bbmumford/mullion/native" {
 				return cand

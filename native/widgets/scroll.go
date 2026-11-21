@@ -665,7 +665,7 @@ type VirtualListAttrs struct {
 	AvgSampleBottom int
 }
 
-// command wiring: one-line wrappers over shirei's PostCommand/TakeCommand
+// command wiring: one-line wrappers over mullion's PostCommand/TakeCommand
 // so call sites read as widget verbs.
 const vlistWidget = "widgets.VirtualList"
 const vlistScrollIntoView = "scroll-into-view"

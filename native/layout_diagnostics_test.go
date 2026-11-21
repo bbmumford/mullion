@@ -57,7 +57,7 @@ func TestLayoutWarningCollapsedContent(t *testing.T) {
 				fixed = false
 				RunFrameFn(build)
 			})
-			if strings.Count(output, "shirei: layout warning:") != 1 {
+			if strings.Count(output, "mullion: layout warning:") != 1 {
 				t.Fatalf("want one warning, got:\n%s", output)
 			}
 			for _, want := range []string{"zero-" + name, "builder location:", "layout_diagnostics_test.go:", "content: 30 x 20", "parent layout:", "cross-axis expansion (Expand)"} {
@@ -155,7 +155,7 @@ func TestLayoutWarningSharedBuilderLocations(t *testing.T) {
 			})
 		}
 	})
-	if strings.Count(output, "shirei: layout warning:") != 2 {
+	if strings.Count(output, "mullion: layout warning:") != 2 {
 		t.Fatalf("want one warning per instance:\n%s", output)
 	}
 	var locations []string

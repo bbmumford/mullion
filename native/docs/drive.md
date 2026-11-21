@@ -4,17 +4,17 @@ The windowed app can listen on a loopback UDP port and apply **one command
 per datagram**. This file is that command list.
 
 How to stamp names on containers and write `go test` clients is
-[drive-tutorial.md](drive-tutorial.md). The Go helper is `shirei/drive`.
+[drive-tutorial.md](drive-tutorial.md). The Go helper is `mullion/drive`.
 
 ---
 
 ## Wire
 
 Call `app.SetupDrive()` after `SetupWindow` and before `Run`. It reads
-`SHIREI_DRIVE_PORT` (set by `drive.Start`, or by a human:
-`SHIREI_DRIVE_PORT=4372 go run .`) and, if the value is a positive
+`MULLION_DRIVE_PORT` (set by `drive.Start`, or by a human:
+`MULLION_DRIVE_PORT=4372 go run .`) and, if the value is a positive
 port, binds a loopback listener. No port is a no-op. It also calls
-`SetupQuiet` unless `SHIREI_DRIVE_FOREGROUND` is on, so `go test` does
+`SetupQuiet` unless `MULLION_DRIVE_FOREGROUND` is on, so `go test` does
 not steal the editor.
 
 `AcceptInputCommands(port)` is the lower layer: bind this port, no
@@ -55,7 +55,7 @@ origin top-left).
 | `show q` | one record or `error: no match` | First match. `q` is a name path or `#N`. |
 | `focused` | `#N #M …` or empty | Identity serials: leaf, then ancestors to root. |
 | `hovered` | `#N #M …` or empty | Hover stack: direct hit, then ancestors. |
-| `screenshot path` | `ok` | Write a PNG of the last completed frame (`SoftRenderer`, same as `--png`). Path is the rest of the line (app filesystem). `drive.Shot` uses this when `SHIREI_DRIVE_TRACE` is set. |
+| `screenshot path` | `ok` | Write a PNG of the last completed frame (`SoftRenderer`, same as `--png`). Path is the rest of the line (app filesystem). `drive.Shot` uses this when `MULLION_DRIVE_TRACE` is set. |
 | `profile_start path` | `ok` | Start a process-wide CPU profile. Path is the rest of the line, relative to the app working directory or absolute. Fails if any CPU profiler is already running. |
 | `profile_stop` | `ok` | Stop the drive-owned recording, flush it, and publish it at the requested path. Fails if no drive recording is active. |
 | `quit` / `exit` | (empty) | `generic.ExitWithCleanup(0)` on a new goroutine. |
@@ -195,7 +195,7 @@ mouse_down
 mouse_up
 ```
 
-`shirei/drive` sleeps `Pause` (150ms) after each inject so the
+`mullion/drive` sleeps `Pause` (150ms) after each inject so the
 app can produce. Helpers take the UDP port as the first argument
 (`Start` returns that port). `Timeout` (2s) is the UDP read deadline.
 

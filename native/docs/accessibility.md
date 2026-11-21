@@ -1,6 +1,6 @@
 # Accessibility
 
-Shirei's macOS, Linux Wayland and 64-bit Windows backends expose a native
+Mullion's macOS, Linux Wayland and 64-bit Windows backends expose a native
 accessibility tree for static text and basic controls. macOS uses Cocoa
 accessibility, Wayland uses AT-SPI over the accessibility D-Bus, and Windows
 uses UI Automation (UIA) and Microsoft Active Accessibility (MSAA). Screen readers use the same widget state and interaction helpers as
@@ -92,7 +92,7 @@ AT-SPI support uses standard desktop services and has no distribution-specific
 code. The session needs a D-Bus session bus and the AT-SPI accessibility bus and
 registry, commonly provided by `at-spi2-core`. Orca and a working speech backend
 provide spoken output. Package installation and session startup depend on the
-distribution and desktop. No GTK dependency is added to Shirei applications.
+distribution and desktop. No GTK dependency is added to Mullion applications.
 
 The bridge discovers `org.a11y.Bus` on the session bus, registers the application
 on its accessibility bus, and retries when services are unavailable or restart.
@@ -109,8 +109,8 @@ For an external protocol check, build the form and run the Python client in
 the same Linux Wayland session:
 
 ```sh
-go build -o /tmp/shirei-accessibility-form ./behavior_test/accessibility-form
-python3 behavior_test/accessibility-form/check_atspi.py /tmp/shirei-accessibility-form
+go build -o /tmp/mullion-accessibility-form ./behavior_test/accessibility-form
+python3 behavior_test/accessibility-form/check_atspi.py /tmp/mullion-accessibility-form
 ```
 
 The client requires Python GObject bindings and AT-SPI introspection data. It
@@ -118,7 +118,7 @@ launches the form, discovers it through the desktop registry using its process
 ID, verifies labels/roles/bounds, invokes controls, and checks events and visible
 results through libatspi. Focus the form when prompted. The client closes its
 form process on completion. It does not enable Orca or change system settings.
-This checks the real platform connection independently of Shirei's drive API;
+This checks the real platform connection independently of Mullion's drive API;
 spoken output remains a separate Orca smoke test.
 
 ### Windows
@@ -153,7 +153,7 @@ For a speech check, use NVDA or Narrator and Tab through Save, Enable sound
 and Volume. Verify names, checkbox state and slider value against the form.
 Compatibility runtimes can expose only parts of UIA: a missing client method
 or an NVDA UIA initialization error is a runtime limitation, not a passing
-bridge result. `SHIREI_ACCESS_DEBUG=1` logs native provider discovery requests.
+bridge result. `MULLION_ACCESS_DEBUG=1` logs native provider discovery requests.
 
 The Win32 package's `TestAccessibilityProvider` exercises native COM callback
 calling conventions, object ownership and queued actions. The form's `--close`

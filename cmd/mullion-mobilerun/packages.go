@@ -19,8 +19,8 @@ type MainPkg struct {
 	Rel        string // path relative to scan root, for display / config
 }
 
-// ShireiPkg is an alias kept for call-site compatibility.
-type ShireiPkg = MainPkg
+// MullionPkg is an alias kept for call-site compatibility.
+type MullionPkg = MainPkg
 
 type pkgCache struct {
 	mu       sync.Mutex
@@ -33,7 +33,7 @@ type pkgCache struct {
 
 var pkgsCache pkgCache
 
-func ensureShireiPackages(root string) (pkgs []MainPkg, ready bool, err error) {
+func ensureMullionPackages(root string) (pkgs []MainPkg, ready bool, err error) {
 	pkgsCache.mu.Lock()
 	defer pkgsCache.mu.Unlock()
 	if pkgsCache.root != root {

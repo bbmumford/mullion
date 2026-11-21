@@ -15,7 +15,7 @@ import (
 
 // Context is the BackendContext for the iOS backend.
 // The backend sets Host.EscapeHatchBackendContext to this value at Run so
-// extensions can present UIKit controllers from the shirei root view controller.
+// extensions can present UIKit controllers from the mullion root view controller.
 type Context struct{}
 
 // Platform implements native.BackendContext.

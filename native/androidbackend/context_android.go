@@ -20,12 +20,12 @@ type Context struct{}
 // Platform implements native.BackendContext.
 func (Context) Platform() string { return "android" }
 
-// Activity returns the live ShireiActivity / NativeActivity jobject
+// Activity returns the live MullionActivity / NativeActivity jobject
 // (glue-owned; do not DeleteLocalRef). nil if unavailable.
 // Prefer the generic host helpers (StartActivityForResult, RequestPermissions)
 // over ad-hoc JNI when possible.
 func (Context) Activity() unsafe.Pointer {
-	return unsafe.Pointer(C.shirei_android_activity())
+	return unsafe.Pointer(C.mullion_android_activity())
 }
 
 var _ native.BackendContext = Context{}

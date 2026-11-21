@@ -8,12 +8,12 @@ import (
 	"slices"
 	"time"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/gpurender"
 	"github.com/bbmumford/mullion/native/internal/wayland/dmabuf"
 	"github.com/bbmumford/mullion/native/internal/wayland/wl"
 	"github.com/bbmumford/mullion/native/internal/wayland/wlclient"
+	g "go.hasen.dev/generic"
 )
 
 const gpuPoolSize = 3
@@ -42,8 +42,8 @@ func bindLinuxDmabuf(name, version uint32) {
 }
 
 func tryInitGPU() {
-	if g.EnvFalsy("SHIREI_GPU") {
-		perfLog("[wl] GPU off (SHIREI_GPU=0)")
+	if g.EnvFalsy("MULLION_GPU") {
+		perfLog("[wl] GPU off (MULLION_GPU=0)")
 		return
 	}
 	if linuxDmabuf == nil {

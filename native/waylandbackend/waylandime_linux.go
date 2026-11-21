@@ -70,7 +70,7 @@ func (*handler) HandleTextInputEnter(ev textinput.EnterEvent) {
 	leave := enterWindow(w)
 	defer leave()
 
-	// Focus follows the keyboard; enable for the whole surface (shirei is one
+	// Focus follows the keyboard; enable for the whole surface (mullion is one
 	// text-input client, not per-widget contexts).
 	_ = ev
 	currentWindow.textInputOnSurface = true

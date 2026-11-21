@@ -1,4 +1,4 @@
-// JNI bridge between ShireiActivity (mobilerun/embed) and the Go backend.
+// JNI bridge between MullionActivity (mobilerun/embed) and the Go backend.
 // Two directions: the activity's InputConnection calls the Java_* native
 // methods below on the UI thread (forwarded to Go exports + a looper wake),
 // and the app thread calls up into Java for keyboard show/hide and
@@ -15,54 +15,54 @@
 #include "shim.h"
 #include "_cgo_export.h"
 
-#define ALOG(...) __android_log_print(ANDROID_LOG_INFO, "shirei", __VA_ARGS__)
+#define ALOG(...) __android_log_print(ANDROID_LOG_INFO, "mullion", __VA_ARGS__)
 
-// ---- native methods: ShireiActivity → Go (UI thread) ----------------------
+// ---- native methods: MullionActivity → Go (UI thread) ----------------------
 
 JNIEXPORT void JNICALL
-Java_dev_shirei_host_ShireiActivity_nativeCommitText(JNIEnv* env, jclass cls, jstring text) {
+Java_dev_mullion_host_MullionActivity_nativeCommitText(JNIEnv* env, jclass cls, jstring text) {
 	(void)cls;
 	const char* s = (*env)->GetStringUTFChars(env, text, NULL);
 	if (s) {
-		shireiAndroidCommitText((char*)s);
+		mullionAndroidCommitText((char*)s);
 		(*env)->ReleaseStringUTFChars(env, text, s);
 	}
-	shirei_android_wake();
+	mullion_android_wake();
 }
 
 JNIEXPORT void JNICALL
-Java_dev_shirei_host_ShireiActivity_nativeDeleteBackward(JNIEnv* env, jclass cls, jint count) {
+Java_dev_mullion_host_MullionActivity_nativeDeleteBackward(JNIEnv* env, jclass cls, jint count) {
 	(void)env;
 	(void)cls;
-	shireiAndroidDeleteBackward((int)count);
-	shirei_android_wake();
+	mullionAndroidDeleteBackward((int)count);
+	mullion_android_wake();
 }
 
 JNIEXPORT void JNICALL
-Java_dev_shirei_host_ShireiActivity_nativeSetComposition(JNIEnv* env, jclass cls, jstring text) {
+Java_dev_mullion_host_MullionActivity_nativeSetComposition(JNIEnv* env, jclass cls, jstring text) {
 	(void)cls;
 	const char* s = (*env)->GetStringUTFChars(env, text, NULL);
 	if (s) {
-		shireiAndroidSetComposition((char*)s);
+		mullionAndroidSetComposition((char*)s);
 		(*env)->ReleaseStringUTFChars(env, text, s);
 	}
-	shirei_android_wake();
+	mullion_android_wake();
 }
 
 JNIEXPORT void JNICALL
-Java_dev_shirei_host_ShireiActivity_nativeFinishComposition(JNIEnv* env, jclass cls) {
+Java_dev_mullion_host_MullionActivity_nativeFinishComposition(JNIEnv* env, jclass cls) {
 	(void)env;
 	(void)cls;
-	shireiAndroidFinishComposition();
-	shirei_android_wake();
+	mullionAndroidFinishComposition();
+	mullion_android_wake();
 }
 
 JNIEXPORT void JNICALL
-Java_dev_shirei_host_ShireiActivity_nativeEditorAction(JNIEnv* env, jclass cls, jint action) {
+Java_dev_mullion_host_MullionActivity_nativeEditorAction(JNIEnv* env, jclass cls, jint action) {
 	(void)env;
 	(void)cls;
-	shireiAndroidEditorAction((int)action);
-	shirei_android_wake();
+	mullionAndroidEditorAction((int)action);
+	mullion_android_wake();
 }
 
 // ---- app thread → Java -----------------------------------------------------
@@ -72,7 +72,7 @@ Java_dev_shirei_host_ShireiActivity_nativeEditorAction(JNIEnv* env, jclass cls, 
 static JNIEnv* app_env(void) {
 	static JNIEnv* env;
 	if (env) return env;
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!app) return NULL;
 	JavaVM* vm = app->activity->vm;
 	if ((*vm)->AttachCurrentThread(vm, &env, NULL) != JNI_OK) {
@@ -88,13 +88,13 @@ static void clear_exception(JNIEnv* env) {
 	}
 }
 
-// shirei_android_set_keyboard shows/hides the soft keyboard via the
+// mullion_android_set_keyboard shows/hides the soft keyboard via the
 // activity's setKeyboardVisible (which hops to the UI thread itself).
-void shirei_android_set_keyboard(int show) {
+void mullion_android_set_keyboard(int show) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app) return;
-	jobject activity = app->activity->clazz; // the ShireiActivity instance
+	jobject activity = app->activity->clazz; // the MullionActivity instance
 	jclass cls = (*env)->GetObjectClass(env, activity);
 	jmethodID mid = (*env)->GetMethodID(env, cls, "setKeyboardVisible", "(Z)V");
 	if (mid) {
@@ -104,11 +104,11 @@ void shirei_android_set_keyboard(int show) {
 	(*env)->DeleteLocalRef(env, cls);
 }
 
-// shirei_android_set_orientation locks the activity via
+// mullion_android_set_orientation locks the activity via
 // Activity.setRequestedOrientation (UI thread hop inside the activity).
-void shirei_android_set_orientation(int preferred) {
+void mullion_android_set_orientation(int preferred) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app) return;
 	jobject activity = app->activity->clazz;
 	jclass cls = (*env)->GetObjectClass(env, activity);
@@ -120,11 +120,11 @@ void shirei_android_set_orientation(int preferred) {
 	(*env)->DeleteLocalRef(env, cls);
 }
 
-// shirei_android_hardware_keyboard: Java InputDevice + Configuration scan
+// mullion_android_hardware_keyboard: Java InputDevice + Configuration scan
 // (covers built-in and Bluetooth keyboards; soft IME alone is false).
-int shirei_android_hardware_keyboard(void) {
+int mullion_android_hardware_keyboard(void) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app) return 0;
 	jobject activity = app->activity->clazz;
 	jclass cls = (*env)->GetObjectClass(env, activity);
@@ -138,9 +138,9 @@ int shirei_android_hardware_keyboard(void) {
 	return out;
 }
 
-void shirei_android_set_clipboard(const char* text) {
+void mullion_android_set_clipboard(const char* text) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app || !text) return;
 	jobject activity = app->activity->clazz;
 	jclass cls = (*env)->GetObjectClass(env, activity);
@@ -156,9 +156,9 @@ void shirei_android_set_clipboard(const char* text) {
 	(*env)->DeleteLocalRef(env, cls);
 }
 
-char* shirei_android_get_clipboard(void) {
+char* mullion_android_get_clipboard(void) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app) return NULL;
 	jobject activity = app->activity->clazz;
 	jclass cls = (*env)->GetObjectClass(env, activity);
@@ -178,11 +178,11 @@ char* shirei_android_get_clipboard(void) {
 	return out;
 }
 
-// shirei_android_open_url opens url via Intent.ACTION_VIEW on the activity
+// mullion_android_open_url opens url via Intent.ACTION_VIEW on the activity
 // (system browser or scheme handler). Safe to call from the app thread.
-void shirei_android_open_url(const char* url) {
+void mullion_android_open_url(const char* url) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app || !url || !url[0]) return;
 	jobject activity = app->activity->clazz;
 	jclass cls = (*env)->GetObjectClass(env, activity);
@@ -200,19 +200,19 @@ void shirei_android_open_url(const char* url) {
 
 // ---- generic extension host ------------------------------------------------
 
-void *shirei_android_activity(void) {
-	struct android_app* app = shirei_android_app();
+void *mullion_android_activity(void) {
+	struct android_app* app = mullion_android_app();
 	if (!app || !app->activity) return NULL;
 	return (void *)app->activity->clazz;
 }
 
-void *shirei_android_jni_env(void) {
+void *mullion_android_jni_env(void) {
 	return (void *)app_env();
 }
 
-void shirei_android_start_activity_for_result(void *intent, int request_code) {
+void mullion_android_start_activity_for_result(void *intent, int request_code) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app || !intent) return;
 	jobject activity = app->activity->clazz;
 	jclass cls = (*env)->GetObjectClass(env, activity);
@@ -225,9 +225,9 @@ void shirei_android_start_activity_for_result(void *intent, int request_code) {
 	(*env)->DeleteLocalRef(env, cls);
 }
 
-void shirei_android_request_permissions(const char **perms, int request_code) {
+void mullion_android_request_permissions(const char **perms, int request_code) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app || !perms) return;
 	int n = 0;
 	while (perms[n]) n++;
@@ -262,9 +262,9 @@ void shirei_android_request_permissions(const char **perms, int request_code) {
 	(*env)->DeleteLocalRef(env, arr);
 }
 
-int shirei_android_check_permission(const char *perm) {
+int mullion_android_check_permission(const char *perm) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app || !perm) return -1;
 	jobject activity = app->activity->clazz;
 	jclass cls = (*env)->GetObjectClass(env, activity);
@@ -284,20 +284,20 @@ int shirei_android_check_permission(const char *perm) {
 }
 
 // Go: androidbackend hostbridge.go
-//export shireiAndroidActivityResult
-//export shireiAndroidPermissionResult
+//export mullionAndroidActivityResult
+//export mullionAndroidPermissionResult
 
 JNIEXPORT void JNICALL
-Java_dev_shirei_host_ShireiActivity_nativeActivityResult(
+Java_dev_mullion_host_MullionActivity_nativeActivityResult(
 	JNIEnv* env, jclass cls, jint requestCode, jint resultCode, jobject data) {
 	(void)cls;
 	// env + Intent are only valid for the duration of this call (UI thread).
-	shireiAndroidActivityResult((int)requestCode, (int)resultCode, (void *)env, (void *)data);
-	shirei_android_wake();
+	mullionAndroidActivityResult((int)requestCode, (int)resultCode, (void *)env, (void *)data);
+	mullion_android_wake();
 }
 
 JNIEXPORT void JNICALL
-Java_dev_shirei_host_ShireiActivity_nativeRequestPermissionsResult(
+Java_dev_mullion_host_MullionActivity_nativeRequestPermissionsResult(
 	JNIEnv* env, jclass cls, jint requestCode, jobjectArray permissions, jintArray grantResults) {
 	(void)cls;
 	(void)permissions; // handlers re-check with check_permission if needed
@@ -316,18 +316,18 @@ Java_dev_shirei_host_ShireiActivity_nativeRequestPermissionsResult(
 			}
 		}
 	}
-	shireiAndroidPermissionResult((int)requestCode, grants, n);
+	mullionAndroidPermissionResult((int)requestCode, grants, n);
 	free(grants);
-	shirei_android_wake();
+	mullion_android_wake();
 }
 
-// shirei_android_key_unicode maps a hardware/injected key event to its
-// unicode char via ShireiActivity.unicodeOf (KeyCharacterMap). 0 = none.
+// mullion_android_key_unicode maps a hardware/injected key event to its
+// unicode char via MullionActivity.unicodeOf (KeyCharacterMap). 0 = none.
 // Note: FindClass cannot see app classes from an attached native thread, so
 // the class is taken from the live activity object instead.
-int shirei_android_key_unicode(int deviceId, int keyCode, int metaState) {
+int mullion_android_key_unicode(int deviceId, int keyCode, int metaState) {
 	JNIEnv* env = app_env();
-	struct android_app* app = shirei_android_app();
+	struct android_app* app = mullion_android_app();
 	if (!env || !app) return 0;
 
 	static jclass activityCls;   // global ref, resolved once

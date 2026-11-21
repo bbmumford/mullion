@@ -36,7 +36,7 @@ type galleryRow struct {
 // table's virtualization and scrollbar render
 var galleryRows = func() []*galleryRow {
 	words := []string{"alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel"}
-	pkgs := []string{"runtime", "widgets", "shirei", "main"}
+	pkgs := []string{"runtime", "widgets", "mullion", "main"}
 	out := make([]*galleryRow, 0, 40)
 	for i := 0; i < 40; i++ {
 		out = append(out, &galleryRow{

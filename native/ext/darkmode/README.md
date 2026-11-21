@@ -1,11 +1,11 @@
 # darkmode
 
-`go.hasen.dev/shirei/ext/darkmode` provides real-time detection of the host operating system's dark mode preference across desktop, mobile, and web platforms.
+`go.hasen.dev/mullion/ext/darkmode` provides real-time detection of the host operating system's dark mode preference across desktop, mobile, and web platforms.
 
 ## Installation
 
 ```bash
-go get go.hasen.dev/shirei/ext/darkmode
+go get go.hasen.dev/mullion/ext/darkmode
 ```
 
 ## API
@@ -28,11 +28,11 @@ func OSDarkMode() bool
 package main
 
 import (
-	"go.hasen.dev/shirei/app"
-	"go.hasen.dev/shirei/ext/darkmode"
+	"go.hasen.dev/mullion/app"
+	"go.hasen.dev/mullion/ext/darkmode"
 
-	. "go.hasen.dev/shirei"
-	. "go.hasen.dev/shirei/widgets"
+	. "go.hasen.dev/mullion"
+	. "go.hasen.dev/mullion/widgets"
 )
 
 func main() {

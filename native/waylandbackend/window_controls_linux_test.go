@@ -20,7 +20,7 @@ import (
 // Exercise queued window controls through their actual Wayland wire requests.
 func controlWire(t *testing.T) (*wl.Context, *net.UnixConn) {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "shirei-wl-")
+	dir, err := os.MkdirTemp("", "mullion-wl-")
 	if err != nil {
 		t.Fatal(err)
 	}

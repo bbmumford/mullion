@@ -35,7 +35,7 @@ func SetupIconBytes(data []byte) {
 // Run attaches the UIKit content view and returns; CADisplayLink drives frames
 // afterward. UIApplicationWillTerminate calls generic.ExitWithCleanup.
 // Must be called on the main goroutine after UIApplicationMain has started
-// (shirei_mobilerun / ioshost arrange this via shirei_ios_run).
+// (mullion-mobilerun / ioshost arrange this via mullion_ios_run).
 func Run(frameFn native.FrameFn) {
 	iosbackend.Run(frameFn)
 }

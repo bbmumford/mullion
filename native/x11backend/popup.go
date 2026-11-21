@@ -8,10 +8,10 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/bbmumford/mullion/native"
 	"github.com/jezek/xgb"
 	"github.com/jezek/xgb/xproto"
 	g "go.hasen.dev/generic"
-	"github.com/bbmumford/mullion/native"
 )
 
 var uiThreadID atomic.Int64

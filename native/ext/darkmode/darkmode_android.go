@@ -6,7 +6,7 @@ package darkmode
 #cgo LDFLAGS: -landroid
 #include <android/configuration.h>
 
-static int shirei_ext_darkmode_android_check(void) {
+static int mullion_ext_darkmode_android_check(void) {
     AConfiguration* config = AConfiguration_new();
     if (!config) {
         return 0;
@@ -19,5 +19,5 @@ static int shirei_ext_darkmode_android_check(void) {
 import "C"
 
 func initPlatform() {
-	setDarkMode(C.shirei_ext_darkmode_android_check() == 1)
+	setDarkMode(C.mullion_ext_darkmode_android_check() == 1)
 }

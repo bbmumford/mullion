@@ -385,7 +385,7 @@ func imageWipeTag(text string, x, y float32, accent, fg Vec4) {
 // Uses a float from the left with a temporary measure: we draw at an estimated
 // x from the right by building the tag and accepting a slight overshoot when
 // the label is very long (caller can shorten). For simplicity we float from
-// the right via negative... Shirei Float is top-left based, so estimate width.
+// the right via negative... Mullion Float is top-left based, so estimate width.
 func imageWipeTagRight(text string, viewW, pad float32, accent, fg Vec4) {
 	// Rough width from rune count; good enough for short corner tags.
 	est := float32(len(text))*7 + 16

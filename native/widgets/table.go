@@ -68,7 +68,7 @@ type TableAttrs[T any] struct {
 const tableHeaderHeight = 30
 
 // Table is a generic, sortable, virtualized table. id is forwarded to
-// LayoutWithKey (nil = auto id, matching the rest of shirei). rowId must return
+// LayoutWithKey (nil = auto id, matching the rest of mullion). rowId must return
 // a stable, unique identity per row (e.g. the row's own pointer) — it's
 // used both for LayoutWithKey identity within a row and for VirtualListView's
 // scroll/animation bookkeeping. defaultSortColumn picks which column (and,

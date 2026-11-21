@@ -30,7 +30,7 @@ func buildPkg(t testing.TB, pkg string) string {
 	if bin, ok := bins[abs]; ok {
 		return bin
 	}
-	dir, err := os.MkdirTemp("", "shirei-drive-"+filepath.Base(abs)+"-")
+	dir, err := os.MkdirTemp("", "mullion-drive-"+filepath.Base(abs)+"-")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func buildPkg(t testing.TB, pkg string) string {
 }
 
 // Start builds pkg (a main-package directory), launches it with
-// SHIREI_DRIVE_PORT in the child environment, and returns that port.
+// MULLION_DRIVE_PORT in the child environment, and returns that port.
 // Extra args are forwarded as-is. After ping, Start waits 500ms for
 // the OS to map the window. Cleanup sends quit and waits for the process.
 func Start(t testing.TB, pkg string, extraArgs ...string) int {
@@ -58,7 +58,7 @@ func Start(t testing.TB, pkg string, extraArgs ...string) int {
 		t.Fatal(err)
 	}
 	cmd := exec.Command(buildPkg(t, pkg), extraArgs...)
-	cmd.Env = append(os.Environ(), "SHIREI_DRIVE_PORT="+strconv.Itoa(port))
+	cmd.Env = append(os.Environ(), "MULLION_DRIVE_PORT="+strconv.Itoa(port))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {

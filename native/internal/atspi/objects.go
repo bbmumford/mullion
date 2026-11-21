@@ -7,9 +7,9 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/bbmumford/mullion/native"
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
-	"github.com/bbmumford/mullion/native"
 )
 
 type object struct {
@@ -197,7 +197,7 @@ func (o accessible) GetAttributes() (map[string]string, *dbus.Error) {
 	if !ok {
 		return nil, unknown(o.path)
 	}
-	attrs := map[string]string{"toolkit": "shirei"}
+	attrs := map[string]string{"toolkit": "mullion"}
 	if e.node.Name != "" {
 		attrs["id"] = e.node.Name
 	}
@@ -259,7 +259,7 @@ func (o object) propertyValues(iface string) (map[string]dbus.Variant, *dbus.Err
 			}
 			values = map[string]any{"version": uint32(1), "Name": e.node.Label, "Description": e.node.Description, "Parent": o.b.parent(e), "ChildCount": int32(len(e.children)), "Locale": locale(), "AccessibleId": id, "HelpText": e.node.Description}
 		case prefix + "Application":
-			values = map[string]any{"ToolkitName": "shirei", "Version": "", "ToolkitVersion": "", "AtspiVersion": "2.1", "InterfaceVersion": uint32(1), "Id": o.b.appID}
+			values = map[string]any{"ToolkitName": "mullion", "Version": "", "ToolkitVersion": "", "AtspiVersion": "2.1", "InterfaceVersion": uint32(1), "Id": o.b.appID}
 		case prefix + "Component":
 			values["version"] = uint32(1)
 		case prefix + "Action":

@@ -1,19 +1,19 @@
-// shirei_mobilerun builds and launches shirei main packages on iOS or Android
+// mullion-mobilerun builds and launches mullion main packages on iOS or Android
 // for local development (device/simulator iteration). It is not a production
 // or store packaging pipeline: Android uses a debug keystore and debuggable
 // APKs; iOS uses free/personal team or simulator signing as configured.
 //
 // Install:
 //
-//	go install github.com/bbmumford/mullion/native/cmd/shirei_mobilerun@latest
+//	go install github.com/bbmumford/mullion/native/cmd/mullion-mobilerun@latest
 //
-//	shirei_mobilerun                              # GUI
-//	shirei_mobilerun -platform android <pkgdir>   # Android CLI
-//	shirei_mobilerun -platform ios <pkgdir>       # iOS CLI
-//	shirei_mobilerun --png out.png                # headless GUI snapshot
+//	mullion-mobilerun                              # GUI
+//	mullion-mobilerun -platform android <pkgdir>   # Android CLI
+//	mullion-mobilerun -platform ios <pkgdir>       # iOS CLI
+//	mullion-mobilerun --png out.png                # headless GUI snapshot
 //
-// Preferences: <os.UserConfigDir>/shirei/mobile-run.json
-// Release packaging: go install github.com/bbmumford/mullion/native/cmd/shirei_bundle@latest
+// Preferences: <os.UserConfigDir>/mullion/mobile-run.json
+// Release packaging: go install github.com/bbmumford/mullion/native/cmd/mullion-bundle@latest
 package main
 
 import (
@@ -196,7 +196,7 @@ func guiMain() {
 			teamsReady = true
 		}
 		scanDevices()
-		ensureShireiPackages(wd)
+		ensureMullionPackages(wd)
 		wakeUI()
 	}()
 

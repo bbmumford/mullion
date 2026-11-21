@@ -1,6 +1,6 @@
 package wl
 
-// Tests for the shirei-added RunTimeout: expiry must classify as
+// Tests for the mullion-added RunTimeout: expiry must classify as
 // ErrContextRunTimeout (not a fatal read error), and a deadline must never
 // split an event — once the header is read, the payload read is exempt.
 // These drive a raw unix socketpair; no compositor involved.

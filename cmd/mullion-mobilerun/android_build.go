@@ -39,7 +39,7 @@ type AndroidOpts struct {
 	AppID     string // application id; empty → {IDPrefix}.<name>
 	Label     string // launcher label; default folder name
 	IconPath  string // optional launcher icon image
-	IDPrefix  string // reverse-DNS stem when AppID empty; default dev.shirei
+	IDPrefix  string // reverse-DNS stem when AppID empty; default dev.mullion
 	Serial    string // adb device serial; empty = the only/default device
 	BuildOnly bool
 	Screencap string // save a post-launch screenshot here
@@ -125,8 +125,8 @@ package main
 
 import "C"
 
-//export shirei_android_main
-func shirei_android_main() {
+//export mullion_android_main
+func mullion_android_main() {
 	main()
 }
 `
@@ -158,7 +158,7 @@ func shirei_android_main() {
 	os.Remove(strings.TrimSuffix(soPath, ".so") + ".h") // header is unused
 
 	// --- 3. compile the Java host activity (keyboard/IME) → classes.dex ---
-	javaBytes, err := shireiActivityJavaBytes()
+	javaBytes, err := mullionActivityJavaBytes()
 	if err != nil {
 		return fmt.Errorf("embedded %s: %w", brand.AndroidGlueJavaFile(), err)
 	}
@@ -323,10 +323,10 @@ func adbCmd(adb, serial string, args ...string) *exec.Cmd {
 	return exec.Command(adb, args...)
 }
 
-// manifestXML: the activity is ShireiActivity (NativeActivity subclass in
+// manifestXML: the activity is MullionActivity (NativeActivity subclass in
 // classes.dex) so soft-keyboard/IME input works; adjustResize turns keyboard
 // show/hide into a window resize, which the backend reads per frame.
-// extraPerms come from shirei.capabilities on the app's Go module deps.
+// extraPerms come from mullion.capabilities on the app's Go module deps.
 func manifestXML(appID, label string, withIcon bool, extraPerms []string, orientation string) string {
 	iconAttr := ""
 	if withIcon {

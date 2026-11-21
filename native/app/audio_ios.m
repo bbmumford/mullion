@@ -17,8 +17,8 @@
 #include "audio.h"
 
 // implemented in Go (audio_ios.go)
-extern void shireiAudioFill(float *buf, int frames);
-extern void shireiAudioSetInterrupted(int v);
+extern void mullionAudioFill(float *buf, int frames);
+extern void mullionAudioSetInterrupted(int v);
 
 static AudioQueueRef gQueue = NULL;
 static double gSampleRate = 0;
@@ -35,7 +35,7 @@ static void aqCallback(void *user, AudioQueueRef aq, AudioQueueBufferRef b) {
 		frames = kMaxStackFrames;
 	}
 	float tmp[kMaxStackFrames];
-	shireiAudioFill(tmp, frames);
+	mullionAudioFill(tmp, frames);
 
 	int16_t *out = (int16_t *)b->mAudioData;
 	for (int i = 0; i < frames; i++) {
@@ -137,14 +137,14 @@ static void ensureInterruptionObserver(void) {
 		                                         AVAudioSessionInterruptionType type =
 			                                         (AVAudioSessionInterruptionType)typeNum.unsignedIntegerValue;
 		                                         if (type == AVAudioSessionInterruptionTypeBegan) {
-			                                         shireiAudioSetInterrupted(1);
+			                                         mullionAudioSetInterrupted(1);
 			                                         if (gQueue != NULL) {
 				                                         AudioQueuePause(gQueue);
 			                                         }
 			                                         return;
 		                                         }
 		                                         if (type == AVAudioSessionInterruptionTypeEnded) {
-			                                         shireiAudioSetInterrupted(0);
+			                                         mullionAudioSetInterrupted(0);
 			                                         NSError *err = nil;
 			                                         [[AVAudioSession sharedInstance] setActive:YES error:&err];
 			                                         if (gQueue != NULL) {
@@ -163,7 +163,7 @@ static void ensureInterruptionObserver(void) {
 	                                     }];
 }
 
-int shireiAudioStart(double sampleRate, int bufferFrames) {
+int mullionAudioStart(double sampleRate, int bufferFrames) {
 	gSampleRate = sampleRate;
 	gBufferFrames = bufferFrames;
 
@@ -172,11 +172,11 @@ int shireiAudioStart(double sampleRate, int bufferFrames) {
 		return st;
 	}
 	ensureInterruptionObserver();
-	shireiAudioSetInterrupted(0);
+	mullionAudioSetInterrupted(0);
 	return createAndStart();
 }
 
-int shireiAudioRestart(void) {
+int mullionAudioRestart(void) {
 	if (gQueue != NULL) {
 		AudioQueueDispose(gQueue, true);
 		gQueue = NULL;
@@ -188,7 +188,7 @@ int shireiAudioRestart(void) {
 	return createAndStart();
 }
 
-int shireiAudioPause(void) {
+int mullionAudioPause(void) {
 	if (gQueue == NULL) {
 		return -1;
 	}

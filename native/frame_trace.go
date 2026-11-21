@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-// SHIREI_TRACE_FRAME=1 prints once a second why frames were requested:
+// MULLION_TRACE_FRAME=1 prints once a second why frames were requested:
 // RequestNextFrame call sites, surface-hash changes, and unconsumed commands.
 // Use this instead of a breakpoint — a 60fps wake is too noisy to step.
-var traceFrame = os.Getenv("SHIREI_TRACE_FRAME") != ""
+var traceFrame = os.Getenv("MULLION_TRACE_FRAME") != ""
 
 type frameTrace struct {
 	mu      sync.Mutex

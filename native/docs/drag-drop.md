@@ -1,4 +1,4 @@
-# Drag and Drop in Shirei
+# Drag and Drop in Mullion
 
 How to move items between drop zones with the `widgets` drag-and-drop API.
 Companion to [tutorial.md](tutorial.md) (the general overview); this
@@ -18,7 +18,7 @@ The main tutorial’s **Dragging** section (`PressAction` / `IsActive` +
 canvas, scrubbing a slider thumb. That path does not transfer application
 data between widgets.
 
-**Item drag-and-drop** is a separate mechanism in `shirei/widgets`:
+**Item drag-and-drop** is a separate mechanism in `mullion/widgets`:
 
 | Concern | Tool |
 |---------|------|
@@ -34,7 +34,7 @@ handler uses to update app state.
 ## 2. The pieces
 
 ```go
-import . "go.hasen.dev/shirei/widgets"
+import . "go.hasen.dev/mullion/widgets"
 
 // On the draggable item (inside its container):
 if DragAndDrop(payload) {

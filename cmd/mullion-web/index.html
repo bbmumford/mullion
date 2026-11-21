@@ -8,27 +8,27 @@
     html, body { margin: 0; height: 100%; }
     body { display: flex; flex-direction: column; }
     /* Host fills leftover page space (siblings such as a source strip keep theirs). */
-    #shirei-root {
+    #mullion-root {
       flex: 1;
       min-height: 0;
       position: relative;
       overflow: hidden;
       background: #fff;
     }
-    #shirei-canvas {
+    #mullion-canvas {
       display: block;
       width: 100%;
       height: 100%;
       outline: none;
       touch-action: none;
     }
-    #shirei-status {
+    #mullion-status {
       position: fixed; left: 12px; bottom: 12px;
       font: 12px/1.4 system-ui, sans-serif;
       color: #888; pointer-events: none;
     }
     {{- if .HasChrome}}
-    #shirei-page {
+    #mullion-page {
       flex: 0 0 auto;
       padding: 8px 14px;
       font: 12px/1.4 system-ui, -apple-system, sans-serif;
@@ -36,31 +36,31 @@
       background: rgba(255, 255, 255, 0.92);
       border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     }
-    #shirei-page a {
+    #mullion-page a {
       color: #1a5fb4;
       text-decoration: none;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-weight: 500;
     }
-    #shirei-page a:hover { text-decoration: underline; }
+    #mullion-page a:hover { text-decoration: underline; }
     {{- end}}
   </style>
 </head>
 <body>
   {{- if .HasChrome}}
-  <header id="shirei-page">
+  <header id="mullion-page">
     Source:
     <a href="{{.SourceURL}}" target="_blank" rel="noopener noreferrer">{{.SourceLabel}}</a>
   </header>
   {{- end}}
-  <div id="shirei-root">
-    <canvas id="shirei-canvas" tabindex="0"></canvas>
+  <div id="mullion-root">
+    <canvas id="mullion-canvas" tabindex="0"></canvas>
   </div>
-  <div id="shirei-status">Loading…</div>
+  <div id="mullion-status">Loading…</div>
   <script src="wasm_exec.js"></script>
   <script>
     (async () => {
-      const status = document.getElementById("shirei-status");
+      const status = document.getElementById("mullion-status");
       try {
         const go = new Go();
         if (!WebAssembly.instantiateStreaming) {

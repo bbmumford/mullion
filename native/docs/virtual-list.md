@@ -1,6 +1,6 @@
 # Virtual lists and Measure
 
-How to scroll large collections in Shirei without building every row for each
+How to scroll large collections in Mullion without building every row for each
 requested frame, and how row heights relate to `Measure`. Companion to
 [tutorial.md](tutorial.md) (general overview); this document is only about
 virtualization and measuring.
@@ -36,7 +36,7 @@ A **virtual list** only builds the rows that intersect the viewport (plus a
 little slack for scrolling). Total content height is estimated or measured so
 the scrollbar still represents the whole corpus.
 
-In Shirei that widget is `widgets.VirtualListView` /
+In Mullion that widget is `widgets.VirtualListView` /
 `VirtualListViewExt`.
 
 ---
@@ -45,8 +45,8 @@ In Shirei that widget is `widgets.VirtualListView` /
 
 ```go
 import (
-    . "go.hasen.dev/shirei"
-    . "go.hasen.dev/shirei/widgets"
+    . "go.hasen.dev/mullion"
+    . "go.hasen.dev/mullion/widgets"
 )
 
 var listKey = new(int) // stable address for commands / Use state
@@ -438,7 +438,7 @@ variable-length cards).
 |-----|---------|------|
 | `VirtualListView` / `VirtualListViewExt` | `widgets` | Virtualized column |
 | `VirtualListAttrs.AvgSampleTop` / `Bottom` | `widgets` | Total-height average sample (§5) |
-| `Measure` | `shirei` | Fresh-UI layout-only size |
-| `ShapeTextMax` | `shirei` | Offline text metrics (optional height helper, not required for auto-height) |
-| `ActiveUI` / `GetHost` | `shirei` | Live UI / Host I/O |
-| `SharedResources` | `shirei` | Process caches (shared with Measure) |
+| `Measure` | `mullion` | Fresh-UI layout-only size |
+| `ShapeTextMax` | `mullion` | Offline text metrics (optional height helper, not required for auto-height) |
+| `ActiveUI` / `GetHost` | `mullion` | Live UI / Host I/O |
+| `SharedResources` | `mullion` | Process caches (shared with Measure) |

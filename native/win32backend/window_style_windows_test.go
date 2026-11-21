@@ -34,7 +34,7 @@ func TestWindowStyles(t *testing.T) {
 				currentWindow.winTransparent, currentWindow.winUndecorated, winQuiet = transparent, undecorated, true
 				native.GetHost().TransparentBackground = transparent
 				currentWindow.frameFn = func() {}
-				SetupWindow("Shirei window style check", 160, 120)
+				SetupWindow("Mullion window style check", 160, 120)
 				currentWindow.hwnd = 0
 				currentWindow.haveFrame, currentWindow.havePresented, currentWindow.timerOn = false, false, false
 				if err := createWindow(); err != nil {
@@ -125,7 +125,7 @@ func TestWindowStyles(t *testing.T) {
 					}
 				}
 				procDestroyWindow.Call(uintptr(currentWindow.hwnd))
-				class, _ := syscall.UTF16PtrFromString("shireiWindowClass")
+				class, _ := syscall.UTF16PtrFromString("mullionWindowClass")
 				user32.NewProc("UnregisterClassW").Call(uintptr(unsafe.Pointer(class)), uintptr(hinstance))
 				currentWindow.hwnd = 0
 			}

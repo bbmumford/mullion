@@ -92,7 +92,7 @@ func tryIBusDial(addr string) bool {
 func tryIBusConn(conn *dbus.Conn, via string) bool {
 	var path dbus.ObjectPath
 	obj := conn.Object(ibusDest, ibusPath)
-	if err := obj.Call(ibusIface+".CreateInputContext", 0, "shirei").Store(&path); err != nil {
+	if err := obj.Call(ibusIface+".CreateInputContext", 0, "mullion").Store(&path); err != nil {
 		x11IMELog("CreateInputContext via %s: %v", via, err)
 		return false
 	}
@@ -375,7 +375,7 @@ func noteIMEInput() {
 // Known issue: on GNOME Classic / Xorg the IBus suggestions popup is often
 // offset from the caret — GNOME Text Editor shows the same misplacement on
 // the same session, so we treat it as an IBus/X11 desktop quirk, not a
-// shirei layout bug. Inline preedit (Composition) placement is correct.
+// mullion layout bug. Inline preedit (Composition) placement is correct.
 func updateIMECursor() {
 	if !imeIsReady() {
 		return
@@ -554,7 +554,7 @@ func truncateIME(s string) string {
 }
 
 func x11IMELog(format string, args ...interface{}) {
-	if !x11Debug && os.Getenv("SHIREI_X11_IME_LOG") == "" {
+	if !x11Debug && os.Getenv("MULLION_X11_IME_LOG") == "" {
 		return
 	}
 	fmt.Fprintf(os.Stderr, "[x11-ime] "+format+"\n", args...)

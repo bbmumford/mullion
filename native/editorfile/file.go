@@ -161,7 +161,7 @@ func documentFingerprint(document *widgets.TextDocument) (sum [32]byte, err erro
 }
 
 func writeAtomic(path string, data io.WriterTo, mode os.FileMode, beforeRename func() error, exclusive bool) error {
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".shirei-edit-*")
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".mullion-edit-*")
 	if err != nil {
 		return err
 	}

@@ -155,7 +155,7 @@ func (ctx *Context) Run() error {
 // ErrContextRunTimeout when no event arrives within d. The deadline only
 // guards the wait for an event's header; once a header is read, the payload
 // read is not subject to it (readEvent clears the deadline), so a timeout
-// can never split an event and desync the stream. [shirei addition]
+// can never split an event and desync the stream. [mullion addition]
 func (ctx *Context) RunTimeout(d time.Duration) error {
 	if ctx == nil {
 		return ErrContextNil

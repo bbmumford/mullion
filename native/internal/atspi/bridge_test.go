@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godbus/dbus/v5"
 	"github.com/bbmumford/mullion/native"
+	"github.com/godbus/dbus/v5"
 )
 
 // This test uses a real private bus and a separate client connection. The input

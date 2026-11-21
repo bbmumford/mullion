@@ -14,9 +14,9 @@ import (
 // EmitFrameMetrics, which delivers the snapshot to the OnFrameMetrics
 // callback if one is registered.
 //
-// SHIREI_PERF=1 registers DefaultFrameMetricsPrinter. Optional
-// SHIREI_PERF_LOG=<path> also appends that line to a file (and enables perf
-// if SHIREI_PERF is unset).
+// MULLION_PERF=1 registers DefaultFrameMetricsPrinter. Optional
+// MULLION_PERF_LOG=<path> also appends that line to a file (and enables perf
+// if MULLION_PERF is unset).
 
 var (
 	perfOn  bool
@@ -24,8 +24,8 @@ var (
 )
 
 func init() {
-	logPath := os.Getenv("SHIREI_PERF_LOG")
-	perfOn = os.Getenv("SHIREI_PERF") != "" || logPath != ""
+	logPath := os.Getenv("MULLION_PERF_LOG")
+	perfOn = os.Getenv("MULLION_PERF") != "" || logPath != ""
 	if !perfOn {
 		return
 	}
@@ -34,12 +34,12 @@ func init() {
 		return
 	}
 	if err := os.MkdirAll(filepath.Dir(logPath), 0o755); err != nil {
-		fmt.Fprintf(os.Stderr, "[perf] mkdir for SHIREI_PERF_LOG %q: %v\n", logPath, err)
+		fmt.Fprintf(os.Stderr, "[perf] mkdir for MULLION_PERF_LOG %q: %v\n", logPath, err)
 		return
 	}
 	f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[perf] SHIREI_PERF_LOG open %q: %v\n", logPath, err)
+		fmt.Fprintf(os.Stderr, "[perf] MULLION_PERF_LOG open %q: %v\n", logPath, err)
 		return
 	}
 	abs, _ := filepath.Abs(logPath)
@@ -83,7 +83,7 @@ func EmitFrameMetrics() {
 	}
 }
 
-// DefaultFrameMetricsPrinter is the stock SHIREI_PERF policy: accumulate for
+// DefaultFrameMetricsPrinter is the stock MULLION_PERF policy: accumulate for
 // a second, print one [perf] line, reset. Apps can register it themselves
 // via OnFrameMetrics(DefaultFrameMetricsPrinter).
 func DefaultFrameMetricsPrinter(t FrameTimings) {

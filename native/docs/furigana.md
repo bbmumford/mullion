@@ -1,6 +1,6 @@
 # Furigana
 
-Shirei displays Unicode interlinear annotations as furigana above the base text.
+Mullion displays Unicode interlinear annotations as furigana above the base text.
 The same marked string works in labels, `Text`, text inputs, and text areas.
 No style flag is required.
 

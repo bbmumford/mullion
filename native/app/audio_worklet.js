@@ -6,7 +6,7 @@
 // then Float32[capacity] samples at byte offset 12.
 // Main thread produces; this processor consumes on the audio thread.
 
-class ShireiAudioProcessor extends AudioWorkletProcessor {
+class MullionAudioProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
     const opts = options.processorOptions || {};
@@ -42,4 +42,4 @@ class ShireiAudioProcessor extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor("shirei-audio", ShireiAudioProcessor);
+registerProcessor("mullion-audio", MullionAudioProcessor);

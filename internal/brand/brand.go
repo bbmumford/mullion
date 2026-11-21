@@ -1,7 +1,7 @@
 // Package brand holds the names the build tools put into the things they
 // produce, in one place rather than spelled out wherever they are used.
 //
-// The tools came from go-shirei with its name written inline in some two
+// The tools came from go-mullion with its name written inline in some two
 // hundred places: log prefixes, temporary directory patterns, generated file
 // names, environment variables, reverse-DNS identifiers, a logcat tag. Renaming
 // a project by substituting a string across two hundred sites is how a tool
@@ -33,18 +33,13 @@ const (
 	// ReverseDNS is the default root for an application identifier, used when
 	// a project has not set one of its own.
 	ReverseDNS = "dev.mullion"
-
-	// LegacyEnvPrefix is what these tools read before they moved here. Env
-	// still accepts it, so a script written against go-shirei keeps working;
-	// nothing writes it.
-	LegacyEnvPrefix = "SHIREI"
 )
 
 // Android glue, which is the one name that cannot be changed from here alone.
 //
 // The Java class a mullion Android application runs under declares native
 // methods, and JNI binds those to C symbols by a name encoding the Java
-// package and class: Java_dev_shirei_host_ShireiActivity_nativeCommitText and
+// package and class: Java_dev_mullion_host_MullionActivity_nativeCommitText and
 // six siblings, written out in native/androidbackend/jni.c. The Java side, the
 // manifest, the adb launch component and those C symbols must all say the same
 // thing or the application starts and then fails the first time someone types
@@ -55,8 +50,8 @@ const (
 // constants exist so that edit is two files rather than a hunt, and so the
 // coupling is written down where someone renaming things will meet it.
 const (
-	AndroidGluePackage = "dev.shirei.host"
-	AndroidGlueClass   = "ShireiActivity"
+	AndroidGluePackage = "dev.mullion.host"
+	AndroidGlueClass   = "MullionActivity"
 
 	// AndroidLogTag is the tag the Android runtime writes logcat lines under,
 	// set in native/androidbackend/jni.c. Pinned for the same reason as the
@@ -64,7 +59,7 @@ const (
 	// tag that does not match what the runtime writes shows an empty log,
 	// which reads as "the application produced nothing" rather than "you
 	// filtered on the wrong word".
-	AndroidLogTag = "shirei"
+	AndroidLogTag = "mullion"
 )
 
 // AndroidGlueFQCN is the fully qualified class name, for a manifest or an adb
@@ -86,24 +81,10 @@ const AndroidLibName = Name + "app"
 // dependencies.
 const CapabilitiesFile = Name + ".capabilities"
 
-// LegacyCapabilitiesFile is the go-shirei spelling, still read so a package
-// written against it keeps declaring its permissions rather than silently
-// losing them -- a missing camera permission shows up as a black preview on a
-// device, far from the cause.
-const LegacyCapabilitiesFile = "shirei.capabilities"
-
 // Env reads an environment variable by its unprefixed name: Env("IOS_TEAM")
 // reads MULLION_IOS_TEAM.
-//
-// It falls back to the go-shirei spelling when the current one is unset, so a
-// script that predates this module keeps working rather than silently losing
-// its configuration -- which for a signing team or a keystore password means a
-// build that fails somewhere far from the cause.
 func Env(name string) string {
-	if v := os.Getenv(EnvPrefix + "_" + name); v != "" {
-		return v
-	}
-	return os.Getenv(LegacyEnvPrefix + "_" + name)
+	return os.Getenv(EnvPrefix + "_" + name)
 }
 
 // EnvName is the variable a message should name when telling someone to set

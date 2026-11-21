@@ -1,6 +1,6 @@
 # Access attributes and drive tests
 
-This tutorial is about testing a Shirei application the way a person
+This tutorial is about testing a Mullion application the way a person
 uses it: look at the window, find a button, click it, and check that
 the screen changed.
 
@@ -170,7 +170,7 @@ alignment. Automatic assign would fill the tree with noise. The widget
 — or your own chrome — chooses which box is the named one.
 
 If you call `NextAccessName` and nothing calls `AssignAccess` before
-the frame ends, Shirei prints a warning to stderr and drops the leftover.
+the frame ends, Mullion prints a warning to stderr and drops the leftover.
 
 ## 5. A Label is not a control — wrap it
 
@@ -263,7 +263,7 @@ that same container — the same shape the default widgets use.
 
 ## 8. The named boxes become a tree
 
-After layout, Shirei walks every container and keeps only the ones that
+After layout, Mullion walks every container and keeps only the ones that
 assigned. That list, with parent links, is the **access tree** for this
 frame.
 
@@ -368,7 +368,7 @@ focused: true
 | `z` | Stacking, if non-zero |
 | `scroll` | Scrollport offset and max, if this node scrolls |
 
-You do not stamp `focused` or `hovered`. Shirei fills those from the
+You do not stamp `focused` or `hovered`. Mullion fills those from the
 same stacks the UI already uses.
 
 Caret position (`caret` / `caret_h`) is printed only for a focused
@@ -384,14 +384,14 @@ The access tree lives inside the GUI process, for that frame. A test
 that wants to act like a user needs the *window*: mapping, focus, keys,
 the OS event loop.
 
-`shirei/drive` is a small client for that. The test launches the app as
+`mullion/drive` is a small client for that. The test launches the app as
 its own process. The two talk over loopback UDP: the test sends pointer
 and key input, then asks for the access tree.
 
 ```text
   go test                          the app
   ─────────                        ─────────
-  drive.Start(t, ".")   SHIREI_DRIVE_PORT=N -->  AcceptInputCommands(N)
+  drive.Start(t, ".")   MULLION_DRIVE_PORT=N -->  AcceptInputCommands(N)
   drive.Click(port, "save")        UDP  show / move / down / up
   drive.Query(port, "saved")       UDP  query saved  <-- access tree
   t.Cleanup                        UDP  quit
@@ -403,7 +403,7 @@ returned. Two tests can drive two programs at once by keeping both
 ports.
 
 `Start` builds the **main package** (the app, not the test binary),
-launches it with `SHIREI_DRIVE_PORT` set, waits until a `ping` comes back, waits
+launches it with `MULLION_DRIVE_PORT` set, waits until a `ping` comes back, waits
 500ms for the window, and registers cleanup that sends `quit`. Extra
 arguments after the package path are forwarded to the app:
 
@@ -416,8 +416,8 @@ Put the test in the same directory as `main.go`, with `package main`.
 ## 12. The app listens on a port
 
 The running app has to open a listener on that port. `app.SetupDrive`
-reads `SHIREI_DRIVE_PORT` (set by `Start`, or by a human:
-`SHIREI_DRIVE_PORT=4372 go run .`) and calls `AcceptInputCommands`.
+reads `MULLION_DRIVE_PORT` (set by `Start`, or by a human:
+`MULLION_DRIVE_PORT=4372 go run .`) and calls `AcceptInputCommands`.
 No port is a no-op.
 
 ```go
@@ -430,7 +430,7 @@ app.Run(RootView)
 does not steal the editor. To watch the window while the test runs:
 
 ```bash
-SHIREI_DRIVE_FOREGROUND=1 SHIREI_CMD_LOG=1 go test -count=1 -v -run TestDriveClickSave .
+MULLION_DRIVE_FOREGROUND=1 MULLION_CMD_LOG=1 go test -count=1 -v -run TestDriveClickSave .
 ```
 
 That env is inherited by the child; the app skips `SetupQuiet`.
@@ -446,7 +446,7 @@ package main
 import (
 	"testing"
 
-	"go.hasen.dev/shirei/drive"
+	"go.hasen.dev/mullion/drive"
 )
 
 func TestDriveClickSave(t *testing.T) {
@@ -489,7 +489,7 @@ saw input already requests one follow-up produce. Held keys stay in
 ## 15. The rest of the driver
 
 The UDP lines themselves are listed in [drive.md](drive.md). The
-functions below are what `shirei/drive` sends. All of them take `port`
+functions below are what `mullion/drive` sends. All of them take `port`
 first except `Tick` / `Frames`.
 
 | Function | Sends | Effect |
@@ -508,9 +508,9 @@ first except `Tick` / `Frames`.
 | `Show(port, q)` | `show q` | first match (name path or `#N`) |
 | `Quit(port)` | `quit` | `Start` cleanup already calls this |
 
-`go test -v` with `SHIREI_CMD_LOG=1` prints each UDP line with a
+`go test -v` with `MULLION_CMD_LOG=1` prints each UDP line with a
 timestamp (`>` command, `<` reply), except `ping`. Empty inject replies
-are omitted. Tester uses `SHIREI_DRIVE_TRACE` instead and does not set
+are omitted. Tester uses `MULLION_DRIVE_TRACE` instead and does not set
 this.
 
 ## 16. Waiting on the OS
@@ -549,7 +549,7 @@ Use `value` to pick one, then click that node's rect — look it up
 From the app directory:
 
 ```bash
-SHIREI_CMD_LOG=1 go test -count=1 -v -run TestDriveClickSave .
+MULLION_CMD_LOG=1 go test -count=1 -v -run TestDriveClickSave .
 ```
 
 `-count=1` disables Go's successful-test cache. Drive tests launch a
@@ -558,9 +558,9 @@ GUI; a cached `ok` does not open a window. Same-package tests still
 run. Re-running an unchanged test does not — that is why the flag is
 on the command line.
 
-`SHIREI_CMD_LOG=1` plus `-v` prints the UDP trace on stderr.
+`MULLION_CMD_LOG=1` plus `-v` prints the UDP trace on stderr.
 
-`SHIREI_DRIVE_FOREGROUND=1` brings the window forward.
+`MULLION_DRIVE_FOREGROUND=1` brings the window forward.
 
 `Timeout` (UDP read deadline) is 2s; `Pause` after each pointer/key
 inject is 150ms. Both are package constants.
@@ -570,8 +570,8 @@ last completed frame as a PNG for a visual check. Use an absolute path:
 the file is created by the app process. It is not a pixel-golden
 assertion — `Snapshot` / `RenderToPNG` cover that.
 
-`drive.Shot(port, "after pin")` is the beat for `shirei_tester`: a no-op
-unless `SHIREI_DRIVE_TRACE` is a directory (tester sets that). Then it
+`drive.Shot(port, "after pin")` is the beat for `mullion-tester`: a no-op
+unless `MULLION_DRIVE_TRACE` is a directory (tester sets that). Then it
 writes a numbered PNG and a JSONL line. `drive.Comment("Open the filter text field")`
 is a heading in that log, also a no-op without the env. Every UDP `Cmd`
 except `ping` is logged too. Tester shows comments in bold, then the
@@ -583,8 +583,8 @@ commands, then the shots.
 
 1. Stamp access: `NextAccessName` on every control the test will
    `Click` / `Query`; `AssignAccess` if the widget does not.
-2. `app.SetupDrive()` after `SetupWindow` (listens on `SHIREI_DRIVE_PORT`,
-   `SetupQuiet` unless `SHIREI_DRIVE_FOREGROUND`).
+2. `app.SetupDrive()` after `SetupWindow` (listens on `MULLION_DRIVE_PORT`,
+   `SetupQuiet` unless `MULLION_DRIVE_FOREGROUND`).
 3. `drive.Start(t, ".")` from a `package main` test in that directory.
 4. After a local click: `WaitCount` (100ms). Fail if it does not match
    within 3s.

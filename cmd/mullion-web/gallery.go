@@ -11,7 +11,7 @@ import (
 // Dir is the package slug under demos/ and the output folder name.
 // Name is the page title; Desc is for the static-site gallery cards only.
 // Dir is also the GitHub path under demos/ for the Source link label.
-// Keep in sync with static-sites/.../shirei/{demos,custom-widgets}/index.scgo.
+// Keep in sync with static-sites/.../mullion/{demos,custom-widgets}/index.scgo.
 type webDemo struct {
 	Dir  string
 	Name string
@@ -22,11 +22,11 @@ type webDemo struct {
 const publicDemoSource = "the examples directory of this module"
 
 // Gallery sets built by -gallery=<name>. Names match the static-site directory
-// under static-sites/judi.systems/shirei/ (custom-widgets, demos).
+// under static-sites/judi.systems/mullion/ (custom-widgets, demos).
 //
 // Only demos linked from those gallery pages belong here — not every package
 // under demos/ (font-scan, IME-heavy text-view, mobile-only, … stay out).
-// demos/small is built separately into /shirei/try by rebuild-web-demos.sh.
+// demos/small is built separately into /mullion/try by rebuild-web-demos.sh.
 var gallerySets = map[string][]webDemo{
 	// Custom chrome on Process* helpers — skins never enter the widgets package.
 	"custom-widgets": {

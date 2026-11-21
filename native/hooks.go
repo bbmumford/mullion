@@ -29,7 +29,7 @@ type HookEntryKey struct {
 // Use returns a pointer to per-container state of type T, keyed by itemKey and
 // retained across frames on the current container's identity node. It is
 // zero-valued on first use (and re-initialized after any frame in which it went
-// untouched). This is Shirei's React-like local component state; use
+// untouched). This is Mullion's React-like local component state; use
 // UseWithInit to supply a custom initializer.
 func Use[T any](itemKey any) *T {
 	return UseWithInit[T](itemKey, nil)

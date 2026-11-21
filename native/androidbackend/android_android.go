@@ -2,8 +2,8 @@
 
 // Package androidbackend is a direct-Android (NativeActivity) backend for
 // native. The vendored NDK native_app_glue owns activity lifecycle plumbing.
-// GLES (shirei/gpurender) encodes into an EGL window surface on the
-// ANativeWindow unless SHIREI_GPU=0 or EGL init fails; SoftRenderer +
+// GLES (mullion/gpurender) encodes into an EGL window surface on the
+// ANativeWindow unless MULLION_GPU=0 or EGL init fails; SoftRenderer +
 // ANativeWindow_lock is the fallback (RGBA via Host.PixelOrder).
 //
 // Input: multi-touch fills InputState.Touches (+ FrameInput began/ended).
@@ -17,7 +17,7 @@
 // app.Run → Run, which never returns: it polls the looper (lifecycle + touch
 // callbacks fire from inside the poll) and produces/presents frames.
 //
-// Soft keyboard / IME: ShireiActivity (a small Java NativeActivity subclass
+// Soft keyboard / IME: MullionActivity (a small Java NativeActivity subclass
 // that mobilerun compiles into the APK) forwards InputConnection traffic —
 // committed text, deletes, composition — through jni.c into the pending-input
 // queue here; WantsKeyboard edges call back up to show/hide the IME. Basic
@@ -46,9 +46,9 @@ import (
 	"unicode/utf8"
 	"unsafe"
 
-	"go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/gpurender"
+	"go.hasen.dev/generic"
 )
 
 // glyphCacheBudget caps total cached glyph-bitmap bytes (enables the shared
@@ -143,7 +143,7 @@ var (
 	clickReleaseAt time.Time
 )
 
-// ---- soft keyboard / IME (fed by ShireiActivity via jni.c) ----
+// ---- soft keyboard / IME (fed by MullionActivity via jni.c) ----
 //
 // The Java natives fire on the UI thread while the frame loop runs on the
 // glue's app thread, so this pending state is mutex-guarded (unlike iOS,
@@ -193,7 +193,7 @@ func SetupWindow(title string, width, height int) {
 }
 
 // Run enters the frame loop and never returns. Must be called on the glue's
-// app thread (android_main → shirei_android_main → main → app.Run → here).
+// app thread (android_main → mullion_android_main → main → app.Run → here).
 // mobileComfortScale fattens default control chrome for finger targets
 // (keep in sync with iosbackend).
 const mobileComfortScale float32 = 1.25
@@ -212,7 +212,7 @@ func Run(fn native.FrameFn) {
 	// in main before Run) so we do not paint portrait then flip.
 	if want := native.GetHost().PreferredOrientation; want != appliedOrientation {
 		appliedOrientation = want
-		C.shirei_android_set_orientation(C.int(want))
+		C.mullion_android_set_orientation(C.int(want))
 	}
 
 	for {
@@ -220,14 +220,14 @@ func Run(fn native.FrameFn) {
 		if wantFrame() {
 			timeout = 0
 		}
-		flags := C.shirei_android_poll(timeout)
-		if flags&C.SHIREI_POLL_DESTROY != 0 {
+		flags := C.mullion_android_poll(timeout)
+		if flags&C.MULLION_POLL_DESTROY != 0 {
 			// Back button / activity teardown. NativeActivity may recreate the
 			// activity in the same process, which would re-enter main() — exit
 			// instead so every launch starts clean.
 			generic.ExitWithCleanup(0)
 		}
-		if flags&C.SHIREI_POLL_HAS_WINDOW == 0 {
+		if flags&C.MULLION_POLL_HAS_WINDOW == 0 {
 			havePresented = false
 			continue
 		}
@@ -237,7 +237,7 @@ func Run(fn native.FrameFn) {
 	}
 }
 
-// wantFrame mirrors iosbackend's shireiFrameRequested: any pending synth
+// wantFrame mirrors iosbackend's mullionFrameRequested: any pending synth
 // activity keeps frames coming (click hold, fling coast, park).
 func wantFrame() bool {
 	return native.FrameRequested() || pendingPark || clickHeld ||
@@ -295,12 +295,12 @@ func flushPendingIME() {
 var contentOriginX, contentOriginY int
 
 func produceAndPresent() {
-	scale := float32(C.shirei_android_density()) / 160
+	scale := float32(C.mullion_android_density()) / 160
 	if scale <= 0 {
 		scale = 2 // sane phone default when density is unreported
 	}
-	devW := int(C.shirei_android_window_width())
-	devH := int(C.shirei_android_window_height())
+	devW := int(C.mullion_android_window_width())
+	devH := int(C.mullion_android_window_height())
 	if devW <= 0 || devH <= 0 {
 		return
 	}
@@ -310,7 +310,7 @@ func produceAndPresent() {
 	// soft keyboard only shrink this rect. WindowSize follows it; rendering
 	// offsets into the surface accordingly.
 	var cl, ct, cr, cb C.int
-	C.shirei_android_content_rect(&cl, &ct, &cr, &cb)
+	C.mullion_android_content_rect(&cl, &ct, &cr, &cb)
 	conL, conT, conR, conB := int(cl), int(ct), int(cr), int(cb)
 	if conL < 0 {
 		conL = 0
@@ -335,7 +335,7 @@ func produceAndPresent() {
 	// Physical keyboard (config / InputDevice); soft IME does not count.
 	// May flip when a Bluetooth keyboard attaches or detaches.
 	prevHW := native.GetHost().HardwareKeyboard
-	native.GetHost().HardwareKeyboard = C.shirei_android_hardware_keyboard() != 0
+	native.GetHost().HardwareKeyboard = C.mullion_android_hardware_keyboard() != 0
 	if native.GetHost().HardwareKeyboard != prevHW {
 		native.RequestNextFrame()
 	}
@@ -360,16 +360,16 @@ func produceAndPresent() {
 	if want := native.GetHost().WantsKeyboard; want != keyboardShown {
 		keyboardShown = want
 		if want {
-			C.shirei_android_set_keyboard(1)
+			C.mullion_android_set_keyboard(1)
 		} else {
-			C.shirei_android_set_keyboard(0)
+			C.mullion_android_set_keyboard(0)
 		}
 	}
 
 	// Preferred orientation: sticky Host field → Activity.setRequestedOrientation.
 	if want := native.GetHost().PreferredOrientation; want != appliedOrientation {
 		appliedOrientation = want
-		C.shirei_android_set_orientation(C.int(want))
+		C.mullion_android_set_orientation(C.int(want))
 	}
 
 	if out.Copy != "" {
@@ -403,7 +403,7 @@ func produceAndPresent() {
 
 	tryGPU(devW, devH)
 	if gpuOK {
-		win := C.shirei_android_native_window()
+		win := C.mullion_android_native_window()
 		if win == nil {
 			return
 		}
@@ -425,10 +425,10 @@ func produceAndPresent() {
 		return
 	}
 
-	C.shirei_android_use_cpu_buffers()
+	C.mullion_android_use_cpu_buffers()
 	var bits unsafe.Pointer
 	var w, h, stridePx C.int
-	if C.shirei_android_lock_window(&bits, &w, &h, &stridePx) == 0 {
+	if C.mullion_android_lock_window(&bits, &w, &h, &stridePx) == 0 {
 		return
 	}
 	strideBytes := int(stridePx) * 4
@@ -453,7 +453,7 @@ func produceAndPresent() {
 	sub := dst[rt*strideBytes+rl*4:]
 	// SoftRenderer writes RGBA (Host.PixelOrder) straight into the locked window.
 	softRenderer.RenderInto(sub, strideBytes, rw, rh, scale, out.Surfaces, out.GlyphRuns)
-	C.shirei_android_unlock_post()
+	C.mullion_android_unlock_post()
 
 	lastPresentedHash = out.SurfacesHash
 	presentL, presentT, presentW, presentH, havePresented = conL, conT, conW, conH, true
@@ -468,23 +468,23 @@ func tryGPU(devW, devH int) {
 		return
 	}
 	gpuTried = true
-	if generic.EnvFalsy("SHIREI_GPU") {
-		C.shirei_android_use_cpu_buffers()
+	if generic.EnvFalsy("MULLION_GPU") {
+		C.mullion_android_use_cpu_buffers()
 		return
 	}
-	win := C.shirei_android_native_window()
+	win := C.mullion_android_native_window()
 	if win == nil {
 		gpuTried = false
 		return
 	}
 	if err := gpurender.Init(); err != nil {
 		fmt.Fprintf(os.Stderr, "gpurender: fallback to software: %v\n", err)
-		C.shirei_android_use_cpu_buffers()
+		C.mullion_android_use_cpu_buffers()
 		return
 	}
 	if err := gpurender.BindWindow(unsafe.Pointer(win), devW, devH); err != nil {
 		fmt.Fprintf(os.Stderr, "gpurender: fallback to software: %v\n", err)
-		C.shirei_android_use_cpu_buffers()
+		C.mullion_android_use_cpu_buffers()
 		return
 	}
 	gpuOK = true
@@ -518,8 +518,8 @@ func clearBandsWhite(p []byte, stride, w, h, cl, ct, cw, ch int) {
 	}
 }
 
-//export shireiAndroidCmd
-func shireiAndroidCmd(cmd C.int32_t) {
+//export mullionAndroidCmd
+func mullionAndroidCmd(cmd C.int32_t) {
 	switch cmd {
 	case C.APP_CMD_INIT_WINDOW:
 		havePresented = false
@@ -543,12 +543,12 @@ func shireiAndroidCmd(cmd C.int32_t) {
 	}
 }
 
-//export shireiAndroidTouch
-func shireiAndroidTouch(x, y C.double, phase C.int, osKey C.uintptr_t) {
+//export mullionAndroidTouch
+func mullionAndroidTouch(x, y C.double, phase C.int, osKey C.uintptr_t) {
 	// Coordinates arrive in device pixels relative to the surface; the scene
 	// lives in the content rect, so shift by its origin (last frame's — a
 	// one-frame skew during rect changes, same class of lag as iOS layout).
-	scale := float32(C.shirei_android_density()) / 160
+	scale := float32(C.mullion_android_density()) / 160
 	if scale <= 0 {
 		scale = 2
 	}
@@ -619,7 +619,7 @@ func shireiAndroidTouch(x, y C.double, phase C.int, osKey C.uintptr_t) {
 // ---- keyboard accessory bar -------------------------------------------
 //
 // iOS gets a native inputAccessoryView above the keyboard; Android has no
-// such concept for a NativeActivity, so the bar is drawn by shirei itself:
+// such concept for a NativeActivity, so the bar is drawn by mullion itself:
 // while the soft keyboard is up, the app's frame is wrapped in a column of
 // [app content (grow)][46pt bar], and the bar's buttons feed the same
 // pending-key path as iOS accessory actions (arrows plain; Select All /
@@ -740,12 +740,12 @@ func queueAccessoryKey(key native.KeyCode, mod native.Modifiers) {
 
 func setClipboard(s string) {
 	cs := C.CString(s)
-	C.shirei_android_set_clipboard(cs)
+	C.mullion_android_set_clipboard(cs)
 	C.free(unsafe.Pointer(cs))
 }
 
 func getClipboard() string {
-	cs := C.shirei_android_get_clipboard()
+	cs := C.mullion_android_get_clipboard()
 	if cs == nil {
 		return ""
 	}
@@ -755,21 +755,21 @@ func getClipboard() string {
 }
 
 // openURL opens url in the system browser (or the scheme's handler) via
-// Intent.ACTION_VIEW on ShireiActivity. Called from the frame loop when
+// Intent.ACTION_VIEW on MullionActivity. Called from the frame loop when
 // FrameOutputData.OpenURL is set. Errors ignored.
 func openURL(url string) {
 	if url == "" {
 		return
 	}
 	cs := C.CString(url)
-	C.shirei_android_open_url(cs)
+	C.mullion_android_open_url(cs)
 	C.free(unsafe.Pointer(cs))
 }
 
 // ---- IME exports (called from jni.c on the UI thread) ----
 
-//export shireiAndroidCommitText
-func shireiAndroidCommitText(ctext *C.char) {
+//export mullionAndroidCommitText
+func mullionAndroidCommitText(ctext *C.char) {
 	s := C.GoString(ctext)
 	if !textInputOK(s) {
 		return
@@ -784,8 +784,8 @@ func shireiAndroidCommitText(ctext *C.char) {
 	native.RequestNextFrame()
 }
 
-//export shireiAndroidDeleteBackward
-func shireiAndroidDeleteBackward(count C.int) {
+//export mullionAndroidDeleteBackward
+func mullionAndroidDeleteBackward(count C.int) {
 	if count <= 0 {
 		return
 	}
@@ -795,8 +795,8 @@ func shireiAndroidDeleteBackward(count C.int) {
 	native.RequestNextFrame()
 }
 
-//export shireiAndroidSetComposition
-func shireiAndroidSetComposition(ctext *C.char) {
+//export mullionAndroidSetComposition
+func mullionAndroidSetComposition(ctext *C.char) {
 	s := C.GoString(ctext)
 	pendingMu.Lock()
 	pendingComposition = s
@@ -805,8 +805,8 @@ func shireiAndroidSetComposition(ctext *C.char) {
 	native.RequestNextFrame()
 }
 
-//export shireiAndroidFinishComposition
-func shireiAndroidFinishComposition() {
+//export mullionAndroidFinishComposition
+func mullionAndroidFinishComposition() {
 	pendingMu.Lock()
 	if pendingComposition != "" {
 		pendingText += pendingComposition
@@ -817,8 +817,8 @@ func shireiAndroidFinishComposition() {
 	native.RequestNextFrame()
 }
 
-//export shireiAndroidEditorAction
-func shireiAndroidEditorAction(action C.int) {
+//export mullionAndroidEditorAction
+func mullionAndroidEditorAction(action C.int) {
 	const imeActionDone = 6 // EditorInfo.IME_ACTION_DONE
 	pendingMu.Lock()
 	if int(action) == imeActionDone {
@@ -831,12 +831,12 @@ func shireiAndroidEditorAction(action C.int) {
 	native.RequestNextFrame()
 }
 
-// shireiAndroidKeyDown handles native-queue key events (hardware keyboards,
+// mullionAndroidKeyDown handles native-queue key events (hardware keyboards,
 // `adb shell input text/keyevent`). Runs on the app thread. Returns 1 when
 // consumed, 0 to give the key back to the system.
 //
-//export shireiAndroidKeyDown
-func shireiAndroidKeyDown(keyCode, unicode C.int) C.int {
+//export mullionAndroidKeyDown
+func mullionAndroidKeyDown(keyCode, unicode C.int) C.int {
 	handled := true
 	pendingMu.Lock()
 	switch int(keyCode) {
@@ -1184,7 +1184,7 @@ func synthFromPrimary(pt native.Vec2, phase int) {
 
 // ---------------------------------------------------------------------------
 // stdout/stderr → logcat, so Go panics and prints are visible via
-// `adb logcat -s shirei`. Runs at package init so even early failures land.
+// `adb logcat -s mullion`. Runs at package init so even early failures land.
 // ---------------------------------------------------------------------------
 
 func init() {
@@ -1206,7 +1206,7 @@ func redirectLogsToLogcat() {
 		sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 		for sc.Scan() {
 			cs := C.CString(sc.Text())
-			C.shirei_android_log(cs)
+			C.mullion_android_log(cs)
 			C.free(unsafe.Pointer(cs))
 		}
 	}()

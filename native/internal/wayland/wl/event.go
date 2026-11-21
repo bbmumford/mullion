@@ -52,7 +52,7 @@ func (ctx *Context) readEvent() (*Event, error) {
 	n, oobn, _, _, err := ctx.conn.ReadMsgUnix(buf[:], control)
 	if err != nil {
 		// propagate deadline expiry unwrapped so run() can classify it as
-		// ErrContextRunTimeout (RunTimeout support) [shirei addition]
+		// ErrContextRunTimeout (RunTimeout support) [mullion addition]
 		if neterr, ok := err.(net.Error); ok && neterr.Timeout() {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (ctx *Context) readEvent() (*Event, error) {
 
 	// A header was read: the payload follows immediately, so it must not be
 	// subject to a RunTimeout deadline — a mid-event timeout would desync
-	// the stream. [shirei addition]
+	// the stream. [mullion addition]
 	ctx.conn.SetReadDeadline(time.Time{})
 
 	ev.Pid = ProxyId(binary.LittleEndian.Uint32(buf[0:4]))

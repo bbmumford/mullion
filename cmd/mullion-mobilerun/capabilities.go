@@ -15,10 +15,6 @@ import (
 // packaging needs. One token per line (known tokens from capabilityCatalog).
 const capabilitiesFileName = brand.CapabilitiesFile
 
-// legacyCapabilitiesFileName is read as well, so a package written against
-// go-shirei keeps declaring its permissions.
-const legacyCapabilitiesFileName = brand.LegacyCapabilitiesFile
-
 // iosUsage is one Info.plist privacy purpose string.
 type iosUsage struct {
 	Key string
@@ -231,7 +227,7 @@ type ResolvedCapabilities struct {
 }
 
 // collectCapabilities walks modules in the build dependency graph of pkgDir's
-// package main (go list -deps) and unions shirei.capabilities files.
+// package main (go list -deps) and unions mullion.capabilities files.
 func collectCapabilities(pkgDir string, logf logFn) (ResolvedCapabilities, error) {
 	var zero ResolvedCapabilities
 	dirs, err := moduleDirsForPackage(pkgDir)
@@ -434,13 +430,7 @@ func androidPermissionXML(perms []string) string {
 	return b.String()
 }
 
-// capabilitiesPath is the capability file in dir, preferring this module's
-// name and falling back to the go-shirei one so a package written against it
-// still declares its permissions.
+// capabilitiesPath is the capability file in dir.
 func capabilitiesPath(dir string) string {
-	p := filepath.Join(dir, capabilitiesFileName)
-	if _, err := os.Stat(p); err == nil {
-		return p
-	}
-	return filepath.Join(dir, legacyCapabilitiesFileName)
+	return filepath.Join(dir, capabilitiesFileName)
 }

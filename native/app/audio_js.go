@@ -14,7 +14,7 @@ import (
 // independent of soft-render on the main thread). Falls back to
 // ScriptProcessor when the page is not cross-origin isolated.
 //
-// Isolation requires COOP+COEP on the document (shirei_web writes .headers;
+// Isolation requires COOP+COEP on the document (mullion-web writes .headers;
 // -run/-serve sets the same headers). Autoplay: context stays suspended until
 // a user gesture — we resume on pointerdown/keydown.
 //
@@ -53,9 +53,9 @@ var (
 	webAudioFillBuf []float32
 
 	// Adaptive lead (samples buffered ahead of the playhead).
-	webAudioTarget   int
-	webAudioLastUnd  int // last seen underrun counter
-	webAudioStable   int // pumps since last underrun growth
+	webAudioTarget  int
+	webAudioLastUnd int // last seen underrun counter
+	webAudioStable  int // pumps since last underrun growth
 
 	// ScriptProcessor fallback
 	webAudioOnProc js.Func
@@ -173,7 +173,7 @@ func startWorkletAudio(ctx js.Value) error {
 
 	done := make(chan error, 1)
 	then := js.FuncOf(func(this js.Value, args []js.Value) any {
-		node := js.Global().Get("AudioWorkletNode").New(ctx, "shirei-audio", map[string]any{
+		node := js.Global().Get("AudioWorkletNode").New(ctx, "mullion-audio", map[string]any{
 			"numberOfInputs":     0,
 			"numberOfOutputs":    1,
 			"outputChannelCount": []any{1},

@@ -5,16 +5,16 @@ import (
 	"os"
 	"unsafe"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/gpurender"
+	g "go.hasen.dev/generic"
 )
 
 var gpuOK bool
 
 func tryInitGPU() {
-	if g.EnvFalsy("SHIREI_GPU") {
-		fmt.Fprintln(os.Stderr, "gpurender: off (SHIREI_GPU=0)")
+	if g.EnvFalsy("MULLION_GPU") {
+		fmt.Fprintln(os.Stderr, "gpurender: off (MULLION_GPU=0)")
 		return
 	}
 	if remote, _, _ := procGetSystemMetrics.Call(smRemoteSession); remote != 0 {

@@ -1,4 +1,4 @@
-// Package qwerty maps hardware key positions to shirei KeyCodes named by
+// Package qwerty maps hardware key positions to mullion KeyCodes named by
 // their US-QWERTY legends, making key identity layout-independent: pressing
 // the second key of the top letter row yields KeyW whether the OS layout is
 // QWERTY, AZERTY, Dvorak, or Arabic. Layouts are a text concern —

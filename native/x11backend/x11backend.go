@@ -12,8 +12,8 @@ import (
 	"github.com/jezek/xgb/shm"
 	"github.com/jezek/xgb/xproto"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
+	g "go.hasen.dev/generic"
 )
 
 // glyphCacheBudget caps total cached glyph-bitmap bytes (enables the shared core
@@ -277,7 +277,7 @@ func eventLoop() {
 	}
 }
 
-// frame runs one shirei frame and presents it.
+// frame runs one mullion frame and presents it.
 func frame() {
 	if currentWindow.curW == 0 || currentWindow.curH == 0 {
 		currentWindow.curW, currentWindow.curH = currentWindow.winW, currentWindow.winH // until the first ConfigureNotify

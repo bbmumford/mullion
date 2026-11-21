@@ -8,9 +8,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/internal/atspi"
+	g "go.hasen.dev/generic"
 	"golang.org/x/sys/unix"
 )
 

@@ -242,7 +242,7 @@ var nextButtonAttrs ButtonAttrs
 func init() {
 	RegisterFrameCleanup(func() {
 		if nextButtonAttrs != (ButtonAttrs{}) {
-			fmt.Fprintln(os.Stderr, "shirei/widgets: leftover NextButton properties without a button")
+			fmt.Fprintln(os.Stderr, "mullion/widgets: leftover NextButton properties without a button")
 			nextButtonAttrs = ButtonAttrs{}
 		}
 	})

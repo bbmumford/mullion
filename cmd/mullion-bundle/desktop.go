@@ -18,7 +18,7 @@ import (
 const releaseLdflags = "-s -w"
 
 // buildDesktopBinary cross-compiles a normal Go main for desktop platforms.
-// Uses CGO_ENABLED=0 so packaging works from any host (shirei backends are purego).
+// Uses CGO_ENABLED=0 so packaging works from any host (mullion backends are purego).
 // Always strips symbols (-s -w). Windows release builds also use -H windowsgui so
 // the PE is a GUI app (no console window on double-click). Linux has no linker
 // equivalent; the .desktop entry uses Terminal=false instead. Dev builds (plain

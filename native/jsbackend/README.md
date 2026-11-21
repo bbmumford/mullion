@@ -1,16 +1,16 @@
 # jsbackend
 
-Browser/wasm shell for shirei. Same contract as every other backend: sample
+Browser/wasm shell for mullion. Same contract as every other backend: sample
 input, `RunFrameFn`, present. Default present is GLES 3.00 over WebGL2
-(`gpurender`). `SHIREI_GPU=0`, `window.SHIREI_GPU=0`, or `?shirei_gpu=0`
+(`gpurender`). `MULLION_GPU=0`, `window.MULLION_GPU=0`, or `?mullion_gpu=0`
 falls back to `SoftRenderer` + `putImageData`. No WebGL2 also falls back.
 
 ## Build a static site
 
-From the shirei module:
+From the mullion module:
 
 ```bash
-go run ./cmd/shirei_web -o dist ./demos/todo
+go run ./cmd/mullion-web -o dist ./demos/todo
 ```
 
 Writes `index.html`, `wasm_exec.js`, `main.wasm`, and sprouts `.headers`
@@ -29,13 +29,13 @@ fast; pass `-webcompiler=tinygo` to preview the TinyGo build.
 ## Local preview
 
 ```bash
-go run ./cmd/shirei_web -run ./demos/todo
+go run ./cmd/mullion-web -run ./demos/todo
 ```
 
 Build into a temp dir, serve on `http://127.0.0.1:8787/`, open a browser.
 
 ```bash
-go run ./cmd/shirei_web -serve -o dist -n ./demos/theme
+go run ./cmd/mullion-web -serve -o dist -n ./demos/theme
 ```
 
 Build into `dist/`, serve, do not open a browser (`-n`).
@@ -43,19 +43,19 @@ Build into `dist/`, serve, do not open a browser (`-n`).
 ## Rebuild published web demos
 
 The landing sample and two static galleries live under
-`static-sites/.../shirei/`:
+`static-sites/.../mullion/`:
 
 | URL path | Gallery set | Contents |
 |----------|-------------|----------|
-| `/shirei/try` | standalone build | Complete small demo from the landing page |
-| `/shirei/demos` | `-gallery=demos` | Cards in `demos/index.scgo` (not every `demos/*` package) |
-| `/shirei/custom-widgets` | `-gallery=custom-widgets` | Cards in `custom-widgets/index.scgo` |
+| `/mullion/try` | standalone build | Complete small demo from the landing page |
+| `/mullion/demos` | `-gallery=demos` | Cards in `demos/index.scgo` (not every `demos/*` package) |
+| `/mullion/custom-widgets` | `-gallery=custom-widgets` | Cards in `custom-widgets/index.scgo` |
 
-Gallery membership lives in `cmd/shirei_web/gallery.go` and should stay aligned
+Gallery membership lives in `cmd/mullion-web/gallery.go` and should stay aligned
 with those scgo index pages. Each gallery app page shows
-`Source: demos/<slug>` linking to `github.com/hasenj/go-shirei`.
+`Source: demos/<slug>` linking to `github.com/hasenj/go-mullion`.
 
-From the Shirei module, rebuild all three:
+From the Mullion module, rebuild all three:
 
 ```bash
 ./rebuild-web-demos.sh
@@ -67,8 +67,8 @@ stale demo dirs under `…/apps/` that are no longer in the gallery set.
 Screenshots (optional refresh; demos that support `--png`):
 
 ```bash
-go run ./demos/balls-buckets --png ../static-sites/judi.systems/shirei/demos/shots/balls-buckets.png
-go run ./demos/custom-buttons --png ../static-sites/judi.systems/shirei/custom-widgets/shots/custom-buttons.png
+go run ./demos/balls-buckets --png ../static-sites/judi.systems/mullion/demos/shots/balls-buckets.png
+go run ./demos/custom-buttons --png ../static-sites/judi.systems/mullion/custom-widgets/shots/custom-buttons.png
 ```
 
 ## Fonts
@@ -80,7 +80,7 @@ bytes through the global:
 
 ```js
 // ArrayBuffer of a TTF/OTF
-window.shireiUseFontBytes(arrayBuffer)
+window.mullionUseFontBytes(arrayBuffer)
 ```
 
 Chromium **Local Font Access** (`queryLocalFonts` → `blob`) can feed the same
@@ -88,26 +88,26 @@ hook for full system-face demos; it is progressive enhancement, not required.
 
 ## Layout of the page
 
-Default HTML (from `shirei_web`) is a shell + canvas:
+Default HTML (from `mullion-web`) is a shell + canvas:
 
 ```html
-<div id="shirei-root">
-  <canvas id="shirei-canvas" tabindex="0"></canvas>
+<div id="mullion-root">
+  <canvas id="mullion-canvas" tabindex="0"></canvas>
 </div>
 ```
 
 `SetupWindow(title, w, h)` is the **content** size (same contract as
 macOS/Win32). **Top-level desktop-sized** pages float a shell of height
-`h + 34` inside `#shirei-root` with **client-side decorations** (same idea as
+`h + 34` inside `#mullion-root` with **client-side decorations** (same idea as
 Wayland CSD): a soft-rendered title bar (drag to move, close button) and an
-edge hit zone to resize. `#shirei-root` fills leftover space in the page
+edge hit zone to resize. `#mullion-root` fills leftover space in the page
 (siblings such as a source strip keep theirs); the shell is clamped to that
 slot minus a small margin. The app body sees the resulting content size;
 after each frame `GetHost().WindowSize` reports that content size (not the
 shell).
 
 **Mobile hosts** (iOS, iPadOS, Android) and **short or narrow host slots**
-(width ≤ 700 or height ≤ 500) fill `#shirei-root` with no chrome, same as
+(width ≤ 700 or height ≤ 500) fill `#mullion-root` with no chrome, same as
 the iOS and Android backends. Rotating the phone or resizing a desktop window
 across that threshold switches the shell.
 
@@ -115,10 +115,10 @@ across that threshold switches the shell.
 `w×h` and posts:
 
 ```js
-{ source: "shirei", type: "resize", width: w, height: h }
+{ source: "mullion", type: "resize", width: w, height: h }
 ```
 
-so the parent can size the iframe. Include `embed.js` from a `shirei_web`
+so the parent can size the iframe. Include `embed.js` from a `mullion-web`
 build on the gallery page:
 
 ```html
@@ -127,5 +127,5 @@ build on the gallery page:
 ```
 
 Pass `0, 0` to fill the viewport (no chrome). The backend creates the shell if
-missing. A hidden `<input id="shirei-text">` captures IME composition and typed
+missing. A hidden `<input id="mullion-text">` captures IME composition and typed
 text.

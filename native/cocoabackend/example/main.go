@@ -2,7 +2,7 @@
 
 // Manual test harness for the cocoa backend. Run with:
 //
-//	go run ./shirei/cocoabackend/example
+//	go run ./mullion/cocoabackend/example
 //
 // At this stage (M0-M2) it exercises rect rendering only: solid fills, rounded
 // corners, vertical gradients, borders, clipping, and transparency. No text yet.
@@ -19,13 +19,13 @@ import (
 	. "github.com/bbmumford/mullion/native/widgets"
 )
 
-// optional image to exercise the image-drawing path; set via SHIREI_IMAGE.
-var imagePath = os.Getenv("SHIREI_IMAGE")
+// optional image to exercise the image-drawing path; set via MULLION_IMAGE.
+var imagePath = os.Getenv("MULLION_IMAGE")
 
 func main() {
 	// `example --png out.png` renders one frame offscreen and exits (headless
 	// verification); otherwise it opens a live window. RenderToPNG is core
-	// shirei's (via the dot-import) — software rendering lives in core, so
+	// mullion's (via the dot-import) — software rendering lives in core, so
 	// PNG dumping isn't backend-specific.
 	png := flag.String("png", "", "write one settled frame to PATH and exit")
 	flag.Parse()
@@ -35,7 +35,7 @@ func main() {
 		}
 		return
 	}
-	app.SetupWindow("shirei — cocoa backend", 640, 480)
+	app.SetupWindow("mullion — cocoa backend", 640, 480)
 	app.Run(frameFn)
 }
 

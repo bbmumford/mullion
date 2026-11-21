@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/bbmumford/mullion/native"
 	"github.com/jezek/xgb"
 	"github.com/jezek/xgb/xproto"
-	"github.com/bbmumford/mullion/native"
 )
 
 // Exercise software rendering and both native image transports against a real

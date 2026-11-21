@@ -1,4 +1,4 @@
-// Package window is a Shirei extension that manages window geometry and
+// Package window is a Mullion extension that manages window geometry and
 // placement (positioning, centering, and enforcing minimum window dimensions)
 // on desktop platforms (macOS, Windows, Linux Wayland/X11) via
 // Host.EscapeHatchBackendContext on a best-effort basis.

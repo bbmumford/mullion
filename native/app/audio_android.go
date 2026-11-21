@@ -5,8 +5,8 @@ package app
 /*
 #cgo LDFLAGS: -ldl -llog
 
-int shirei_aaudio_start(int sampleRate);
-int shirei_aaudio_restart(void);
+int mullion_aaudio_start(int sampleRate);
+int mullion_aaudio_restart(void);
 */
 import "C"
 
@@ -16,8 +16,8 @@ import (
 	"unsafe"
 )
 
-//export shireiAudioFill
-func shireiAudioFill(buf *C.float, frames C.int) {
+//export mullionAudioFill
+func mullionAudioFill(buf *C.float, frames C.int) {
 	audioNoteFill()
 	out := unsafe.Slice((*float32)(unsafe.Pointer(buf)), int(frames))
 	if fill := audioFill; fill != nil {
@@ -34,7 +34,7 @@ func shireiAudioFill(buf *C.float, frames C.int) {
 // silent. Disconnects (route change, headphones) stop the callbacks; the
 // shared watchdog notices the stall and rebuilds the stream.
 func audioStart(sampleRate int) error {
-	if st := int(C.shirei_aaudio_start(C.int(sampleRate))); st != 0 {
+	if st := int(C.mullion_aaudio_start(C.int(sampleRate))); st != 0 {
 		if st == -100 {
 			return fmt.Errorf("AAudio unavailable (needs Android 8.0 / API 26)")
 		}
@@ -42,7 +42,7 @@ func audioStart(sampleRate int) error {
 	}
 	audioLastFill.Store(time.Now().UnixNano())
 	go audioWatchdog(func() error {
-		if st := int(C.shirei_aaudio_restart()); st != 0 {
+		if st := int(C.mullion_aaudio_restart()); st != 0 {
 			return fmt.Errorf("AAudio restart error %d", st)
 		}
 		return nil

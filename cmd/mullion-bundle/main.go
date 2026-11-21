@@ -1,22 +1,22 @@
-// shirei_bundle builds release packages for shirei apps.
+// mullion-bundle builds release packages for mullion apps.
 //
 // Install:
 //
-//	go install github.com/bbmumford/mullion/native/cmd/shirei_bundle@latest
+//	go install github.com/bbmumford/mullion/native/cmd/mullion-bundle@latest
 //
 // GUI (default):
 //
-//	shirei_bundle
+//	mullion-bundle
 //
 // CLI iOS:
 //
-//	shirei_bundle -platform ios \
+//	mullion-bundle -platform ios \
 //	  -team FLGJ22JLN7 -id systems.judi.myapp \
 //	  -version 0.1.0 -build 1 ./path/to/main
 //
 // CLI Android:
 //
-//	SHIREI_ANDROID_KS_PASS=… shirei_bundle -platform android \
+//	MULLION_ANDROID_KS_PASS=… mullion-bundle -platform android \
 //	  -keystore ~/keys/app.jks -key-alias myalias \
 //	  -id systems.judi.myapp -version 0.1.0 -build 1 ./path/to/main
 package main

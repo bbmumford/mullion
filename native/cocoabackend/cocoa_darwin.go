@@ -3,8 +3,8 @@
 // Package cocoabackend is a direct-macOS (AppKit) backend for native. AppKit
 // provides the window, run loop, and input. Rasterization writes an IOSurface
 // that is set as a CALayer's contents — the window server composites it with no
-// per-frame CPU copy. Metal (shirei/gpurender) is the default compositor.
-// SHIREI_GPU=0 or a Metal initialization failure selects the software renderer.
+// per-frame CPU copy. Metal (mullion/gpurender) is the default compositor.
+// MULLION_GPU=0 or a Metal initialization failure selects the software renderer.
 package cocoabackend
 
 import (
@@ -109,7 +109,7 @@ func init() {
 // from the program's main goroutine (AppKit requires the main thread) and
 // does not return: quit paths call generic.ExitWithCleanup so AddExitCleanup
 // handlers run. AppKit [NSApp terminate:] would otherwise exit without
-// returning to Go. System fonts are initialized by shirei on the first
+// returning to Go. System fonts are initialized by mullion on the first
 // frame (RunFrameFn), not here.
 func Run(fn native.FrameFn) {
 	runtime.LockOSThread()
@@ -130,10 +130,10 @@ func Run(fn native.FrameFn) {
 		setAppIcon(winIconPath)
 	}
 	enableZerocopy()
-	if g.EnvFalsy("SHIREI_GPU") {
-		fmt.Fprintln(os.Stderr, "shirei: software renderer (SHIREI_GPU=0)")
+	if g.EnvFalsy("MULLION_GPU") {
+		fmt.Fprintln(os.Stderr, "mullion: software renderer (MULLION_GPU=0)")
 	} else if err := gpurender.Init(); err != nil {
-		fmt.Fprintf(os.Stderr, "shirei: software renderer (%v)\n", err)
+		fmt.Fprintf(os.Stderr, "mullion: software renderer (%v)\n", err)
 	} else {
 		gpuOK = true
 		gpurender.SetCompleteFunc(gpuPresentComplete)
@@ -151,7 +151,7 @@ func exitWithCleanup() {
 	g.ExitWithCleanup(0)
 }
 
-// gpuOK is set once at Run if Metal init succeeds and SHIREI_GPU is not 0.
+// gpuOK is set once at Run if Metal init succeeds and MULLION_GPU is not 0.
 var gpuOK bool
 
 // IOSurface present pool. A few surfaces are rotated so we never render into the

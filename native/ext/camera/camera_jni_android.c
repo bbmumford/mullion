@@ -1,4 +1,4 @@
-// Android camera capture for go.hasen.dev/shirei/ext/camera.
+// Android camera capture for go.hasen.dev/mullion/ext/camera.
 // Builds camera/gallery Intents and decodes results via the generic host
 // bridges (activity, startActivityForResult, permissions).
 #include <android/log.h>
@@ -7,14 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ALOG(...) __android_log_print(ANDROID_LOG_INFO, "shirei-camera", __VA_ARGS__)
+#define ALOG(...) __android_log_print(ANDROID_LOG_INFO, "mullion-camera", __VA_ARGS__)
 
 // From androidbackend/shim.h (linked into the same .so).
-void *shirei_android_activity(void);
-void *shirei_android_jni_env(void);
-void shirei_android_start_activity_for_result(void *intent, int request_code);
-void shirei_android_request_permissions(const char **perms, int request_code);
-int shirei_android_check_permission(const char *perm);
+void *mullion_android_activity(void);
+void *mullion_android_jni_env(void);
+void mullion_android_start_activity_for_result(void *intent, int request_code);
+void mullion_android_request_permissions(const char **perms, int request_code);
+int mullion_android_check_permission(const char *perm);
 
 // Go //export cameraAndroidOnRGBA
 extern void cameraAndroidOnRGBA(uint8_t *rgba, int w, int h, int stride, int status);
@@ -53,7 +53,7 @@ static int launch_picker(JNIEnv *env, jobject activity) {
 	if (!intent) {
 		return -1;
 	}
-	shirei_android_start_activity_for_result((void *)intent, REQ_PICK);
+	mullion_android_start_activity_for_result((void *)intent, REQ_PICK);
 	(*env)->DeleteLocalRef(env, intent);
 	if (action) (*env)->DeleteLocalRef(env, action);
 	if (uri) (*env)->DeleteLocalRef(env, uri);
@@ -81,7 +81,7 @@ static int launch_camera(JNIEnv *env, jobject activity) {
 		if (action) (*env)->DeleteLocalRef(env, action);
 		return -1;
 	}
-	shirei_android_start_activity_for_result((void *)intent, REQ_CAMERA);
+	mullion_android_start_activity_for_result((void *)intent, REQ_CAMERA);
 	(*env)->DeleteLocalRef(env, intent);
 	if (action) (*env)->DeleteLocalRef(env, action);
 	(*env)->DeleteLocalRef(env, intentCls);
@@ -90,15 +90,15 @@ static int launch_camera(JNIEnv *env, jobject activity) {
 
 // camera_android_start: permission → camera intent, else picker.
 void camera_android_start(void) {
-	JNIEnv *env = (JNIEnv *)shirei_android_jni_env();
-	jobject activity = (jobject)shirei_android_activity();
+	JNIEnv *env = (JNIEnv *)mullion_android_jni_env();
+	jobject activity = (jobject)mullion_android_activity();
 	if (!env || !activity) {
 		cameraAndroidOnRGBA(NULL, 0, 0, 0, 2);
 		return;
 	}
-	if (shirei_android_check_permission("android.permission.CAMERA") != 0) {
+	if (mullion_android_check_permission("android.permission.CAMERA") != 0) {
 		const char *perms[] = {"android.permission.CAMERA", NULL};
-		shirei_android_request_permissions(perms, REQ_PERM);
+		mullion_android_request_permissions(perms, REQ_PERM);
 		return;
 	}
 	if (launch_camera(env, activity) != 0) {
@@ -109,8 +109,8 @@ void camera_android_start(void) {
 }
 
 void camera_android_on_permission(int granted) {
-	JNIEnv *env = (JNIEnv *)shirei_android_jni_env();
-	jobject activity = (jobject)shirei_android_activity();
+	JNIEnv *env = (JNIEnv *)mullion_android_jni_env();
+	jobject activity = (jobject)mullion_android_activity();
 	if (!env || !activity) {
 		cameraAndroidOnRGBA(NULL, 0, 0, 0, 2);
 		return;
@@ -183,7 +183,7 @@ void camera_android_on_activity_result(void *env_ptr, int request_code, int resu
 		jmethodID getData = (*env)->GetMethodID(env, intentCls, "getData", "()Landroid/net/Uri;");
 		jobject uri = getData ? (*env)->CallObjectMethod(env, intent, getData) : NULL;
 		clear_exc(env);
-		jobject activity = (jobject)shirei_android_activity();
+		jobject activity = (jobject)mullion_android_activity();
 		if (uri && activity) {
 			jclass actCls = (*env)->GetObjectClass(env, activity);
 			jmethodID getCR = (*env)->GetMethodID(env, actCls, "getContentResolver",

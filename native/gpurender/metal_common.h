@@ -1,7 +1,7 @@
 // Shared Metal device / pipeline / encode. Platform files acquire the
 // destination texture (IOSurface vs CAMetalLayer drawable).
-#ifndef SHIREI_GPURENDER_METAL_COMMON_H
-#define SHIREI_GPURENDER_METAL_COMMON_H
+#ifndef MULLION_GPURENDER_METAL_COMMON_H
+#define MULLION_GPURENDER_METAL_COMMON_H
 
 #import <Metal/Metal.h>
 #include "metal.h"

@@ -13,7 +13,7 @@ func DisplayDispatch(d *wl.Display) error {
 }
 
 // DisplayDispatchTimeout processes one event, or returns
-// wl.ErrContextRunTimeout when none arrives within timeout. [shirei addition]
+// wl.ErrContextRunTimeout when none arrives within timeout. [mullion addition]
 func DisplayDispatchTimeout(d *wl.Display, timeout time.Duration) error {
 	return d.Context().RunTimeout(timeout)
 }

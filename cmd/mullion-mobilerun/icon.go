@@ -8,7 +8,7 @@ import (
 	_ "image/png"
 )
 
-// Dock icon: Shirei flower logo over a phone silhouette. Generated with
+// Dock icon: Mullion flower logo over a phone silhouette. Generated with
 // Imagine from the project logo; embedded so the installed binary works
 // from any directory.
 //

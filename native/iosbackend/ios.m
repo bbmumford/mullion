@@ -1,13 +1,13 @@
-// Objective-C side of the shirei iOS backend: a full-screen UIView driven by
+// Objective-C side of the mullion iOS backend: a full-screen UIView driven by
 // CADisplayLink. Present is Metal into a CAMetalLayer (default) or a CPU BGRA
 // CGImage on CALayer.contents (Metal init failure). This side owns the window,
 // display link, and touch + soft-keyboard / IME routing into Go.
 //
 // IME (Japanese etc.): UITextInput with a thin document that only mirrors marked
 // (preedit) text — same contract as cocoabackend's NSTextInputClient. Marked
-// text → shireiSetComposition; commits → shireiInsertText; the app buffer stays
+// text → mullionSetComposition; commits → mullionInsertText; the app buffer stays
 // in Go (TextInput). Visibility is driven by ios_syncKeyboard from
-// shirei.WantsKeyboard after each frame.
+// mullion.WantsKeyboard after each frame.
 //
 // Content view: full safe-area frame (stable CALayer size). Keyboard overlap
 // only shrinks the layout size reported as WindowSize — presenting always uses
@@ -23,7 +23,7 @@
 #include "ios.h"
 #include "_cgo_export.h"
 
-// Touch phases passed to shireiTouch (mirror ios_ios.go constants).
+// Touch phases passed to mullionTouch (mirror ios_ios.go constants).
 enum {
 	kTouchBegin  = 0,
 	kTouchMove   = 1,
@@ -47,15 +47,15 @@ static CGRect gKeyboardFrameScreen;
 static CGFloat gLayoutW = 0;
 static CGFloat gLayoutH = 0;
 
-// Preferred interface orientation (shirei.PreferredOrientation): 0 any,
-// 1 portrait, 2 landscape. Read by ShireiRootVC; written by ios_syncOrientation.
+// Preferred interface orientation (mullion.PreferredOrientation): 0 any,
+// 1 portrait, 2 landscape. Read by MullionRootVC; written by ios_syncOrientation.
 static int gPreferredOrientation = 0;
 static int gAppliedOrientation = -1; // force first apply
 
 // Physical keyboard (GCKeyboard), not soft IME. Updated on connect/disconnect.
 static BOOL gHardwareKeyboard = NO;
 
-// Set by ios_set_metal before ios_attach. Chooses ShireiView.layerClass.
+// Set by ios_set_metal before ios_attach. Chooses MullionView.layerClass.
 static BOOL gUseMetal = NO;
 
 static void ios_layoutContentView(void);
@@ -66,46 +66,46 @@ static void ios_refreshHardwareKeyboard(void);
 
 // ---- thin UITextInput document positions/ranges (UTF-16 indices) ----
 
-@interface ShireiTextPosition : UITextPosition
+@interface MullionTextPosition : UITextPosition
 @property (nonatomic, assign) NSUInteger index;
 + (instancetype)positionWithIndex:(NSUInteger)index;
 @end
 
-@implementation ShireiTextPosition
+@implementation MullionTextPosition
 + (instancetype)positionWithIndex:(NSUInteger)index {
-	ShireiTextPosition *p = [[ShireiTextPosition alloc] init];
+	MullionTextPosition *p = [[MullionTextPosition alloc] init];
 	p.index = index;
 	return p;
 }
 @end
 
-@interface ShireiTextRange : UITextRange
+@interface MullionTextRange : UITextRange
 @property (nonatomic, assign) NSUInteger startIndex;
 @property (nonatomic, assign) NSUInteger endIndex;
 + (instancetype)rangeWithStart:(NSUInteger)start end:(NSUInteger)end;
 @end
 
-@implementation ShireiTextRange
+@implementation MullionTextRange
 + (instancetype)rangeWithStart:(NSUInteger)start end:(NSUInteger)end {
-	ShireiTextRange *r = [[ShireiTextRange alloc] init];
+	MullionTextRange *r = [[MullionTextRange alloc] init];
 	r.startIndex = start;
 	r.endIndex = end;
 	return r;
 }
 - (UITextPosition *)start {
 	NSUInteger a = MIN(self.startIndex, self.endIndex);
-	return [ShireiTextPosition positionWithIndex:a];
+	return [MullionTextPosition positionWithIndex:a];
 }
 - (UITextPosition *)end {
 	NSUInteger b = MAX(self.startIndex, self.endIndex);
-	return [ShireiTextPosition positionWithIndex:b];
+	return [MullionTextPosition positionWithIndex:b];
 }
 - (BOOL)isEmpty {
 	return self.startIndex == self.endIndex;
 }
 @end
 
-// Accessory toolbar → shireiAccessoryAction (keep in sync with ios_ios.go).
+// Accessory toolbar → mullionAccessoryAction (keep in sync with ios_ios.go).
 enum {
 	kAccessoryLeft = 0,
 	kAccessoryRight,
@@ -115,17 +115,17 @@ enum {
 	kAccessoryDone,
 };
 
-@interface ShireiView : UIView <UITextInput>
-- (void)shireiTick:(CADisplayLink *)link;
+@interface MullionView : UIView <UITextInput>
+- (void)mullionTick:(CADisplayLink *)link;
 - (BOOL)hasMarkedText;
 - (void)commitMarkedForInterruption;
 - (void)keyboardFrameChanged:(NSNotification *)note;
 @end
 
-@interface ShireiRootVC : UIViewController
+@interface MullionRootVC : UIViewController
 @end
 
-@implementation ShireiRootVC
+@implementation MullionRootVC
 - (BOOL)prefersStatusBarHidden {
 	return NO;
 }
@@ -360,7 +360,7 @@ static void ios_layoutContentView(void) {
 	}
 }
 
-@implementation ShireiView {
+@implementation MullionView {
 	// Thin document: empty when not composing; equals marked string while
 	// composing. Does not mirror the Go TextInput buffer.
 	NSMutableString *_doc;
@@ -437,7 +437,7 @@ static void ios_layoutContentView(void) {
 
 - (void)notifyCompositionFromDoc {
 	if (![self hasMarkedText]) {
-		shireiClearComposition();
+		mullionClearComposition();
 		return;
 	}
 	NSString *s = [_doc copy];
@@ -448,7 +448,7 @@ static void ios_layoutContentView(void) {
 	if (!utf8) {
 		utf8 = "";
 	}
-	shireiSetComposition((char *)utf8, (int)sel.location, (int)(sel.location + sel.length));
+	mullionSetComposition((char *)utf8, (int)sel.location, (int)(sel.location + sel.length));
 }
 
 - (void)clearMarkedLocal {
@@ -467,11 +467,11 @@ static void ios_layoutContentView(void) {
 	[self.inputDelegate textWillChange:self];
 	[self.inputDelegate selectionWillChange:self];
 	[self clearMarkedLocal];
-	shireiClearComposition();
+	mullionClearComposition();
 	if (s.length > 0) {
 		const char *utf8 = s.UTF8String;
 		if (utf8) {
-			shireiInsertText((char *)utf8);
+			mullionInsertText((char *)utf8);
 		}
 	}
 	[self.inputDelegate selectionDidChange:self];
@@ -489,7 +489,7 @@ static void ios_layoutContentView(void) {
 	double w = 0, h = 0;
 	ios_viewSize(&w, &h);
 	if (w > 0 && h > 0) {
-		shireiProduceAndPresent(w, h);
+		mullionProduceAndPresent(w, h);
 	}
 }
 
@@ -497,7 +497,7 @@ static void ios_layoutContentView(void) {
 	// Each UITouch object identity is stable for the contact lifetime (osKey).
 	for (UITouch *t in touches) {
 		CGPoint p = [t locationInView:self];
-		shireiTouch(p.x, p.y, phase, (uintptr_t)(__bridge void *)t);
+		mullionTouch(p.x, p.y, phase, (uintptr_t)(__bridge void *)t);
 	}
 	if (touches.count > 0) {
 		[self noteInput];
@@ -590,10 +590,10 @@ static void ios_layoutContentView(void) {
 		[b setTitleColor:(emphasized ? doneColor : titleColor) forState:UIControlStateNormal];
 		// Slight fill on press so full-height cells feel tappable.
 		if (@available(iOS 13.0, *)) {
-			[b setBackgroundImage:[self shireiAccessoryImageWithColor:[UIColor tertiarySystemFillColor]]
+			[b setBackgroundImage:[self mullionAccessoryImageWithColor:[UIColor tertiarySystemFillColor]]
 			             forState:UIControlStateHighlighted];
 		} else {
-			[b setBackgroundImage:[self shireiAccessoryImageWithColor:[UIColor colorWithWhite:0.85 alpha:1]]
+			[b setBackgroundImage:[self mullionAccessoryImageWithColor:[UIColor colorWithWhite:0.85 alpha:1]]
 			             forState:UIControlStateHighlighted];
 		}
 		[b addTarget:self action:@selector(accessoryTapped:) forControlEvents:UIControlEventTouchUpInside];
@@ -677,7 +677,7 @@ static void ios_layoutContentView(void) {
 }
 
 // 1×1 solid color image for UIButton highlighted background.
-- (UIImage *)shireiAccessoryImageWithColor:(UIColor *)color {
+- (UIImage *)mullionAccessoryImageWithColor:(UIColor *)color {
 	CGRect r = CGRectMake(0, 0, 1, 1);
 	UIGraphicsBeginImageContextWithOptions(r.size, NO, 0);
 	[color setFill];
@@ -695,7 +695,7 @@ static void ios_layoutContentView(void) {
 		// not re-becomeFirstResponder via WantsKeyboard.
 		[self commitMarked];
 	}
-	shireiAccessoryAction(action);
+	mullionAccessoryAction(action);
 }
 
 - (UIKeyboardType)keyboardType {
@@ -731,11 +731,11 @@ static void ios_layoutContentView(void) {
 	[self.inputDelegate selectionWillChange:self];
 	if ([self hasMarkedText]) {
 		[self clearMarkedLocal];
-		shireiClearComposition();
+		mullionClearComposition();
 	}
 	const char *utf8 = text.UTF8String;
 	if (utf8) {
-		shireiInsertText((char *)utf8);
+		mullionInsertText((char *)utf8);
 	}
 	_selStart = 0;
 	_selEnd = 0;
@@ -752,7 +752,7 @@ static void ios_layoutContentView(void) {
 		[self.inputDelegate selectionWillChange:self];
 		if (_doc.length <= 1) {
 			[self clearMarkedLocal];
-			shireiClearComposition();
+			mullionClearComposition();
 		} else {
 			// Delete one composed character (one UTF-16 code unit; surrogate pairs
 			// may need two — rangeOfComposedCharacterSequence handles that).
@@ -767,7 +767,7 @@ static void ios_layoutContentView(void) {
 		[self.inputDelegate textDidChange:self];
 		return;
 	}
-	shireiDeleteBackward();
+	mullionDeleteBackward();
 }
 
 // ---- UITextInput ----
@@ -777,24 +777,24 @@ static void ios_layoutContentView(void) {
 }
 
 - (UITextPosition *)beginningOfDocument {
-	return [ShireiTextPosition positionWithIndex:0];
+	return [MullionTextPosition positionWithIndex:0];
 }
 
 - (UITextPosition *)endOfDocument {
-	return [ShireiTextPosition positionWithIndex:_doc.length];
+	return [MullionTextPosition positionWithIndex:_doc.length];
 }
 
 - (UITextRange *)selectedTextRange {
 	// Japanese IMEs may query selection before starting marked text. An empty
 	// range at 0 (not nil) matches Cocoa's selectedRange={0,0} lesson.
-	return [ShireiTextRange rangeWithStart:_selStart end:_selEnd];
+	return [MullionTextRange rangeWithStart:_selStart end:_selEnd];
 }
 
 - (void)setSelectedTextRange:(UITextRange *)range {
 	if (!range) {
 		return;
 	}
-	ShireiTextRange *r = (ShireiTextRange *)range;
+	MullionTextRange *r = (MullionTextRange *)range;
 	NSUInteger a = MIN(r.startIndex, r.endIndex);
 	NSUInteger b = MAX(r.startIndex, r.endIndex);
 	a = MIN(a, _doc.length);
@@ -810,7 +810,7 @@ static void ios_layoutContentView(void) {
 	if (![self hasMarkedText]) {
 		return nil;
 	}
-	return [ShireiTextRange rangeWithStart:_markedRange.location
+	return [MullionTextRange rangeWithStart:_markedRange.location
 	                                   end:_markedRange.location + _markedRange.length];
 }
 
@@ -820,7 +820,7 @@ static void ios_layoutContentView(void) {
 	[self.inputDelegate selectionWillChange:self];
 	if (s.length == 0) {
 		[self clearMarkedLocal];
-		shireiClearComposition();
+		mullionClearComposition();
 	} else {
 		[_doc setString:s];
 		_markedRange = NSMakeRange(0, s.length);
@@ -843,8 +843,8 @@ static void ios_layoutContentView(void) {
 	if (!range) {
 		return nil;
 	}
-	NSUInteger a = MIN(((ShireiTextRange *)range).startIndex, ((ShireiTextRange *)range).endIndex);
-	NSUInteger b = MAX(((ShireiTextRange *)range).startIndex, ((ShireiTextRange *)range).endIndex);
+	NSUInteger a = MIN(((MullionTextRange *)range).startIndex, ((MullionTextRange *)range).endIndex);
+	NSUInteger b = MAX(((MullionTextRange *)range).startIndex, ((MullionTextRange *)range).endIndex);
 	a = MIN(a, _doc.length);
 	b = MIN(b, _doc.length);
 	if (a >= b) {
@@ -858,7 +858,7 @@ static void ios_layoutContentView(void) {
 	if (text.length == 0 && [self hasMarkedText]) {
 		[self.inputDelegate textWillChange:self];
 		[self clearMarkedLocal];
-		shireiClearComposition();
+		mullionClearComposition();
 		[self.inputDelegate textDidChange:self];
 		[self noteInput];
 		return;
@@ -870,20 +870,20 @@ static void ios_layoutContentView(void) {
 
 - (UITextRange *)textRangeFromPosition:(UITextPosition *)fromPosition
                             toPosition:(UITextPosition *)toPosition {
-	NSUInteger a = ((ShireiTextPosition *)fromPosition).index;
-	NSUInteger b = ((ShireiTextPosition *)toPosition).index;
-	return [ShireiTextRange rangeWithStart:a end:b];
+	NSUInteger a = ((MullionTextPosition *)fromPosition).index;
+	NSUInteger b = ((MullionTextPosition *)toPosition).index;
+	return [MullionTextRange rangeWithStart:a end:b];
 }
 
 - (UITextPosition *)positionFromPosition:(UITextPosition *)position offset:(NSInteger)offset {
-	NSInteger i = (NSInteger)((ShireiTextPosition *)position).index + offset;
+	NSInteger i = (NSInteger)((MullionTextPosition *)position).index + offset;
 	if (i < 0) {
 		i = 0;
 	}
 	if (i > (NSInteger)_doc.length) {
 		i = (NSInteger)_doc.length;
 	}
-	return [ShireiTextPosition positionWithIndex:(NSUInteger)i];
+	return [MullionTextPosition positionWithIndex:(NSUInteger)i];
 }
 
 - (UITextPosition *)positionFromPosition:(UITextPosition *)position
@@ -898,8 +898,8 @@ static void ios_layoutContentView(void) {
 
 - (NSComparisonResult)comparePosition:(UITextPosition *)position
                            toPosition:(UITextPosition *)other {
-	NSUInteger a = ((ShireiTextPosition *)position).index;
-	NSUInteger b = ((ShireiTextPosition *)other).index;
+	NSUInteger a = ((MullionTextPosition *)position).index;
+	NSUInteger b = ((MullionTextPosition *)other).index;
 	if (a < b) {
 		return NSOrderedAscending;
 	}
@@ -911,13 +911,13 @@ static void ios_layoutContentView(void) {
 
 - (NSInteger)offsetFromPosition:(UITextPosition *)from
                      toPosition:(UITextPosition *)toPosition {
-	return (NSInteger)((ShireiTextPosition *)toPosition).index -
-	       (NSInteger)((ShireiTextPosition *)from).index;
+	return (NSInteger)((MullionTextPosition *)toPosition).index -
+	       (NSInteger)((MullionTextPosition *)from).index;
 }
 
 - (UITextPosition *)positionWithinRange:(UITextRange *)range
                     farthestInDirection:(UITextLayoutDirection)direction {
-	ShireiTextRange *r = (ShireiTextRange *)range;
+	MullionTextRange *r = (MullionTextRange *)range;
 	if (direction == UITextLayoutDirectionRight || direction == UITextLayoutDirectionDown) {
 		return r.end;
 	}
@@ -926,13 +926,13 @@ static void ios_layoutContentView(void) {
 
 - (UITextRange *)characterRangeByExtendingPosition:(UITextPosition *)position
                                        inDirection:(UITextLayoutDirection)direction {
-	NSUInteger i = ((ShireiTextPosition *)position).index;
+	NSUInteger i = ((MullionTextPosition *)position).index;
 	if (direction == UITextLayoutDirectionRight || direction == UITextLayoutDirectionDown) {
 		NSUInteger j = MIN(i + 1, _doc.length);
-		return [ShireiTextRange rangeWithStart:i end:j];
+		return [MullionTextRange rangeWithStart:i end:j];
 	}
 	NSUInteger j = (i > 0) ? i - 1 : 0;
-	return [ShireiTextRange rangeWithStart:j end:i];
+	return [MullionTextRange rangeWithStart:j end:i];
 }
 
 - (UITextWritingDirection)baseWritingDirectionForPosition:(UITextPosition *)position
@@ -946,11 +946,11 @@ static void ios_layoutContentView(void) {
 	(void)range;
 }
 
-// Caret / marked geometry from last shirei frame (logical points in this view).
+// Caret / marked geometry from last mullion frame (logical points in this view).
 - (CGRect)caretRectInView {
-	CGFloat x = (CGFloat)shireiCaretX();
-	CGFloat y = (CGFloat)shireiCaretY(); // bottom of caret
-	CGFloat h = (CGFloat)shireiCaretHeight();
+	CGFloat x = (CGFloat)mullionCaretX();
+	CGFloat y = (CGFloat)mullionCaretY(); // bottom of caret
+	CGFloat h = (CGFloat)mullionCaretHeight();
 	if (h <= 0) {
 		h = 16;
 	}
@@ -974,7 +974,7 @@ static void ios_layoutContentView(void) {
 
 - (UITextPosition *)closestPositionToPoint:(CGPoint)point {
 	(void)point;
-	return [ShireiTextPosition positionWithIndex:_selStart];
+	return [MullionTextPosition positionWithIndex:_selStart];
 }
 
 - (UITextPosition *)closestPositionToPoint:(CGPoint)point withinRange:(UITextRange *)range {
@@ -984,7 +984,7 @@ static void ios_layoutContentView(void) {
 
 - (UITextRange *)characterRangeAtPoint:(CGPoint)point {
 	(void)point;
-	return [ShireiTextRange rangeWithStart:_selStart end:_selEnd];
+	return [MullionTextRange rangeWithStart:_selStart end:_selEnd];
 }
 
 // Optional dictation stubs — silence unrecognized selector noise.
@@ -1004,10 +1004,10 @@ static void ios_layoutContentView(void) {
 	ios_layoutContentView();
 }
 
-- (void)shireiTick:(CADisplayLink *)link {
+- (void)mullionTick:(CADisplayLink *)link {
 	(void)link;
 	BOOL recent = (CFAbsoluteTimeGetCurrent() - gLastInputTime) < kInputRenderWindow;
-	if (!gWantsFrame && !recent && !shireiFrameRequested()) {
+	if (!gWantsFrame && !recent && !mullionFrameRequested()) {
 		return;
 	}
 	// Hold paint only until aspect matches PreferredOrientation (portrait flash).
@@ -1022,7 +1022,7 @@ static void ios_layoutContentView(void) {
 	if (w <= 0 || h <= 0) {
 		return;
 	}
-	shireiProduceAndPresent(w, h);
+	mullionProduceAndPresent(w, h);
 }
 @end
 
@@ -1048,10 +1048,10 @@ void ios_attach(void) {
 	gWindow = [[UIWindow alloc] initWithFrame:screen.bounds];
 	gWindow.backgroundColor = [UIColor blackColor];
 
-	ShireiRootVC *vc = [[ShireiRootVC alloc] init];
+	MullionRootVC *vc = [[MullionRootVC alloc] init];
 	gWindow.rootViewController = vc;
 
-	gView = [[ShireiView alloc] initWithFrame:vc.view.bounds];
+	gView = [[MullionView alloc] initWithFrame:vc.view.bounds];
 	// Frame owned by ios_layoutContentView (safe area + keyboard); not autoresized.
 	gView.autoresizingMask = UIViewAutoresizingNone;
 	[vc.view addSubview:gView];
@@ -1083,7 +1083,7 @@ void ios_attach(void) {
 	                 queue:nil
 	            usingBlock:^(NSNotification *note) {
 		            (void)note;
-		            shireiExitWithCleanup();
+		            mullionExitWithCleanup();
 	            }];
 
 	// Hardware keyboard attach/detach (Bluetooth Magic Keyboard, Smart Keyboard, …).
@@ -1111,7 +1111,7 @@ void ios_attach(void) {
 
 	gLastInputTime = CFAbsoluteTimeGetCurrent();
 	gWantsFrame = YES;
-	gLink = [CADisplayLink displayLinkWithTarget:gView selector:@selector(shireiTick:)];
+	gLink = [CADisplayLink displayLinkWithTarget:gView selector:@selector(mullionTick:)];
 	[gLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 }
 

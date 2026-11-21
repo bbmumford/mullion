@@ -1,20 +1,20 @@
-// Command shirei_web builds a shirei app for GOOS=js/GOARCH=wasm into a static
+// Command mullion-web builds a mullion app for GOOS=js/GOARCH=wasm into a static
 // site directory (index.html, wasm_exec.js, main.wasm, .headers, embed.js).
 //
 // Default — build only:
 //
-//	shirei_web -o dist ./demos/todo
+//	mullion-web -o dist ./demos/todo
 //
 // Build and serve (local preview):
 //
-//	shirei_web -serve -o dist ./demos/todo
-//	shirei_web -run ./demos/todo          # temp dir, open browser
+//	mullion-web -serve -o dist ./demos/todo
+//	mullion-web -run ./demos/todo          # temp dir, open browser
 //
 // Gallery — build a named set of web demos into -o/<slug>/:
 //
-//	shirei_web -gallery=custom-widgets -o ../static-sites/judi.systems/shirei/custom-widgets/apps
-//	shirei_web -gallery=demos -o ../static-sites/judi.systems/shirei/demos/apps
-//	shirei_web -gallery=demos -run -o play
+//	mullion-web -gallery=custom-widgets -o ../static-sites/judi.systems/mullion/custom-widgets/apps
+//	mullion-web -gallery=demos -o ../static-sites/judi.systems/mullion/demos/apps
+//	mullion-web -gallery=demos -run -o play
 //
 // package defaults to ".". -o is required for a plain build; with -run/-serve
 // it defaults to a temp directory that is removed on exit when omitted.
@@ -56,7 +56,7 @@ var indexHTMLTemplate string
 var embedJS []byte
 
 // pageMeta fills index.html: document title and optional "Source: path" chrome.
-// Zero value: bare page titled "shirei" (local -run / plain -o builds).
+// Zero value: bare page titled "mullion" (local -run / plain -o builds).
 type pageMeta struct {
 	Title       string // <title> only (demos already show their own heading)
 	SourceURL   string
@@ -69,7 +69,7 @@ func (m pageMeta) HasChrome() bool {
 
 func renderIndexHTML(meta pageMeta) ([]byte, error) {
 	if meta.Title == "" {
-		meta.Title = "shirei"
+		meta.Title = "mullion"
 	}
 	t, err := template.New("index").Parse(indexHTMLTemplate)
 	if err != nil {
@@ -83,8 +83,8 @@ func renderIndexHTML(meta pageMeta) ([]byte, error) {
 }
 
 // sproutsDotHeaders isolates the demo document for SharedArrayBuffer (Worklet audio).
-// Consumed by sprouts when present; shirei_web -run/-serve applies the same headers.
-const sproutsDotHeaders = `# shirei_web — cross-origin isolation for SharedArrayBuffer audio
+// Consumed by sprouts when present; mullion-web -run/-serve applies the same headers.
+const sproutsDotHeaders = `# mullion-web — cross-origin isolation for SharedArrayBuffer audio
 Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 `
@@ -218,11 +218,11 @@ func main() {
 	fatal(http.Serve(ln, mux))
 }
 
-// findDemosRoot resolves ./demos relative to the shirei module (cwd or parent).
+// findDemosRoot resolves ./demos relative to the mullion module (cwd or parent).
 func findDemosRoot() string {
 	candidates := []string{
 		"demos",
-		filepath.Join("shirei", "demos"),
+		filepath.Join("mullion", "demos"),
 	}
 	if exe, err := os.Executable(); err == nil {
 		// not reliable for go run; skip
@@ -235,7 +235,7 @@ func findDemosRoot() string {
 			return p
 		}
 	}
-	// Walk up looking for demos/next to go.mod module shirei
+	// Walk up looking for demos/next to go.mod module mullion
 	dir := wd
 	for i := 0; i < 6; i++ {
 		p := filepath.Join(dir, "demos")

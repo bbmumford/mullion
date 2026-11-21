@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"image"
 	"image/draw"
-	_ "image/gif"  // register the formats an icon file may reasonably use
+	_ "image/gif" // register the formats an icon file may reasonably use
 	_ "image/jpeg"
 	_ "image/png"
 	"os"

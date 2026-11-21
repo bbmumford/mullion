@@ -162,9 +162,9 @@ func reportDuplicateKey(key any) {
 	const logCap = 8
 	if ui.identDupLogged < logCap {
 		ui.identDupLogged++
-		fmt.Printf("shirei: duplicate container key %v (%T) claimed twice under one parent in a single frame\n", key, key)
+		fmt.Printf("mullion: duplicate container key %v (%T) claimed twice under one parent in a single frame\n", key, key)
 		if ui.identDupLogged == logCap {
-			fmt.Println("shirei: further duplicate-key reports suppressed")
+			fmt.Println("mullion: further duplicate-key reports suppressed")
 		}
 	}
 }

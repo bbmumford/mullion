@@ -85,9 +85,9 @@ func startIOS(pkgDir string, cfg Config, logf logFn) error {
 	if icon != "" {
 		env = append(env, ""+brand.EnvName("IOS_ICON_PATH")+"="+icon)
 	}
-	if mod := findShireiModule(pkgDir); mod != "" {
+	if mod := findMullionModule(pkgDir); mod != "" {
 		env = append(env, ""+brand.EnvName("MODULE")+"="+mod)
-	} else if mod := findShireiModule(wd); mod != "" {
+	} else if mod := findMullionModule(wd); mod != "" {
 		env = append(env, ""+brand.EnvName("MODULE")+"="+mod)
 	}
 	cmd.Env = env

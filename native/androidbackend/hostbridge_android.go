@@ -2,7 +2,7 @@
 
 // Generic host bridges for Android extensions: activity results, permissions,
 // and access to the live Activity. Feature packages (e.g. camera) use these
-// instead of forking ShireiActivity.
+// instead of forking MullionActivity.
 package androidbackend
 
 /*
@@ -59,7 +59,7 @@ func StartActivityForResult(intent unsafe.Pointer, requestCode int) {
 	if intent == nil {
 		return
 	}
-	C.shirei_android_start_activity_for_result(intent, C.int(requestCode))
+	C.mullion_android_start_activity_for_result(intent, C.int(requestCode))
 }
 
 // RequestPermissions requests the named permissions (e.g. "android.permission.CAMERA").
@@ -76,24 +76,24 @@ func RequestPermissions(perms []string, requestCode int) {
 			C.free(unsafe.Pointer(cperms[i]))
 		}
 	}()
-	C.shirei_android_request_permissions(&cperms[0], C.int(requestCode))
+	C.mullion_android_request_permissions(&cperms[0], C.int(requestCode))
 }
 
 // CheckPermission reports whether perm is granted (true on pre-M).
 func CheckPermission(perm string) bool {
 	cs := C.CString(perm)
 	defer C.free(unsafe.Pointer(cs))
-	return C.shirei_android_check_permission(cs) == 0
+	return C.mullion_android_check_permission(cs) == 0
 }
 
 // JNIEnv returns the app-thread JNIEnv*, or nil. Prefer the env passed into
 // ActivityResultFunc when handling results (that runs on the UI thread).
 func JNIEnv() unsafe.Pointer {
-	return unsafe.Pointer(C.shirei_android_jni_env())
+	return unsafe.Pointer(C.mullion_android_jni_env())
 }
 
-//export shireiAndroidActivityResult
-func shireiAndroidActivityResult(requestCode, resultCode C.int, env, intent unsafe.Pointer) {
+//export mullionAndroidActivityResult
+func mullionAndroidActivityResult(requestCode, resultCode C.int, env, intent unsafe.Pointer) {
 	hostMu.Lock()
 	fn := actHandlers[int(requestCode)]
 	hostMu.Unlock()
@@ -102,8 +102,8 @@ func shireiAndroidActivityResult(requestCode, resultCode C.int, env, intent unsa
 	}
 }
 
-//export shireiAndroidPermissionResult
-func shireiAndroidPermissionResult(requestCode C.int, grants *C.int, n C.int) {
+//export mullionAndroidPermissionResult
+func mullionAndroidPermissionResult(requestCode C.int, grants *C.int, n C.int) {
 	var slice []int
 	if grants != nil && n > 0 {
 		tmp := unsafe.Slice((*int32)(unsafe.Pointer(grants)), int(n))

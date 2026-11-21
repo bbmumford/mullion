@@ -1,10 +1,10 @@
 # window
 
-Shirei **extension**: manage desktop window geometry and placement (positioning,
+Mullion **extension**: manage desktop window geometry and placement (positioning,
 centering, and enforcing minimum window dimensions) on macOS, Windows, Linux
 Wayland, and Linux X11.
 
-Module: `go.hasen.dev/shirei/ext/window`
+Module: `go.hasen.dev/mullion/ext/window`
 
 ## Usage
 
@@ -18,9 +18,9 @@ goroutine and always targets the main window on macOS, Windows, and Wayland.
 package main
 
 import (
-	"go.hasen.dev/shirei/app"
-	"go.hasen.dev/shirei/ext/window"
-	. "go.hasen.dev/shirei"
+	"go.hasen.dev/mullion/app"
+	"go.hasen.dev/mullion/ext/window"
+	. "go.hasen.dev/mullion"
 )
 
 func main() {
@@ -50,9 +50,9 @@ func root() {
 * `window.Center()`: Center the window on the display (best-effort across desktop platforms; supported on Wayland layer windows; ignored on Wayland toplevels and mobile).
 * `window.Position(x, y int)`: Position the top-left corner of the window at `(x, y)` in screen coordinates (logical points).
 * `window.SetMinSize(minWidth, minHeight float32)`: Enforce minimum window dimensions (in logical points). Does not shrink an already-larger window.
-* `window.DragMove(position *shirei.Vec2)`: Make the current container a primary-button drag handle. Keep `position` synchronized with other window-position controls; call every frame inside the handle. Wayland requires layer-shell; positioned layer windows support both relative and absolute pointers.
-* `window.DragMoveNonactivating(position *shirei.Vec2)`: Like `DragMove` for a window opened with `PopupWindowOptions.Nonactivating`; the drag starts even when the app is inactive, so a floating widget can move without taking focus.
-* `window.CurrentPosition() (shirei.Vec2, bool)`: Return the current window's top-left corner in the coordinates used by `Position`. Call on the UI thread inside a frame function; returns false when the backend cannot report a position.
+* `window.DragMove(position *mullion.Vec2)`: Make the current container a primary-button drag handle. Keep `position` synchronized with other window-position controls; call every frame inside the handle. Wayland requires layer-shell; positioned layer windows support both relative and absolute pointers.
+* `window.DragMoveNonactivating(position *mullion.Vec2)`: Like `DragMove` for a window opened with `PopupWindowOptions.Nonactivating`; the drag starts even when the app is inactive, so a floating widget can move without taking focus.
+* `window.CurrentPosition() (mullion.Vec2, bool)`: Return the current window's top-left corner in the coordinates used by `Position`. Call on the UI thread inside a frame function; returns false when the backend cannot report a position.
 * `window.Hovered() bool`: Report whether the pointer is inside the current window's content. Best-effort on macOS, Windows, and X11; Wayland reports pointer focus on the window's surface, including non-activating windows. Mobile returns false. Call on the UI thread.
 * `window.Activate()`: Bring the main window forward. Wayland restores a hidden background window and requests activation; the compositor can deny focus.
 * `window.SetSize(width, height float32)`: Request the current content size (logical points). Wayland supports layer windows and ordinary floating windows; ordinary requests are discarded while the compositor reports tiling, maximization, fullscreen, or interactive resizing. They are not retried after restoring the window. Mobile backends ignore it.
@@ -74,12 +74,12 @@ Keep the requested screen position as application state. The same handle code
 works across desktop backends:
 
 ```go
-var origin = shirei.Vec2{40, 80}
+var origin = mullion.Vec2{40, 80}
 
 func title() {
-    shirei.Container(shirei.Attrs(shirei.FixHeight(40)), func() {
+    mullion.Container(mullion.Attrs(mullion.FixHeight(40)), func() {
         window.DragMove(&origin)
-        shirei.Label("Drag here")
+        mullion.Label("Drag here")
     })
 }
 ```

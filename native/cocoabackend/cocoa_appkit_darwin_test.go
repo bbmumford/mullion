@@ -23,10 +23,10 @@ func TestEnsureAppkit(t *testing.T) {
 		t.Fatal(err)
 	}
 	if viewClass == 0 {
-		t.Fatal("ShireiView class not registered")
+		t.Fatal("MullionView class not registered")
 	}
 	if appDelegateClass == 0 {
-		t.Fatal("ShireiAppDelegate class not registered")
+		t.Fatal("MullionAppDelegate class not registered")
 	}
 	if kIOSurfaceWidth == 0 || nsPasteboardTypeString == 0 || kCAGravityResize == 0 {
 		t.Fatal("AppKit/IOSurface constants not loaded")

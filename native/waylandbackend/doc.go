@@ -1,7 +1,7 @@
-// Package waylandbackend is shirei's native Wayland shell: it owns the window and
+// Package waylandbackend is mullion's native Wayland shell: it owns the window and
 // input and presents a BGRA buffer the compositor can scan out. GLES
-// (shirei/gpurender) writes a dmabuf and is the default compositor unless
-// SHIREI_GPU=0 or init fails; wl_shm + SoftRenderer is the fallback.
+// (mullion/gpurender) writes a dmabuf and is the default compositor unless
+// MULLION_GPU=0 or init fails; wl_shm + SoftRenderer is the fallback.
 //
 // The Wayland protocol is spoken in pure Go via github.com/neurlang/wayland
 // (the maintained successor to rajveermalviya/go-wayland), so the backend

@@ -15,7 +15,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// COM callbacks read an owned snapshot, never Shirei's live frame state.
+// COM callbacks read an owned snapshot, never Mullion's live frame state.
 // Each live node owns one reference. Retired nodes stay anchored until their
 // last COM reference is released; their methods return UIA_E_ELEMENTNOTAVAILABLE.
 type accessInterface struct {
@@ -391,7 +391,7 @@ func accessPropertyValue(p *accessProvider, id int32, active, visible bool) acce
 	case 30011:
 		return accessString(fmt.Sprintf("%s#%d", n.Name, n.ID))
 	case 30012:
-		return accessString("shireiWindowClass")
+		return accessString("mullionWindowClass")
 	case 30013:
 		return accessString(n.Description)
 	case 30016, 30017:
@@ -406,7 +406,7 @@ func accessPropertyValue(p *accessProvider, id int32, active, visible bool) acce
 		}
 		return accessInt(0)
 	case 30024:
-		return accessString("Shirei")
+		return accessString("Mullion")
 	case 30031:
 		return accessBool(accessPatternFace(p, 10000) != nil)
 	case 30033:
@@ -725,7 +725,7 @@ func accessGetObject(h, w, l uintptr) (uintptr, bool) {
 	} else {
 		result, _, _ = msaaReturn.Call(uintptr(unsafe.Pointer(&msaaIID)), w, uintptr(unsafe.Pointer(&p.msaa)))
 	}
-	if os.Getenv("SHIREI_ACCESS_DEBUG") != "" {
+	if os.Getenv("MULLION_ACCESS_DEBUG") != "" {
 		kind := "MSAA"
 		if id == -25 {
 			kind = "UIA"

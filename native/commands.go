@@ -83,7 +83,7 @@ func TakeCommand[T any](widget string, key any, name string) (T, bool) {
 	delete(ui.pendingCommands, commandKey)
 	arg, ok := cmd.arg.(T)
 	if !ok {
-		fmt.Fprintf(os.Stderr, "shirei: command %s %q argument is %T, taken as %T\n",
+		fmt.Fprintf(os.Stderr, "mullion: command %s %q argument is %T, taken as %T\n",
 			widget, name, cmd.arg, zero)
 		return zero, false
 	}

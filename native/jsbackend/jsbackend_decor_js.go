@@ -15,28 +15,31 @@ import (
 //   - SetupWindow sizes are content/client (parity with macOS/Win32). The
 //     floating shell is grown by titlebarHeight so chrome does not eat the body,
 //     then clamped to the host slot so it never opens larger than the desk.
-//     Mobile hosts and short/narrow host slots skip this and fill #shirei-root.
+//     Mobile hosts and short/narrow host slots skip this and fill #mullion-root.
 //   - The canvas is the full surface (titlebar + content).
-//   - wrapFrame draws the titlebar in shirei and narrows Host.WindowSize so
+//   - wrapFrame draws the titlebar in mullion and narrows Host.WindowSize so
 //     the app (and popups) see only the content area.
-//   - Titlebar drag moves the canvas inside #shirei-root (the host slot).
+//   - Titlebar drag moves the canvas inside #mullion-root (the host slot).
 //   - Edge presses (resizeBorder px) start an interactive resize of that shell.
 //
-// #shirei-root fills leftover space in the page; in-flow siblings (a source
+// #mullion-root fills leftover space in the page; in-flow siblings (a source
 // strip, a toolbar, …) keep theirs. The shell is sized against that slot.
 // Iframe embeds, mobile hosts, short/narrow host slots, and SetupWindow 0×0
 // leave csd off. The 1px edge is a box-shadow outside the layout box and does
 // not need a size inflate.
 
 const titlebarHeight = 34
+
 // resizeBorder is the surface-edge hit zone for interactive resize. Slightly
 // wider than Wayland's 6 so the web shell is easier to grab (no compositor
 // frame; only this interior strip counts).
 const resizeBorder = 10
 const chromeMinW = 200
 const chromeMinH = 120 + titlebarHeight
+
 // chromeMargin is the gap between the floating shell and the host slot edge.
 const chromeMargin = 8
+
 // A host slot this narrow or short uses the full-bleed shell (no CSD), even
 // on a desktop OS — there is not enough desk for a floating window.
 const fullBleedMaxW = 700
@@ -90,7 +93,7 @@ func drawTitlebar() {
 		startDrag := IsClicked()
 		title := winTitle
 		if title == "" {
-			title = "shirei"
+			title = "mullion"
 		}
 		Label(title, FontSize(14), TextColor(0, 0, 25, 1))
 		Element(Attrs(Grow(1)))
@@ -121,7 +124,7 @@ func closeShell() {
 	win := js.Global()
 	win.Call("close")
 	doc := win.Get("document")
-	if root := doc.Call("getElementById", "shirei-root"); root.Truthy() {
+	if root := doc.Call("getElementById", "mullion-root"); root.Truthy() {
 		root.Get("style").Set("display", "none")
 	}
 }
@@ -137,17 +140,17 @@ const (
 )
 
 var (
-	chromeAction   chromeMode
-	chromeEdge     uint32 // bit flags, same layout as xdg edges (see below)
-	chromeStartX   float64
-	chromeStartY   float64
-	chromeOrigL    float64
-	chromeOrigT    float64
-	chromeOrigW    int
-	chromeOrigH    int
-	frameLeft      float64
-	frameTop       float64
-	framePlaced    bool
+	chromeAction chromeMode
+	chromeEdge   uint32 // bit flags, same layout as xdg edges (see below)
+	chromeStartX float64
+	chromeStartY float64
+	chromeOrigL  float64
+	chromeOrigT  float64
+	chromeOrigW  int
+	chromeOrigH  int
+	frameLeft    float64
+	frameTop     float64
+	framePlaced  bool
 )
 
 // Edge flags (mirror xdg_toplevel resize edges; only used locally).
@@ -275,14 +278,14 @@ func resizeEdgeAt(x, y, w, h float32) uint32 {
 	return edge
 }
 
-// deskElem is the host slot (#shirei-root): leftover page space after in-flow
+// deskElem is the host slot (#mullion-root): leftover page space after in-flow
 // siblings. The floating canvas is positioned inside it.
 func deskElem() js.Value {
 	doc := js.Global().Get("document")
 	if !doc.Truthy() {
 		return js.Undefined()
 	}
-	return doc.Call("getElementById", "shirei-root")
+	return doc.Call("getElementById", "mullion-root")
 }
 
 func deskSize() (w, h float64) {
@@ -384,7 +387,7 @@ func constrainShell() {
 // applyFrameGeometry writes the floating canvas position and size to the DOM.
 func applyFrameGeometry() {
 	doc := js.Global().Get("document")
-	canvas := doc.Call("getElementById", "shirei-canvas")
+	canvas := doc.Call("getElementById", "mullion-canvas")
 	if !canvas.Truthy() {
 		return
 	}
@@ -394,8 +397,8 @@ func applyFrameGeometry() {
 	cs.Set("width", strconv.Itoa(winW)+"px")
 	cs.Set("height", strconv.Itoa(winH)+"px")
 	if html := doc.Get("documentElement"); html.Truthy() {
-		html.Call("setAttribute", "data-shirei-width", strconv.Itoa(winW))
-		html.Call("setAttribute", "data-shirei-height", strconv.Itoa(winH))
+		html.Call("setAttribute", "data-mullion-width", strconv.Itoa(winW))
+		html.Call("setAttribute", "data-mullion-height", strconv.Itoa(winH))
 	}
 	notifyParentSize(winW, winH)
 	RequestNextFrame()

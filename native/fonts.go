@@ -28,7 +28,7 @@ var initFontsOnce sync.Once
 
 // InitFontSubsystem loads a small critical face set synchronously (hard-coded
 // likely paths per GOOS), then walks the rest of the system font dirs on a
-// background goroutine. Package init runs it when shirei is imported.
+// background goroutine. Package init runs it when mullion is imported.
 // Safe to call explicitly; later calls are no-ops.
 func InitFontSubsystem() {
 	initFontsOnce.Do(startFontSubsystem)

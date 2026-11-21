@@ -1,7 +1,7 @@
 // Package drive is a loopback client for AcceptInputCommands. It sends
 // kernel commands (move, key_down, show, …) and composes hover/click/type
 // by sleeping between beats while the app produces frames. Start builds
-// and launches a main package with SHIREI_DRIVE_PORT for windowed tests.
+// and launches a main package with MULLION_DRIVE_PORT for windowed tests.
 package drive
 
 import (
@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
+	g "go.hasen.dev/generic"
 	"go.hasen.dev/udplib"
 )
 
@@ -52,7 +52,7 @@ func traceUDP(sent, recv string) {
 
 // Cmd sends one kernel line and returns the reply. Injects reply empty
 // (UDP delivery is the success flag). Replies that start with "error:"
-// become an error. With go test -v and SHIREI_CMD_LOG set, each command
+// become an error. With go test -v and MULLION_CMD_LOG set, each command
 // is printed (except ping); empty inject replies are omitted.
 func Cmd(port int, line string) (string, error) {
 	b, ok := udplib.SendUDP(port, []byte(line), nil, Timeout)

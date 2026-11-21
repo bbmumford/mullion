@@ -14,12 +14,12 @@ import (
 
 // EnvTrace is a directory. When set, Cmd appends JSONL (except ping) and
 // Shot writes numbered PNGs plus a beat. Unset: Shot is a no-op.
-const EnvTrace = "SHIREI_DRIVE_TRACE"
+const EnvTrace = "MULLION_DRIVE_TRACE"
 
 // EnvCmdLog enables the stderr UDP dump. It also needs go test -v
-// (testing.Verbose). Tester does not set this; SHIREI_DRIVE_TRACE is the
+// (testing.Verbose). Tester does not set this; MULLION_DRIVE_TRACE is the
 // structured log.
-const EnvCmdLog = "SHIREI_CMD_LOG"
+const EnvCmdLog = "MULLION_CMD_LOG"
 
 // TraceEvent is one JSONL line under EnvTrace/<test>/trace.jsonl.
 // Kind is "cmd" (UDP sent/recv), "shot" (PNG beat), or "comment".
@@ -74,7 +74,7 @@ func recordCmd(sent, recv string) {
 }
 
 // Comment records a human-readable heading in the trace. No-op when
-// SHIREI_DRIVE_TRACE is unset.
+// MULLION_DRIVE_TRACE is unset.
 func Comment(text string) {
 	if text == "" {
 		return
@@ -83,7 +83,7 @@ func Comment(text string) {
 }
 
 // Shot writes a named PNG of the last frame into the trace dir and records
-// a beat. No-op (and nil) when SHIREI_DRIVE_TRACE is unset.
+// a beat. No-op (and nil) when MULLION_DRIVE_TRACE is unset.
 func Shot(port int, name string) error {
 	traceMu.Lock()
 	dir := traceDir

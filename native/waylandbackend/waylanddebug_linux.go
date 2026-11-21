@@ -2,7 +2,7 @@
 
 package waylandbackend
 
-// Event-timing diagnostics: set SHIREI_WL_DEBUG=1 to print keyboard events,
+// Event-timing diagnostics: set MULLION_WL_DEBUG=1 to print keyboard events,
 // modifier updates, frame draws, and frame callbacks with millisecond
 // timestamps. For diagnosing event delivery/ordering issues — e.g. held
 // Shift not reflecting in the UI until another event arrives (GNOME VM).
@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var wlDebugEnabled = os.Getenv("SHIREI_WL_DEBUG") != ""
+var wlDebugEnabled = os.Getenv("MULLION_WL_DEBUG") != ""
 
 var wlDebugStart = time.Now()
 

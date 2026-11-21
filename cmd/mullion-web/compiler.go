@@ -143,7 +143,7 @@ func tinyGoRoot(tinygoPath string) (string, error) {
 
 // patchTinyGoWasmExec seeds TinyGo's JS value table the way Go's wasm_exec.js
 // does. Without the seed, globalThis (and window) are not deduplicated, so
-// js.Value.Equal(parent, window) is false even when parent === window. Shirei's
+// js.Value.Equal(parent, window) is false even when parent === window. Mullion's
 // isEmbeddedFrame relies on that identity check for the window shell layout.
 //
 // The second replacement is part of the same fix: the seeded ids need ref

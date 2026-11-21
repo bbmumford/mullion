@@ -1,16 +1,16 @@
-// Minimal UIKit host for shirei iOS apps built as a Go c-archive.
+// Minimal UIKit host for mullion iOS apps built as a Go c-archive.
 // UIApplicationMain owns the process; after launch we call into Go, which
 // runs the app's main() (SetupWindow + Run) and attaches the content view.
 #import <UIKit/UIKit.h>
 
 // Defined by the Go c-archive export (see ios-run.sh inject file).
-void shirei_ios_run(void);
+void mullion_ios_run(void);
 
-@interface ShireiAppDelegate : UIResponder <UIApplicationDelegate>
+@interface MullionAppDelegate : UIResponder <UIApplicationDelegate>
 @property(nonatomic, strong) UIWindow *window;
 @end
 
-@implementation ShireiAppDelegate
+@implementation MullionAppDelegate
 - (BOOL)application:(UIApplication *)application
 	didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 	(void)application;
@@ -18,7 +18,7 @@ void shirei_ios_run(void);
 	// Initialize the Go runtime and run the app package's main (which calls
 	// app.Run → iosbackend.Run → ios_attach). The window property is unused;
 	// iosbackend creates its own UIWindow.
-	shirei_ios_run();
+	mullion_ios_run();
 	return YES;
 }
 
@@ -39,6 +39,6 @@ void shirei_ios_run(void);
 int main(int argc, char *argv[]) {
 	@autoreleasepool {
 		return UIApplicationMain(argc, argv, nil,
-			NSStringFromClass([ShireiAppDelegate class]));
+			NSStringFromClass([MullionAppDelegate class]));
 	}
 }

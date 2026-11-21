@@ -34,7 +34,7 @@ func gpuInit() error {
 		return err
 	}
 
-	path := strings.TrimSpace(os.Getenv("SHIREI_DRM_RENDER"))
+	path := strings.TrimSpace(os.Getenv("MULLION_DRM_RENDER"))
 	var err error
 	if path != "" {
 		drmFD, err = unix.Open(path, unix.O_RDWR|unix.O_CLOEXEC, 0)

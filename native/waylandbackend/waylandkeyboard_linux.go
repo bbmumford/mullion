@@ -9,16 +9,16 @@ import (
 	xkb "github.com/bbmumford/mullion/native/internal/wayland/xkbcommon"
 	"time"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/internal/qwerty"
+	g "go.hasen.dev/generic"
 )
 
 // Keyboard input. The compositor hands us an xkb keymap over an fd; we compile it
 // with libxkbcommon (via neurlang's purego binding — no cgo) and keep an xkb state
 // updated from wl_keyboard.modifiers. Per key we get the keysym (an X11 keysym
 // value, same as the X11 backend uses) for shortcut mapping, and the UTF-32
-// codepoint for typed text. Sampled into the shirei globals (sample, not queue).
+// codepoint for typed text. Sampled into the mullion globals (sample, not queue).
 
 var (
 	seatModifierMask uint32
@@ -82,7 +82,7 @@ func (*handler) HandleKeyboardKeymap(ev wl.KeyboardKeymapEvent) {
 }
 
 // HandleKeyboardModifiers feeds the serialized modifier state into xkb (so text
-// reflects shift/caps/layout) and into the shirei modifier flags.
+// reflects shift/caps/layout) and into the mullion modifier flags.
 func (*handler) HandleKeyboardModifiers(ev wl.KeyboardModifiersEvent) {
 	seatModifierMask = ev.ModsDepressed | ev.ModsLatched
 	if xkbState != nil {
@@ -100,7 +100,7 @@ func (*handler) HandleKeyboardModifiers(ev wl.KeyboardModifiersEvent) {
 	}
 	updateModifiers(ev.ModsDepressed | ev.ModsLatched)
 	currentWindow.dirty = true
-	wlDebug("modifiers: depressed=%#x latched=%#x locked=%#x -> shirei mods=%04b",
+	wlDebug("modifiers: depressed=%#x latched=%#x locked=%#x -> mullion mods=%04b",
 		ev.ModsDepressed, ev.ModsLatched, ev.ModsLocked, native.GetInputState().Modifiers)
 }
 
@@ -216,7 +216,7 @@ func pumpKeyboardRepeat(now time.Time) {
 	leave()
 }
 
-// onKey maps a key event to a shirei key code and, for printable presses, the
+// onKey maps a key event to a mullion key code and, for printable presses, the
 // typed text. Mirrors x11backend.onKey. The writing block resolves by evdev
 // position — KeyW is the physical key at the US-QWERTY W position no matter
 // the layout; the layout still drives the typed text below. Other keys
@@ -232,7 +232,7 @@ func pumpKeyboardRepeat(now time.Time) {
 // Mutter (and similar) only sends commit_string for IME-routed text; ordinary
 // latin/digit keys arrive solely on wl_keyboard.key with no commit_string.
 // Gating on textInputEnabled left TextInput fields read-only without an IME
-// (go-shirei#15). While composing, the early return above already skips xkb
+// (go-mullion#15). While composing, the early return above already skips xkb
 // text — that is enough to avoid double-insert with preedit/commit_string.
 func onKey(code, keysym uint32, down bool) {
 	kc := qwerty.FromScan(uint16(code - 8)) // xkb keycode -> evdev

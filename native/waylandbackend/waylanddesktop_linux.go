@@ -35,7 +35,7 @@ func appID() string {
 	if exe, err := os.Executable(); err == nil {
 		return filepath.Base(exe)
 	}
-	return "shirei-app"
+	return "mullion-app"
 }
 
 // ensureDesktopEntry writes $XDG_DATA_HOME/applications/<id>.desktop and the

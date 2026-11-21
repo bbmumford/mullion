@@ -1,6 +1,6 @@
 //go:build !js
 
-// Package atspi publishes Shirei's semantic snapshots on the Linux accessibility
+// Package atspi publishes Mullion's semantic snapshots on the Linux accessibility
 // bus. D-Bus callbacks read owned data and queue actions for the window thread.
 package atspi
 
@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/godbus/dbus/v5"
 	"github.com/bbmumford/mullion/native"
+	"github.com/godbus/dbus/v5"
 )
 
 const (

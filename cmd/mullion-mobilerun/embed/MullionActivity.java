@@ -1,4 +1,4 @@
-// The one Java class in a shirei Android app. NativeActivity alone cannot do
+// The one Java class in a mullion Android app. NativeActivity alone cannot do
 // text input: its NDK showSoftInput is a broken no-op, and without an
 // InputConnection IMEs degrade badly. This subclass adds an invisible
 // focusable view whose InputConnection forwards IME traffic to native code
@@ -11,8 +11,8 @@
 // Compiled by mobilerun with javac + d8 into classes.dex; the native methods
 // live in androidbackend (jni.c). Package/class name is load-bearing: JNI
 // symbol names and the manifest activity entry depend on
-// dev.shirei.host.ShireiActivity.
-package dev.shirei.host;
+// dev.mullion.host.MullionActivity.
+package dev.mullion.host;
 
 import android.app.NativeActivity;
 import android.content.Context;
@@ -30,12 +30,12 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
-public class ShireiActivity extends NativeActivity {
+public class MullionActivity extends NativeActivity {
 	static {
 		// NativeActivity dlopens the lib natively (loadNativeCode), which
 		// does NOT register it with the Java classloader — without this
 		// loadLibrary, the Java_* natives below throw UnsatisfiedLinkError.
-		System.loadLibrary("shireiapp");
+		System.loadLibrary("mullionapp");
 	}
 
 	// IME → native (implemented in androidbackend/jni.c; called on UI thread).
@@ -49,14 +49,14 @@ public class ShireiActivity extends NativeActivity {
 	private static native void nativeActivityResult(int requestCode, int resultCode, Intent data);
 	private static native void nativeRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults);
 
-	private ShireiEditView edit;
+	private MullionEditView edit;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		// 1x1 view in the corner: never visible, never in the way of touches,
 		// exists purely to own IME focus and the InputConnection.
-		edit = new ShireiEditView(this);
+		edit = new MullionEditView(this);
 		addContentView(edit, new ViewGroup.LayoutParams(1, 1));
 	}
 
@@ -81,7 +81,7 @@ public class ShireiActivity extends NativeActivity {
 	}
 
 	// Called from native when Host.PreferredOrientation changes.
-	// mode matches shirei.PreferredOrientation: 0 any, 1 portrait, 2 landscape.
+	// mode matches mullion.PreferredOrientation: 0 any, 1 portrait, 2 landscape.
 	public void setPreferredOrientation(final int mode) {
 		runOnUiThread(new Runnable() {
 			@Override
@@ -151,7 +151,7 @@ public class ShireiActivity extends NativeActivity {
 					if (cm != null && cm.hasPrimaryClip()) {
 						android.content.ClipData clip = cm.getPrimaryClip();
 						if (clip != null && clip.getItemCount() > 0) {
-							CharSequence cs = clip.getItemAt(0).coerceToText(ShireiActivity.this);
+							CharSequence cs = clip.getItemAt(0).coerceToText(MullionActivity.this);
 							if (cs != null) out[0] = cs.toString();
 						}
 					}
@@ -254,8 +254,8 @@ public class ShireiActivity extends NativeActivity {
 		}
 	}
 
-	class ShireiEditView extends View {
-		ShireiEditView(Context ctx) {
+	class MullionEditView extends View {
+		MullionEditView(Context ctx) {
 			super(ctx);
 			setFocusable(true);
 			setFocusableInTouchMode(true);
@@ -272,12 +272,12 @@ public class ShireiActivity extends NativeActivity {
 				| EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
 			outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_FULLSCREEN
 				| EditorInfo.IME_FLAG_NO_EXTRACT_UI;
-			return new ShireiInputConnection(this);
+			return new MullionInputConnection(this);
 		}
 	}
 
-	class ShireiInputConnection extends BaseInputConnection {
-		ShireiInputConnection(View target) {
+	class MullionInputConnection extends BaseInputConnection {
+		MullionInputConnection(View target) {
 			super(target, true); // full editor: IMEs may compose
 		}
 

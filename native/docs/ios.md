@@ -1,32 +1,32 @@
-# Running Shirei apps on iOS
+# Running Mullion apps on iOS
 
-Shirei is a Go GUI framework. An iOS app built with it is an ordinary Go
+Mullion is a Go GUI framework. An iOS app built with it is an ordinary Go
 program — the same `package main` that runs on the desktop. You do not write Swift or Objective-C for the UI: the
-`shirei_mobilerun` tool cross-compiles your package, links a thin UIKit host, and
+`mullion-mobilerun` tool cross-compiles your package, links a thin UIKit host, and
 installs the result on the Simulator or a USB iPhone.
 
 **macOS only.** Building for iOS requires Apple’s toolchain (Xcode). Linux
 and Windows hosts cannot produce or run iOS apps with this path.
 
-**Development and release.** `shirei_mobilerun` iterates on the Simulator or a
+**Development and release.** `mullion-mobilerun` iterates on the Simulator or a
 developer-signed device using ad-hoc ids, a free Personal Team, or your Apple
 Development certificate. For signed release IPAs and related packaging, use
-**`shirei_bundle`**
-([cmd/shirei_bundle/README.md](../cmd/shirei_bundle/README.md)).
+**`mullion-bundle`**
+([cmd/mullion-bundle/README.md](../cmd/mullion-bundle/README.md)).
 
 Install the tool:
 
 ```sh
-go install go.hasen.dev/shirei/cmd/shirei_mobilerun@latest
+go install go.hasen.dev/mullion/cmd/mullion-mobilerun@latest
 ```
 
 Ensure `$(go env GOPATH)/bin` is on your `PATH`.
 
 This document covers setting up the environment and getting a first app
-onto the Simulator or a phone. For Shirei itself, start with
+onto the Simulator or a phone. For Mullion itself, start with
 [tutorial.md](tutorial.md). Android: [android.md](android.md).
 
-Camera and other OS features (escape hatches, `shirei.capabilities`):
+Camera and other OS features (escape hatches, `mullion.capabilities`):
 [mobile-extensions.md](mobile-extensions.md).
 
 ---
@@ -36,7 +36,7 @@ Camera and other OS features (escape hatches, `shirei.capabilities`):
 | Requirement | Why |
 |---|---|
 | **macOS** host | Xcode, `xcrun`, `simctl` / `devicectl`, and the iOS SDKs are Apple-only |
-| Go 1.24+ | building the app (and `shirei_mobilerun` itself); must be on your `PATH` |
+| Go 1.24+ | building the app (and `mullion-mobilerun` itself); must be on your `PATH` |
 | **Xcode** (full app from the Mac App Store, not only Command Line Tools) | iOS SDK, Simulator, `xcodebuild`, signing, `simctl` / `devicectl` |
 | An iOS Simulator runtime and/or a physical iPhone/iPad | something to launch onto |
 | Apple ID (for a **physical device** only) | free Personal Team + Apple Development certificate via Xcode |
@@ -46,7 +46,7 @@ Program membership. Device builds need at least a free Apple ID signed into
 Xcode (Personal Team). A paid Apple Developer Program account works too, but
 is not required for local USB installs.
 
-Rough disk: Xcode itself is large (tens of GB with platforms). Shirei’s own
+Rough disk: Xcode itself is large (tens of GB with platforms). Mullion’s own
 build scratch is small by comparison.
 
 ---
@@ -87,7 +87,7 @@ Skip this section if you only use the **Simulator**.
 1. **Xcode → Settings → Accounts**
 2. **+** → **Apple ID** → sign in with any Apple ID (free is fine)
 3. Select the account → your **Team** (often *Your Name (Personal Team)*)
-4. Note the **Team ID** (10-character alphanumeric). `shirei_mobilerun` can often
+4. Note the **Team ID** (10-character alphanumeric). `mullion-mobilerun` can often
    read it automatically from Xcode; otherwise paste it into the GUI’s
    **Apple Team** field or pass `-team`.
 
@@ -103,7 +103,7 @@ build, but doing it once in Xcode avoids confusing first-run failures:
 That installs a certificate and private key in your login keychain. The
 first device build may still prompt for **keychain access** — allow it.
 
-Xcode’s Automatic Signing (what `shirei_mobilerun` uses) will also create or
+Xcode’s Automatic Signing (what `mullion-mobilerun` uses) will also create or
 refresh a **provisioning profile** that includes your phone’s UDID.
 
 ### 3.3 Free Personal Team limits
@@ -141,24 +141,24 @@ dev loop.
 
 ```sh
 # GUI: platform = iOS, package picker, team, log
-shirei_mobilerun
+mullion-mobilerun
 
 # Simulator (CLI)
-shirei_mobilerun -platform ios ./demos/theme
+mullion-mobilerun -platform ios ./demos/theme
 
 # Physical device (CLI) — Team ID required
-shirei_mobilerun -platform ios -device -team YOURTEAMID ./demos/theme
+mullion-mobilerun -platform ios -device -team YOURTEAMID ./demos/theme
 ```
 
-From a local checkout of the shirei module you can also
-`go run ./cmd/shirei_mobilerun` instead of installing.
+From a local checkout of the mullion module you can also
+`go run ./cmd/mullion-mobilerun` instead of installing.
 
 In the GUI: set **Platform** to **iOS**, choose **Simulator** or **Device**,
 pick a package, set identity (App ID / name / icon) if you want, then
 **Run**. Empty App ID uses `{prefix}.<folder>`; empty icon uses
 `<package>/icon.png` when present.
 
-First build for a new GOOS/arch takes a while (Shirei + Go compile); later
+First build for a new GOOS/arch takes a while (Mullion + Go compile); later
 builds are much faster. First **device** build can take longer while Xcode
 creates a cert/profile.
 
@@ -220,12 +220,12 @@ certs, full adaptive assets, advanced IME polish, etc.
 
 ## 8. How it works, briefly
 
-`shirei_mobilerun` builds your package with
+`mullion-mobilerun` builds your package with
 `-buildmode=c-archive` against the iOS or Simulator SDK, then links a small
 UIKit host (the one Objective-C file in the system) into an `.app` bundle.
 Simulator builds are ad-hoc signed and installed with `simctl`. Device
 builds use **Xcode Automatic Signing** (`CODE_SIGN_STYLE=Automatic`,
 `CODE_SIGN_IDENTITY=Apple Development`) with your team id, then
 `devicectl` to install and launch. The host template is embedded in the
-`shirei_mobilerun` binary and extracted to the user cache — no monorepo layout is
-required to run a package that imports Shirei.
+`mullion-mobilerun` binary and extracted to the user cache — no monorepo layout is
+required to run a package that imports Mullion.

@@ -3,10 +3,10 @@
 package window
 
 import (
-	"github.com/jezek/xgb/xproto"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/waylandbackend"
 	"github.com/bbmumford/mullion/native/x11backend"
+	"github.com/jezek/xgb/xproto"
 )
 
 func init() {

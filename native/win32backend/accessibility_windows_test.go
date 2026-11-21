@@ -9,8 +9,8 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/ebitengine/purego"
 	"github.com/bbmumford/mullion/native"
+	"github.com/ebitengine/purego"
 )
 
 // Exercise the native COM ABI, ownership and snapshot/action boundary. The
@@ -19,13 +19,13 @@ func TestAccessibilityProvider(t *testing.T) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	class, _ := syscall.UTF16PtrFromString("STATIC")
-	title, _ := syscall.UTF16PtrFromString("Shirei provider ABI check")
+	title, _ := syscall.UTF16PtrFromString("Mullion provider ABI check")
 	h, _, err := procCreateWindowExW.Call(0, uintptr(unsafe.Pointer(class)), uintptr(unsafe.Pointer(title)), wsOverlappedWindow|wsVisible, 20, 20, 400, 400, 0, 0, 0, 0)
 	if h == 0 {
 		t.Fatal(err)
 	}
 	currentWindow.hwnd = syscall.Handle(h)
-	currentWindow.winTitle = "Shirei provider ABI check"
+	currentWindow.winTitle = "Mullion provider ABI check"
 	defer procDestroyWindow.Call(h)
 	initAccess()
 	if !currentWindow.access.ready {

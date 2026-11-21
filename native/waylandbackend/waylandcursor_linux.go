@@ -23,7 +23,7 @@ import (
 //     compositor a buffer, scaled for HiDPI via set_buffer_scale.
 //  3. The drawn arrow below, when no theme can be found at all.
 //
-// SHIREI_WL_NO_CURSOR_SHAPE=1 skips tier 1, to exercise the themed path on
+// MULLION_WL_NO_CURSOR_SHAPE=1 skips tier 1, to exercise the themed path on
 // compositors that do support cursor-shape (e.g. for VM testing on Fedora).
 
 var (
@@ -157,7 +157,7 @@ func buildCursor(cs int) {
 	cursorReady = true
 }
 
-var cursorShapeDisabled = os.Getenv("SHIREI_WL_NO_CURSOR_SHAPE") != ""
+var cursorShapeDisabled = os.Getenv("MULLION_WL_NO_CURSOR_SHAPE") != ""
 
 // themed-cursor cache, per integer scale. The Theme is retained because the
 // image buffers live in its shm pool (and os.File would close the fd when

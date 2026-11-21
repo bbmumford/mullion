@@ -14,15 +14,15 @@ import (
 // asserts the watchdog rebuilds it and pulls resume. Gated behind an env
 // var because it touches audio hardware (it only ever renders silence):
 //
-//	SHIREI_AUDIO_DEVICE_TESTS=1 go test ./app -run AudioWatchdog -v
+//	MULLION_AUDIO_DEVICE_TESTS=1 go test ./app -run AudioWatchdog -v
 //
 // On windows, run it under wine with a cross-compiled test binary:
 //
 //	GOOS=windows GOARCH=amd64 go test -c -o /tmp/apptest.exe ./app
-//	SHIREI_AUDIO_DEVICE_TESTS=1 wine /tmp/apptest.exe -test.run AudioWatchdog -test.v
+//	MULLION_AUDIO_DEVICE_TESTS=1 wine /tmp/apptest.exe -test.run AudioWatchdog -test.v
 func TestAudioWatchdogRevival(t *testing.T) {
-	if os.Getenv("SHIREI_AUDIO_DEVICE_TESTS") == "" {
-		t.Skip("set SHIREI_AUDIO_DEVICE_TESTS=1 to run (opens the audio device)")
+	if os.Getenv("MULLION_AUDIO_DEVICE_TESTS") == "" {
+		t.Skip("set MULLION_AUDIO_DEVICE_TESTS=1 to run (opens the audio device)")
 	}
 
 	var fills atomic.Int64

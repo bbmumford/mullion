@@ -8,7 +8,7 @@ import (
 
 // Layout diagnostics are opt-in and read at process startup. The disabled path
 // does not walk the container tree or resolve builder source locations.
-var layoutWarnings = os.Getenv("SHIREI_LAYOUT_WARN") == "1"
+var layoutWarnings = os.Getenv("MULLION_LAYOUT_WARN") == "1"
 
 // warnCollapsedLayout runs after the final layout pass. Actual and target sizes
 // must both be zero so an opening size animation does not produce a warning.
@@ -40,7 +40,7 @@ func warnCollapsedLayout(c *_Container) {
 				if axis == main {
 					hint = "Check main-axis allocation (Grow) or an explicit size constraint."
 				}
-				fmt.Fprintf(os.Stderr, "shirei: layout warning: clipped content in zero-%s extrinsic container #%d\n  builder location: %s\n  resolved: %g x %g\n  content: %g x %g\n  parent layout: %s (available: %g x %g)\n  Extrinsic excludes children from size measurement.\n  %s\n", name, c.node.serial, builder, c.resolvedSize[0], c.resolvedSize[1], c.ContentSize[0], c.ContentSize[1], direction, available[0], available[1], hint)
+				fmt.Fprintf(os.Stderr, "mullion: layout warning: clipped content in zero-%s extrinsic container #%d\n  builder location: %s\n  resolved: %g x %g\n  content: %g x %g\n  parent layout: %s (available: %g x %g)\n  Extrinsic excludes children from size measurement.\n  %s\n", name, c.node.serial, builder, c.resolvedSize[0], c.resolvedSize[1], c.ContentSize[0], c.ContentSize[1], direction, available[0], available[1], hint)
 			}
 		}
 	}

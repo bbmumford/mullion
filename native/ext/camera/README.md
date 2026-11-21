@@ -1,20 +1,20 @@
 # camera
 
-Reference Shirei **extension**: take a still photo with the system camera UI
-and produce `*image.RGBA` for `shirei.UseImage` — without putting camera
+Reference Mullion **extension**: take a still photo with the system camera UI
+and produce `*image.RGBA` for `mullion.UseImage` — without putting camera
 support in core.
 
-Module: `go.hasen.dev/shirei/ext/camera`
+Module: `go.hasen.dev/mullion/ext/camera`
 
 ## Run the demo
 
 ```sh
-shirei_mobilerun -platform ios ./shirei/demos/mobile-camera
-shirei_mobilerun -platform ios -device ./shirei/demos/mobile-camera
-shirei_mobilerun -platform android ./shirei/demos/mobile-camera
+mullion-mobilerun -platform ios ./mullion/demos/mobile-camera
+mullion-mobilerun -platform ios -device ./mullion/demos/mobile-camera
+mullion-mobilerun -platform android ./mullion/demos/mobile-camera
 ```
 
-shirei_mobilerun reads `shirei.capabilities` from this module (`camera`, `photos`)
+mullion-mobilerun reads `mullion.capabilities` from this module (`camera`, `photos`)
 and injects matching Info.plist purpose strings / Android permissions.
 
 ## Mechanism
@@ -47,11 +47,11 @@ var photo *image.RGBA
 
 if Button(SymImage, "Take photo") {
     camera.TakePhoto(&photo, func(err error) {
-        shirei.WithFrameLock(func() {
+        mullion.WithFrameLock(func() {
             if err == nil && photo != nil {
-                shirei.UseImage("camera/last", photo)
+                mullion.UseImage("camera/last", photo)
             }
-            shirei.RequestNextFrame()
+            mullion.RequestNextFrame()
         })
     })
 }
@@ -65,5 +65,5 @@ if Button(SymImage, "Take photo") {
 | `camera_ios.go` / `.m` | UIImagePicker + RGBA |
 | `camera_android.go` / `camera_jni_android.c` | Camera/gallery via generic androidbackend bridges |
 | `camera_pending.go` | One in-flight capture slot |
-| `shirei.capabilities` | `camera` + `photos` for shirei_mobilerun |
+| `mullion.capabilities` | `camera` + `photos` for mullion-mobilerun |
 | `../demos/mobile-camera` | Button + image view (iOS + Android) |

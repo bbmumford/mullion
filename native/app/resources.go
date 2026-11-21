@@ -15,8 +15,8 @@ import (
 // (macOS: Contents/Resources inside the .app).
 const ResourcesDirName = "Resources"
 
-// SHIREI_RESOURCES overrides automatic resolution when set (tests / odd layouts).
-const resourcesEnvVar = "SHIREI_RESOURCES"
+// MULLION_RESOURCES overrides automatic resolution when set (tests / odd layouts).
+const resourcesEnvVar = "MULLION_RESOURCES"
 
 var (
 	resourcesMu       sync.Mutex
@@ -46,7 +46,7 @@ func SetResourcesDir(dir string) {
 // or "" if none can be found. Resolution order:
 //
 //  1. SetResourcesDir pin
-//  2. SHIREI_RESOURCES environment variable
+//  2. MULLION_RESOURCES environment variable
 //  3. macOS .app: Contents/Resources next to the executable
 //  4. <exeDir>/Resources when that directory exists
 //  5. Dev probe from the working directory and executable directory (see below)

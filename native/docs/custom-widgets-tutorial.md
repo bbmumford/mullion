@@ -2,12 +2,12 @@
 
 This is a **follow-up** to the [layout tutorial](layout-tutorial.md). Layout
 taught multi-panel structure (shell, Extrinsic, Viewport, VirtualList). This
-tutorial teaches a different skill: **how Shirei expects you to customize
+tutorial teaches a different skill: **how Mullion expects you to customize
 interactive controls**.
 
 For application palettes and stock widget styles, see the
 [appearance tutorial](appearance-tutorial.md). This tutorial builds custom
-control geometry using Shirei's input-processing helpers.
+control geometry using Mullion's input-processing helpers.
 
 Pair custom controls with the metadata and actions in the
 [accessibility tutorial](accessibility-tutorial.md) so screen readers can
@@ -31,7 +31,7 @@ Runnable samples (each is a full window you can open while reading):
 | 16 | [`step16/main.go`](../demos/layout-shell/step16/main.go) | Live light/dark switch |
 
 ```bash
-cd shirei
+cd mullion
 go run ./demos/layout-shell/step14    # default field + default Send
 go run ./demos/layout-shell/step15a   # custom circle, default field
 go run ./demos/layout-shell/step15    # full custom compose
@@ -63,7 +63,7 @@ Default widgets (`Button`, `TextInput`, …) are **convenience packages**: they
 wire up interaction **and** draw a default look. That is fine until the
 default look is wrong for your app.
 
-Shirei's custom controls combine input processing with application-owned
+Mullion's custom controls combine input processing with application-owned
 containers and paint:
 
 > **You own the container.**  
@@ -380,7 +380,7 @@ append is enough; no layout rewrite.
 [`demos/layout-shell/step15/main.go`](../demos/layout-shell/step15/main.go)
 
 ```bash
-cd shirei
+cd mullion
 go run ./demos/layout-shell/step15
 ```
 
@@ -401,7 +401,7 @@ both modes.
 **Full source:** [`step16/main.go`](../demos/layout-shell/step16/main.go)
 
 ```bash
-cd shirei
+cd mullion
 go run ./demos/layout-shell/step16               # start in dark mode
 go run ./demos/layout-shell/step16 --dark=false  # start in light mode
 ```
@@ -495,7 +495,7 @@ Dark mode, the same custom controls:
 ![Step 16](layout-tutorial/images/step16.png)
 
 ```bash
-cd shirei
+cd mullion
 go run ./demos/layout-shell/step15
 go run ./demos/layout-shell/step16
 ```

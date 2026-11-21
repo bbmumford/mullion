@@ -1,14 +1,14 @@
-# shirei_bundle — release packaging for Shirei apps
+# mullion-bundle — release packaging for Mullion apps
 
-Build **release** artifacts for a Shirei `package main`: signed IPA, release
+Build **release** artifacts for a Mullion `package main`: signed IPA, release
 APK, macOS app/zip/pkg, Linux tarballs, Windows zips.
 
-This is the release counterpart of **`shirei_mobilerun`**, which is for
+This is the release counterpart of **`mullion-mobilerun`**, which is for
 development installs only (debug signing, fast device/simulator iteration).
 See [docs/android.md](../../docs/android.md) and
 [docs/ios.md](../../docs/ios.md).
 
-`shirei_bundle` writes packages **on disk**. Store listing metadata, TestFlight /
+`mullion-bundle` writes packages **on disk**. Store listing metadata, TestFlight /
 Play Console upload, and Android App Bundles (AAB) are outside this tool —
 upload IPAs/pkgs with Apple’s Transporter (or equivalent), and APKs via
 sideload or Play Console when you use APK tracks.
@@ -16,21 +16,21 @@ sideload or Play Console when you use APK tracks.
 ## Install
 
 ```bash
-go install go.hasen.dev/shirei/cmd/shirei_bundle@latest
+go install go.hasen.dev/mullion/cmd/mullion-bundle@latest
 ```
 
 Ensure `$(go env GOPATH)/bin` (or `GOBIN`) is on your `PATH`, then:
 
 ```bash
-shirei_bundle
+mullion-bundle
 ```
 
 From a local checkout of this module:
 
 ```bash
-go install ./cmd/shirei_bundle
+go install ./cmd/mullion-bundle
 # or without installing:
-go run ./cmd/shirei_bundle
+go run ./cmd/mullion-bundle
 ```
 
 With no package path argument, the **GUI** opens. Pass a package path and
@@ -55,13 +55,13 @@ Default release layout is under each app’s configured **Release directory**
 
 ## App resources (`Resources/`)
 
-Shirei’s resource convention is a **runtime** feature: put assets in
+Mullion’s resource convention is a **runtime** feature: put assets in
 `<package>/Resources/` next to `package main`, and load them with
 `app.ResourcePath(...)` / `app.ResourcesDir()`. The same calls work under
 `go run` and inside a release package. Full details:
 [App resources](../../docs/resources.md).
 
-On **desktop** builds, when that directory exists, `shirei_bundle` copies its
+On **desktop** builds, when that directory exists, `mullion-bundle` copies its
 contents into the platform resource root (no config field — presence is enough):
 
 | Platform | Destination |
@@ -101,8 +101,8 @@ requires a different identity on one OS.
 
 | File | Contents |
 |------|----------|
-| `…/shirei/bundle.json` | Saved apps and platform settings (`UserConfigDir`) |
-| `…/shirei/bundle-releases.json` | Version history and artifact paths |
+| `…/mullion/bundle.json` | Saved apps and platform settings (`UserConfigDir`) |
+| `…/mullion/bundle-releases.json` | Version history and artifact paths |
 
 ---
 
@@ -129,7 +129,7 @@ Common flags: `-platform`, `-id`, `-name`, `-version`, `-build`, `-o` (output),
 ### iOS
 
 ```bash
-shirei_bundle -platform ios \
+mullion-bundle -platform ios \
   -team YOURTEAMID \
   -id com.example.myapp \
   -name "My App" \
@@ -149,9 +149,9 @@ Prints the IPA path on success.
 ### Android
 
 ```bash
-SHIREI_ANDROID_KS_PASS='…' \
-SHIREI_ANDROID_KEY_PASS='…' \   # optional; defaults to keystore password
-shirei_bundle -platform android \
+MULLION_ANDROID_KS_PASS='…' \
+MULLION_ANDROID_KEY_PASS='…' \   # optional; defaults to keystore password
+mullion-bundle -platform android \
   -keystore ~/keys/release.jks \
   -key-alias myalias \
   -id com.example.myapp \
@@ -163,8 +163,8 @@ shirei_bundle -platform android \
 | Flag / env | Role |
 |------------|------|
 | `-keystore`, `-key-alias` | Signing keystore |
-| `SHIREI_ANDROID_KS_PASS` | Keystore password (**required** on CLI) |
-| `SHIREI_ANDROID_KEY_PASS` | Key password if different from the store |
+| `MULLION_ANDROID_KS_PASS` | Keystore password (**required** on CLI) |
+| `MULLION_ANDROID_KEY_PASS` | Key password if different from the store |
 | `-arch` | `arm64` (default) or `arm` |
 | `-build` | Integer **versionCode** (≥ 1) |
 
@@ -176,7 +176,7 @@ CLI builds **self-distribution** (Developer ID `.app` + zip). App Store `.pkg`
 and multi-mode options are in the GUI.
 
 ```bash
-shirei_bundle -platform macos \
+mullion-bundle -platform macos \
   -id com.example.myapp \
   -version 0.1.0 -build 1 \
   -arch universal \
@@ -210,7 +210,7 @@ Prints the primary artifact path (zip after notarize when profile is set).
 ## Related
 
 - [App resources](../../docs/resources.md) (`Resources/` + `app.ResourcePath`)
-- Parent overview: [shirei README](../../README.md)
+- Parent overview: [mullion README](../../README.md)
 - Dev mobile installs: [android.md](../../docs/android.md), [ios.md](../../docs/ios.md)
 - Capability tokens (privacy / sensors) still apply to release graphs:
   [mobile-extensions.md](../../docs/mobile-extensions.md)

@@ -1,5 +1,5 @@
 // Package cursorshape implements the staging wp-cursor-shape-v1 protocol
-// (not shipped by upstream neurlang; originally hand-written inside shirei's
+// (not shipped by upstream neurlang; originally hand-written inside mullion's
 // wayland backend and graduated here). It lets the compositor draw the real
 // themed cursor — the same cursor the rest of the desktop uses, correctly
 // sized on HiDPI — with the client only naming a shape.

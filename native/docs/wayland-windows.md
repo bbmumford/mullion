@@ -1,6 +1,6 @@
 # Wayland window controls
 
-Shirei uses ordinary `xdg_toplevel` windows and optional layer-shell v4 surfaces.
+Mullion uses ordinary `xdg_toplevel` windows and optional layer-shell v4 surfaces.
 Layer surfaces supply decorationless panels above normal applications. Their
 stacking and workspace behavior differ from ordinary utility windows.
 
@@ -49,7 +49,7 @@ has an explicit position. Other owner-relative hints use compositor placement.
 `window.SetSize` also resizes ordinary floating toplevels. Requests are discarded
 when the compositor reports tiling, maximization, fullscreen, or interactive
 resizing; restoring a window does not replay them. Startup requests wait for the
-initial configure so Shirei can determine whether client sizing is available.
+initial configure so Mullion can determine whether client sizing is available.
 Compositor placement rules can override client sizes. Minimum-size hints remain
 window properties and include client-drawn chrome when present.
 Centering uses the current output's usable area. Sizes are logical content points,
@@ -61,7 +61,7 @@ rounds buffer dimensions to device pixels, and sets the viewport destination to
 the logical surface size. Otherwise it uses the preferred integer surface scale
 or the highest integer scale of outputs that surface enters. Outputs containing
 other windows do not raise its rendering scale. Pointer and IME coordinates stay
-in logical surface units. `SHIREI_FRACTIONAL_SCALE=0` exercises the integer fallback.
+in logical surface units. `MULLION_FRACTIONAL_SCALE=0` exercises the integer fallback.
 
 Removing a layer window's output recreates its surface on the containing or
 nearest remaining output. Non-exact placement clamps to that output; exact
@@ -95,19 +95,19 @@ inject editing text during IME composition.
 ## Checking behavior
 
 ```sh
-go -C shirei/behavior_test run ./wayland-window-sizing --close
-go -C shirei/behavior_test run ./wayland-window-options --close
-go -C shirei/behavior_test run ./wayland-window-options --close --normal-main
-go -C shirei/behavior_test run ./wayland-window-options --close --overlay
-SHIREI_GPU=0 go -C shirei/behavior_test run ./wayland-window-options --close
-go -C shirei/behavior_test run ./wayland-window-options --manual
+go -C mullion/behavior_test run ./wayland-window-sizing --close
+go -C mullion/behavior_test run ./wayland-window-options --close
+go -C mullion/behavior_test run ./wayland-window-options --close --normal-main
+go -C mullion/behavior_test run ./wayland-window-options --close --overlay
+MULLION_GPU=0 go -C mullion/behavior_test run ./wayland-window-options --close
+go -C mullion/behavior_test run ./wayland-window-options --manual
 ```
 
 The options harness requires layer-shell v4. The general popup harness also
 supports the ordinary-toplevel fallback:
 
 ```sh
-SHIREI_LAYER_SHELL=0 go -C shirei/behavior_test run ./popup-windows --close
+MULLION_LAYER_SHELL=0 go -C mullion/behavior_test run ./popup-windows --close
 ```
 
 The sizing harness exercises startup/runtime content sizes, minimum sizes and

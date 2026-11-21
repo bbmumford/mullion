@@ -175,11 +175,11 @@ type Host struct {
 	GlyphCacheBudgetBytes int
 
 	// EscapeHatchBackendContext is the live platform host object for
-	// extensions that must call OS APIs outside Shirei's normal surface
+	// extensions that must call OS APIs outside Mullion's normal surface
 	// (camera, share sheet, system pickers, …). The active backend sets it
 	// when the window/activity is ready; nil when headless or before attach.
 	//
-	// This is intentionally not a casual Host field: prefer portable Shirei
+	// This is intentionally not a casual Host field: prefer portable Mullion
 	// APIs and extension packages. Type-assert to the concrete backend
 	// context (iosbackend.Context, androidbackend.Context, …) only inside
 	// those packages — not in ordinary app UI code.

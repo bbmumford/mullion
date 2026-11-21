@@ -8,10 +8,10 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"github.com/ebitengine/purego"
-	"github.com/ebitengine/purego/objc"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/cocoabackend"
+	"github.com/ebitengine/purego"
+	"github.com/ebitengine/purego/objc"
 )
 
 // AppKit via purego.objc — no cgo. Matches cocoabackend so

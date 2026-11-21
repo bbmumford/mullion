@@ -1,7 +1,7 @@
 // readme_screenshots combines matching light and dark snapshot fixtures into
-// the example images shown in Shirei's README files.
+// the example images shown in Mullion's README files.
 //
-// Run from the shirei module directory with:
+// Run from the mullion module directory with:
 //
 //	go run ./tools/readme_screenshots
 package main
@@ -99,7 +99,7 @@ func writeComposite(lightPath, darkPath, output string) error {
 		}
 	}
 
-	tmp, err := os.CreateTemp("", "shirei-readme-*.png")
+	tmp, err := os.CreateTemp("", "mullion-readme-*.png")
 	if err != nil {
 		return err
 	}

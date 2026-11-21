@@ -9,9 +9,9 @@ sections that apply to your code.
 
 ## Module versions
 
-Update `go.hasen.dev/shirei` to v0.8.0. If your application imports a Shirei
+Update `go.hasen.dev/mullion` to v0.8.0. If your application imports a Mullion
 extension (`ext/darkmode`, `ext/window`, or `ext/camera`), update it to v0.8.0
-as well. Update separately versioned Shirei examples or demos only if your
+as well. Update separately versioned Mullion examples or demos only if your
 project depends on them.
 
 ## Removed button and focus APIs
@@ -22,9 +22,9 @@ scheme. For example, a global accent and focus-color customization can use:
 
 ```go
 widgets.CurrentColorScheme.Buttons.Default = widgets.ButtonStyleWithAccent(
-    widgets.CurrentColorScheme.Buttons.Default, shirei.Vec4{204, 70, 48, 1},
+    widgets.CurrentColorScheme.Buttons.Default, mullion.Vec4{204, 70, 48, 1},
 )
-widgets.CurrentColorScheme.FocusRing = shirei.Vec4{210, 85, 52, 1}
+widgets.CurrentColorScheme.FocusRing = mullion.Vec4{210, 85, 52, 1}
 ```
 
 Make changes before building the UI. `ButtonStyleWithAccent` changes enabled

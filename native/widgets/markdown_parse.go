@@ -1,6 +1,6 @@
 package widgets
 
-// Added for mullion; not part of the merged go-shirei snapshot. Kept in files
+// Added for mullion; not part of the merged go-mullion snapshot. Kept in files
 // of its own so a later re-sync with upstream can see at a glance what is
 // local.
 

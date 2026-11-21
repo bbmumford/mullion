@@ -8,8 +8,8 @@
 // stretch during keyboard animation). WindowSize / layout size = safe area
 // minus keyboard overlap (inputAccessoryView height is included in the
 // keyboard end frame).
-#ifndef SHIREI_IOS_H
-#define SHIREI_IOS_H
+#ifndef MULLION_IOS_H
+#define MULLION_IOS_H
 
 // ---- lifecycle (called from Go) ----
 // Creates the UIWindow + full-screen view + CADisplayLink and makes the window
@@ -26,7 +26,7 @@ void ios_setWantsFrame(int v);
 // Resign commits any active IME marked text first (same policy as Cocoa).
 void ios_syncKeyboard(int wants);
 
-// Preferred interface orientation (matches shirei.PreferredOrientation):
+// Preferred interface orientation (matches mullion.PreferredOrientation):
 // 0 = any, 1 = portrait, 2 = landscape. Call before ios_attach when possible
 // so the first frame is already in the preferred orientation. Safe to call
 // again each frame (no-ops when unchanged). Locks via the root VC's
@@ -57,12 +57,12 @@ char *ios_getClipboard(void); // malloc'd UTF-8 (NULL if empty); caller frees
 void ios_openURL(const char *url);
 
 // ---- experimental backend context (plugins / camera, etc.) ----
-// Returns the root UIViewController* of the shirei UIWindow, or NULL if
+// Returns the root UIViewController* of the mullion UIWindow, or NULL if
 // attach has not run yet. Opaque to Go (unsafe.Pointer); do not retain
 // across activity teardown without care. Experiment only.
 void *ios_rootViewController(void);
 
-// Call before ios_attach. Non-zero: ShireiView uses a CAMetalLayer (GPU present).
+// Call before ios_attach. Non-zero: MullionView uses a CAMetalLayer (GPU present).
 // Zero (default): CALayer + ios_present_bgra software path.
 void ios_set_metal(int on);
 

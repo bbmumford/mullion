@@ -10,7 +10,7 @@ import (
 	"github.com/jezek/xgb/xproto"
 )
 
-// clipDebugf logs clipboard/selection activity when SHIREI_X11_DEBUG=1.
+// clipDebugf logs clipboard/selection activity when MULLION_X11_DEBUG=1.
 func clipDebugf(format string, args ...any) {
 	if x11Debug {
 		fmt.Fprintf(os.Stderr, "[x11/clip] "+format+"\n", args...)
@@ -68,7 +68,7 @@ func initClipboard() {
 	atomUTF8 = internAtom("UTF8_STRING")
 	atomTargets = internAtom("TARGETS")
 	atomIncr = internAtom("INCR")
-	atomPasteProp = internAtom("SHIREI_SELECTION")
+	atomPasteProp = internAtom("MULLION_SELECTION")
 }
 
 // openURL opens url in the system browser (FrameOutputData.OpenURL). Errors ignored.

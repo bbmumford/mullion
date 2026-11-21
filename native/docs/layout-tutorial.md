@@ -1,4 +1,4 @@
-# Building a chat-shell layout in Shirei
+# Building a chat-shell layout in Mullion
 
 This tutorial builds a multi-panel **chat shell** one step at a time. Early
 steps use loud colors so every container “box” is obvious; later steps fill
@@ -52,7 +52,7 @@ Skim [tutorial.md](tutorial.md) for containers, `Attrs`, and `Label`.
 ## How to run a step
 
 ```bash
-cd shirei
+cd mullion
 go run ./demos/layout-shell/step05
 go run ./demos/layout-shell/step09   # intentional bug
 ./demos/layout-shell/gen-pngs.sh
@@ -106,9 +106,9 @@ import (
 	"fmt"
 	"os"
 
-	"go.hasen.dev/shirei/app"
+	"go.hasen.dev/mullion/app"
 
-	. "go.hasen.dev/shirei"
+	. "go.hasen.dev/mullion"
 )
 
 const winW, winH = 1100, 720
@@ -385,8 +385,8 @@ compose strip.
 ```diff
  import (
  	...
- 	. "go.hasen.dev/shirei"
-+	. "go.hasen.dev/shirei/widgets"
+ 	. "go.hasen.dev/mullion"
++	. "go.hasen.dev/mullion/widgets"
  )
 +
 +var messages = []msg{ /* ~15 lines of dummy chat */ }
@@ -515,7 +515,7 @@ plain loop inside `Viewport`.
 
 ## Step 13 — Shared surfaces and colors
 
-Give the shell its application colors through Shirei's built-in color scheme.
+Give the shell its application colors through Mullion's built-in color scheme.
 The same layout works in light and dark mode.
 
 ![Step 13](layout-tutorial/images/step13.png)
@@ -663,7 +663,7 @@ rows; `ItemHeight` nil measures each row with `Measure`. Details:
 
 ## Next: custom widgets
 
-Layout ends at step 14. A **separate** tutorial teaches Shirei’s process vs
+Layout ends at step 14. A **separate** tutorial teaches Mullion’s process vs
 presentation model (custom button → custom field → compose bar), then live
 light/dark switching with the same controls:
 

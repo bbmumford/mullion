@@ -7,15 +7,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>shirei</string>
+	<string>mullion</string>
 	<key>CFBundleExecutable</key>
-	<string>shirei</string>
+	<string>mullion</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.shirei.app</string>
+	<string>dev.mullion.app</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>shirei</string>
+	<string>mullion</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleIconName</key>
@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<!-- Privacy purpose strings (NSCameraUsageDescription, …) are injected by
-	     mobilerun from shirei.capabilities on the app's Go module deps — not
+	     mobilerun from mullion.capabilities on the app's Go module deps — not
 	     hard-coded here. See docs/mobile-extensions.md. -->
 	<key>UILaunchScreen</key>
 	<dict/>

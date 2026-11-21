@@ -1,4 +1,4 @@
-// Package camera is the reference Shirei mobile extension: take a still photo
+// Package camera is the reference Mullion mobile extension: take a still photo
 // via the platform camera UI and write *image.RGBA for the app (e.g.
 // native.UseImage).
 //
@@ -14,7 +14,7 @@ import (
 
 // TakePhotoArgs is the in-flight capture state for platform handlers.
 type TakePhotoArgs struct {
-	// Dest receives the photo when capture succeeds (RGBA, shirei-friendly).
+	// Dest receives the photo when capture succeeds (RGBA, mullion-friendly).
 	// Must be non-nil; the pointed-to *image.RGBA is replaced on success.
 	Dest **image.RGBA
 	// Done is optional; called once with nil on success or an error.

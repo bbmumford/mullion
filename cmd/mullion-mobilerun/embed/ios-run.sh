@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ios-run.sh — build a shirei main package as an iOS app and run it.
+# ios-run.sh — build a mullion main package as an iOS app and run it.
 #
 # Usage:
 #   ./ios-run.sh ./demos/theme              # iOS Simulator (default)
@@ -17,39 +17,39 @@
 # access and can take longer while Xcode creates a cert + profile.
 #
 # Layout (portable — no monorepo required):
-#   SHIREI_IOS_HOST_DIR  template UIKit host (never mutated)
-#   SHIREI_IOS_BUILD_DIR scratch (archive, host work copy, .app)
-#   SHIREI_MODULE        optional path to a local go.hasen.dev/shirei module
+#   MULLION_IOS_HOST_DIR  template UIKit host (never mutated)
+#   MULLION_IOS_BUILD_DIR scratch (archive, host work copy, .app)
+#   MULLION_MODULE        optional path to a local go.hasen.dev/mullion module
 #                        for go.work when the package lives outside that module
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Template host: env override, else ioshost/ next to this script (embedded extract).
-HOST_TEMPLATE="${SHIREI_IOS_HOST_DIR:-$SCRIPT_DIR/ioshost}"
+HOST_TEMPLATE="${MULLION_IOS_HOST_DIR:-$SCRIPT_DIR/ioshost}"
 # Build scratch: prefer env; else user cache; never write into the template tree.
-if [[ -n "${SHIREI_IOS_BUILD_DIR:-}" ]]; then
-	BUILD_DIR="$SHIREI_IOS_BUILD_DIR"
+if [[ -n "${MULLION_IOS_BUILD_DIR:-}" ]]; then
+	BUILD_DIR="$MULLION_IOS_BUILD_DIR"
 elif [[ -n "${XDG_CACHE_HOME:-}" ]]; then
-	BUILD_DIR="$XDG_CACHE_HOME/shirei/ios-build"
+	BUILD_DIR="$XDG_CACHE_HOME/mullion/ios-build"
 else
-	BUILD_DIR="${HOME}/Library/Caches/shirei/ios-build"
+	BUILD_DIR="${HOME}/Library/Caches/mullion/ios-build"
 fi
-# Optional local shirei module (for go.work). Not the same as HOST_TEMPLATE.
-SHIREI_MODULE="${SHIREI_MODULE:-}"
+# Optional local mullion module (for go.work). Not the same as HOST_TEMPLATE.
+MULLION_MODULE="${MULLION_MODULE:-}"
 
-# Device signing team. Prefer SHIREI_IOS_TEAM; otherwise leave empty and let
+# Device signing team. Prefer MULLION_IOS_TEAM; otherwise leave empty and let
 # xcodebuild / the iosrun GUI supply it. No personal team id hard-coded.
-DEVELOPMENT_TEAM="${SHIREI_IOS_TEAM:-}"
+DEVELOPMENT_TEAM="${MULLION_IOS_TEAM:-}"
 
 die() { echo "ios-run: $*" >&2; exit 1; }
 log() { echo "ios-run: $*" >&2; }
 
 # apply_usage_descriptions injects privacy purpose strings from
-# SHIREI_IOS_USAGE_FILE (KEY=text lines, written by mobilerun from
-# shirei.capabilities on the app's Go deps). Safe no-op if unset/empty.
+# MULLION_IOS_USAGE_FILE (KEY=text lines, written by mobilerun from
+# mullion.capabilities on the app's Go deps). Safe no-op if unset/empty.
 apply_usage_descriptions() {
 	local plist="$1"
-	local file="${SHIREI_IOS_USAGE_FILE:-}"
+	local file="${MULLION_IOS_USAGE_FILE:-}"
 	[[ -n "$file" && -f "$file" ]] || return 0
 	local line key val
 	while IFS= read -r line || [[ -n "$line" ]]; do
@@ -64,11 +64,11 @@ apply_usage_descriptions() {
 }
 
 # apply_orientation rewrites UISupportedInterfaceOrientations from
-# SHIREI_IOS_ORIENTATION (landscape | portrait). Empty = leave template (any).
+# MULLION_IOS_ORIENTATION (landscape | portrait). Empty = leave template (any).
 # Written by mobilerun from orientation-landscape / orientation-portrait tokens.
 apply_orientation() {
 	local plist="$1"
-	local orient="${SHIREI_IOS_ORIENTATION:-}"
+	local orient="${MULLION_IOS_ORIENTATION:-}"
 	[[ -n "$orient" ]] || return 0
 	/usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" "$plist" 2>/dev/null || true
 	/usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations~ipad" "$plist" 2>/dev/null || true
@@ -89,7 +89,7 @@ apply_orientation() {
 			log "Info.plist orientations: portrait only"
 			;;
 		*)
-			log "warning: unknown SHIREI_IOS_ORIENTATION=$orient (ignored)"
+			log "warning: unknown MULLION_IOS_ORIENTATION=$orient (ignored)"
 			;;
 	esac
 }
@@ -106,20 +106,20 @@ Examples:
   ./ios-run.sh --device /path/to/package
 
 Environment:
-  SHIREI_IOS_HOST_DIR      UIKit host template (default: <script>/ioshost)
-  SHIREI_IOS_BUILD_DIR     build scratch (default: ~/Library/Caches/shirei/ios-build)
-  SHIREI_MODULE            local go.hasen.dev/shirei module for go.work (optional)
-  SHIREI_IOS_BUNDLE_ID     CFBundleIdentifier (default: dev.shirei.<folder>)
-  SHIREI_IOS_APP_NAME      home-screen / .app name (default: package folder name)
-  SHIREI_IOS_ICON_PATH     PNG/JPEG path for AppIcon (optional)
-  SHIREI_IOS_TEAM          DEVELOPMENT_TEAM for device signing (required for --device)
-  SHIREI_IOS_DEVICE        force sim UDID / device UDID
-  SHIREI_IOS_DEVICE_NAME   preferred sim model (empty = any available)
-  SHIREI_IOS_RUNTIME       preferred sim runtime (empty = any available)
-  SHIREI_IOS_MIN_OS        deployment target (default: 16.0)
-  SHIREI_IOS_NO_LAUNCH     if set, build only
-  SHIREI_IOS_USAGE_FILE    KEY=text lines for privacy purpose strings (mobilerun)
-  SHIREI_IOS_ORIENTATION   landscape | portrait (from orientation-* capabilities)
+  MULLION_IOS_HOST_DIR      UIKit host template (default: <script>/ioshost)
+  MULLION_IOS_BUILD_DIR     build scratch (default: ~/Library/Caches/mullion/ios-build)
+  MULLION_MODULE            local go.hasen.dev/mullion module for go.work (optional)
+  MULLION_IOS_BUNDLE_ID     CFBundleIdentifier (default: dev.mullion.<folder>)
+  MULLION_IOS_APP_NAME      home-screen / .app name (default: package folder name)
+  MULLION_IOS_ICON_PATH     PNG/JPEG path for AppIcon (optional)
+  MULLION_IOS_TEAM          DEVELOPMENT_TEAM for device signing (required for --device)
+  MULLION_IOS_DEVICE        force sim UDID / device UDID
+  MULLION_IOS_DEVICE_NAME   preferred sim model (empty = any available)
+  MULLION_IOS_RUNTIME       preferred sim runtime (empty = any available)
+  MULLION_IOS_MIN_OS        deployment target (default: 16.0)
+  MULLION_IOS_NO_LAUNCH     if set, build only
+  MULLION_IOS_USAGE_FILE    KEY=text lines for privacy purpose strings (mobilerun)
+  MULLION_IOS_ORIENTATION   landscape | portrait (from orientation-* capabilities)
 EOF
 	exit 2
 }
@@ -145,28 +145,28 @@ else
 	die "package path not found: $PKG_ARG (use an absolute path or a path relative to cwd)"
 fi
 
-# Bundle id: env, else dev.shirei.<sanitized package folder>.
-if [[ -n "${SHIREI_IOS_BUNDLE_ID:-}" ]]; then
-	BUNDLE_ID="$SHIREI_IOS_BUNDLE_ID"
+# Bundle id: env, else dev.mullion.<sanitized package folder>.
+if [[ -n "${MULLION_IOS_BUNDLE_ID:-}" ]]; then
+	BUNDLE_ID="$MULLION_IOS_BUNDLE_ID"
 else
 	_pkg_base="$(basename "$PKG_DIR")"
 	_comp="$(printf '%s' "$_pkg_base" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')"
 	[[ -n "$_comp" && "$_comp" != [0-9]* ]] || _comp="a${_comp}"
-	BUNDLE_ID="dev.shirei.${_comp}"
+	BUNDLE_ID="dev.mullion.${_comp}"
 fi
 # Home-screen label (CFBundleDisplayName) vs filesystem product name (executable / Foo.app).
-APP_NAME_RAW="${SHIREI_IOS_APP_NAME:-}"
+APP_NAME_RAW="${MULLION_IOS_APP_NAME:-}"
 if [[ -z "$APP_NAME_RAW" ]]; then
 	APP_NAME_RAW="$(basename "$PKG_DIR")"
 fi
 APP_DISPLAY="$(printf '%s' "$APP_NAME_RAW" | tr -cd 'A-Za-z0-9 ._-')"
 APP_DISPLAY="$(echo "$APP_DISPLAY" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-[[ -n "$APP_DISPLAY" ]] || APP_DISPLAY="shirei"
+[[ -n "$APP_DISPLAY" ]] || APP_DISPLAY="mullion"
 # Product/executable: no spaces (xcodebuild + codesign are happier).
 APP_NAME="$(echo "$APP_DISPLAY" | tr ' ' '-')"
-[[ -n "$APP_NAME" ]] || APP_NAME="shirei"
+[[ -n "$APP_NAME" ]] || APP_NAME="mullion"
 
-[[ -d "$HOST_TEMPLATE" ]] || die "host template not found: $HOST_TEMPLATE (set SHIREI_IOS_HOST_DIR)"
+[[ -d "$HOST_TEMPLATE" ]] || die "host template not found: $HOST_TEMPLATE (set MULLION_IOS_HOST_DIR)"
 [[ -f "$HOST_TEMPLATE/main.m" ]] || die "host template missing main.m: $HOST_TEMPLATE"
 
 find_module_root() {
@@ -184,8 +184,8 @@ find_module_root() {
 MODULE_ROOT="$(find_module_root "$PKG_DIR")" \
 	|| die "no go.mod found above $PKG_DIR"
 
-# Package may be the module root itself (e.g. shirei/examples/piano has its own
-# go.mod) or a subpackage of a larger module (e.g. shirei/demos/theme).
+# Package may be the module root itself (e.g. mullion/examples/piano has its own
+# go.mod) or a subpackage of a larger module (e.g. mullion/demos/theme).
 if [[ "$PKG_DIR" == "$MODULE_ROOT" ]]; then
 	PKG_SPEC="."
 else
@@ -200,16 +200,16 @@ if ! grep -qE '^package main' "$PKG_DIR"/*.go 2>/dev/null; then
 	die "expected package main in $PKG_DIR"
 fi
 
-# Optional: wire a local shirei module via go.work when the package lives
-# outside it (e.g. examples with their own go.mod). Set SHIREI_MODULE to the
+# Optional: wire a local mullion module via go.work when the package lives
+# outside it (e.g. examples with their own go.mod). Set MULLION_MODULE to the
 # path of a checkout that has the iOS backend.
 GOWORK_FILE=""
-if [[ -n "$SHIREI_MODULE" && -f "$SHIREI_MODULE/go.mod" && "$MODULE_ROOT" != "$SHIREI_MODULE" ]]; then
+if [[ -n "$MULLION_MODULE" && -f "$MULLION_MODULE/go.mod" && "$MODULE_ROOT" != "$MULLION_MODULE" ]]; then
 	mkdir -p "$BUILD_DIR"
 	GOWORK_FILE="$BUILD_DIR/ios-run.go.work"
 	# go.work's "go" line must be >= every use'd module's go version.
-	# Prefer the max of shirei + the app module (e.g. demo go 1.25 vs shirei 1.24).
-	GO_LINE_A="$(awk '/^go /{print $2; exit}' "$SHIREI_MODULE/go.mod")"
+	# Prefer the max of mullion + the app module (e.g. demo go 1.25 vs mullion 1.24).
+	GO_LINE_A="$(awk '/^go /{print $2; exit}' "$MULLION_MODULE/go.mod")"
 	GO_LINE_B="$(awk '/^go /{print $2; exit}' "$MODULE_ROOT/go.mod" 2>/dev/null || true)"
 	GO_VER="1.24"
 	if [[ -n "$GO_LINE_A" ]]; then GO_VER="$GO_LINE_A"; fi
@@ -222,18 +222,18 @@ go $GO_VER
 
 use (
 	$MODULE_ROOT
-	$SHIREI_MODULE
+	$MULLION_MODULE
 )
 EOF
 	export GOWORK="$GOWORK_FILE"
-	log "using local shirei module $SHIREI_MODULE via $GOWORK_FILE"
+	log "using local mullion module $MULLION_MODULE via $GOWORK_FILE"
 fi
 
 command -v go >/dev/null || die "go not found"
 command -v xcrun >/dev/null || die "xcrun not found (install Xcode)"
 command -v codesign >/dev/null || die "codesign not found"
 
-MIN_OS="${SHIREI_IOS_MIN_OS:-16.0}"
+MIN_OS="${MULLION_IOS_MIN_OS:-16.0}"
 GOARCH=arm64
 CLANG_ARCH=arm64
 
@@ -260,13 +260,13 @@ CLANG="$(xcrun --sdk "$SDK_NAME" -f clang)" \
 
 mkdir -p "$BUILD_DIR"
 APP_DIR="$BUILD_DIR/$APP_NAME.app"
-ARCHIVE="$BUILD_DIR/libshirei.a"
-HEADER="$BUILD_DIR/libshirei.h"
+ARCHIVE="$BUILD_DIR/libmullion.a"
+HEADER="$BUILD_DIR/libmullion.h"
 BIN="$APP_DIR/$APP_NAME"
 DERIVED="$BUILD_DIR/DerivedData"
 
 # Temporary export file so c-archive can call the package's main().
-EXPORT_FILE="$PKG_DIR/zz_shirei_ios_export.go"
+EXPORT_FILE="$PKG_DIR/zz_mullion_ios_export.go"
 cleanup() {
 	rm -f "$EXPORT_FILE"
 }
@@ -281,8 +281,8 @@ package main
 
 import "C"
 
-//export shirei_ios_run
-func shirei_ios_run() {
+//export mullion_ios_run
+func mullion_ios_run() {
 	main()
 }
 EOF
@@ -324,7 +324,7 @@ write_appicon_catalog() {
 	mkdir -p "$iconset"
 	cat >"$asset_root/Contents.json" <<'JSON'
 {
-  "info" : { "author" : "shirei-ios-run", "version" : 1 }
+  "info" : { "author" : "mullion-ios-run", "version" : 1 }
 }
 JSON
 	cat >"$iconset/Contents.json" <<'JSON'
@@ -337,7 +337,7 @@ JSON
       "size" : "1024x1024"
     }
   ],
-  "info" : { "author" : "shirei-ios-run", "version" : 1 }
+  "info" : { "author" : "mullion-ios-run", "version" : 1 }
 }
 JSON
 	local icon_png="$iconset/Icon.png"
@@ -415,7 +415,7 @@ install_app_icon() {
 	log "installed app icon from $src"
 }
 
-ICON_PATH="${SHIREI_IOS_ICON_PATH:-}"
+ICON_PATH="${MULLION_IOS_ICON_PATH:-}"
 
 # ---------------------------------------------------------------------------
 # Simulator path: hand-link + ad-hoc sign + simctl
@@ -468,14 +468,14 @@ if [[ "$TARGET" == "sim" ]]; then
 
 	log "built $APP_DIR"
 
-	if [[ -n "${SHIREI_IOS_NO_LAUNCH:-}" ]]; then
-		log "SHIREI_IOS_NO_LAUNCH set; skipping install/launch"
+	if [[ -n "${MULLION_IOS_NO_LAUNCH:-}" ]]; then
+		log "MULLION_IOS_NO_LAUNCH set; skipping install/launch"
 		exit 0
 	fi
 
 	# Empty prefs mean "any available" — no machine-specific model defaults.
-	PREF_NAME="${SHIREI_IOS_DEVICE_NAME:-}"
-	PREF_RUNTIME="${SHIREI_IOS_RUNTIME:-}"
+	PREF_NAME="${MULLION_IOS_DEVICE_NAME:-}"
+	PREF_RUNTIME="${MULLION_IOS_RUNTIME:-}"
 
 	udid_from_line() {
 		echo "$1" | grep -oE '[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}' | head -1
@@ -524,7 +524,7 @@ if [[ "$TARGET" == "sim" ]]; then
 	}
 
 	pick_sim_device() {
-		if [[ -n "${SHIREI_IOS_DEVICE:-}" ]]; then echo "$SHIREI_IOS_DEVICE"; return 0; fi
+		if [[ -n "${MULLION_IOS_DEVICE:-}" ]]; then echo "$MULLION_IOS_DEVICE"; return 0; fi
 		local udid line
 		if [[ -n "$PREF_NAME" ]]; then
 			if udid="$(ensure_preferred_device "$PREF_NAME" "$PREF_RUNTIME")"; then echo "$udid"; return 0; fi
@@ -575,12 +575,12 @@ rm -rf "$HOST_WORK"
 mkdir -p "$BUILD_DIR"
 cp -R "$HOST_TEMPLATE" "$HOST_WORK"
 # Drop any stale artifacts if someone copied a dirty tree.
-rm -f "$HOST_WORK"/libshirei.a "$HOST_WORK"/*.a 2>/dev/null || true
+rm -f "$HOST_WORK"/libmullion.a "$HOST_WORK"/*.a 2>/dev/null || true
 
 PROJ="$HOST_WORK/DeviceHost.xcodeproj"
 [[ -d "$PROJ" ]] || die "missing $PROJ (host template incomplete)"
 
-cp "$ARCHIVE" "$HOST_WORK/libshirei.a"
+cp "$ARCHIVE" "$HOST_WORK/libmullion.a"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$HOST_WORK/Info.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Set :CFBundleExecutable $APP_NAME" "$HOST_WORK/Info.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Set :CFBundleName $APP_DISPLAY" "$HOST_WORK/Info.plist" 2>/dev/null || true
@@ -601,8 +601,8 @@ fi
 
 # Pick physical device.
 pick_physical_device() {
-	if [[ -n "${SHIREI_IOS_DEVICE:-}" ]]; then
-		echo "$SHIREI_IOS_DEVICE"
+	if [[ -n "${MULLION_IOS_DEVICE:-}" ]]; then
+		echo "$MULLION_IOS_DEVICE"
 		return 0
 	fi
 	# Prefer hardware UDID from xctrace (00008… form).
@@ -634,13 +634,13 @@ fi
 
 if [[ -z "$DEVELOPMENT_TEAM" ]]; then
 	cat >&2 <<'EOF'
-ios-run: SHIREI_IOS_TEAM is not set (required for --device).
+ios-run: MULLION_IOS_TEAM is not set (required for --device).
 
   Find your Team ID: Xcode → Settings → Accounts → your Apple ID → Team
-  Or run the GUI:  shirei_mobilerun
+  Or run the GUI:  mullion-mobilerun
 
   Then:
-    SHIREI_IOS_TEAM=XXXXXXXXXX ./ios-run.sh --device ./demos/theme
+    MULLION_IOS_TEAM=XXXXXXXXXX ./ios-run.sh --device ./demos/theme
 EOF
 	exit 1
 fi
@@ -664,7 +664,7 @@ DESTINATION="platform=iOS,id=$PHYS_DEVICE"
 set +e
 xcodebuild \
 	-project "$PROJ" \
-	-scheme shirei \
+	-scheme mullion \
 	-configuration Debug \
 	-destination "$DESTINATION" \
 	-derivedDataPath "$DERIVED" \
@@ -692,7 +692,7 @@ If the error is about signing or provisioning:
      → "+" → Apple Development  (creates cert + private key)
   2. Unlock the phone and tap Trust if prompted
   3. Free Personal Team: only ~3 apps; try reusing bundle id $BUNDLE_ID
-  4. Confirm team id: SHIREI_IOS_TEAM=$DEVELOPMENT_TEAM
+  4. Confirm team id: MULLION_IOS_TEAM=$DEVELOPMENT_TEAM
 
   Then re-run: $0 --device $PKG_ARG
 EOF
@@ -709,8 +709,8 @@ cp -R "$SIGNED_APP" "$APP_DIR"
 
 log "built+signed $APP_DIR"
 
-if [[ -n "${SHIREI_IOS_NO_LAUNCH:-}" ]]; then
-	log "SHIREI_IOS_NO_LAUNCH set; skipping install/launch"
+if [[ -n "${MULLION_IOS_NO_LAUNCH:-}" ]]; then
+	log "MULLION_IOS_NO_LAUNCH set; skipping install/launch"
 	exit 0
 fi
 

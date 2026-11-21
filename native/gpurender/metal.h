@@ -1,6 +1,6 @@
 // C ABI between Go and the Metal submit path. No Objective-C types.
-#ifndef SHIREI_GPURENDER_METAL_H
-#define SHIREI_GPURENDER_METAL_H
+#ifndef MULLION_GPURENDER_METAL_H
+#define MULLION_GPURENDER_METAL_H
 
 #include <stdint.h>
 

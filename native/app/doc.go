@@ -1,4 +1,4 @@
-// Package app is shirei's GOOS-selected native backend. An application imports
+// Package app is mullion's GOOS-selected native backend. An application imports
 // this one package, calls SetupWindow then Run, and the compiler links the
 // right platform shell. Quit is generic.ExitWithCleanup so AddExitCleanup
 // handlers run.
@@ -17,7 +17,7 @@
 //
 // Windowed paint uses the GPU compositor by default on macOS (Metal), iOS
 // (Metal), Wayland (GLES), Android (GLES), Windows (D3D11), and web
-// (WebGL2). X11 stays on SoftRenderer. SHIREI_GPU=0 or init failure falls
+// (WebGL2). X11 stays on SoftRenderer. MULLION_GPU=0 or init failure falls
 // back to SoftRenderer on the other shells. Snapshots and headless tests
 // always use SoftRenderer. Shells still differ in window, input, and present
 // plumbing. Each underlying backend package still works standalone — this
@@ -33,7 +33,7 @@
 // app-supplied fill function (audio_<goos>.go — AudioQueue on macOS and iOS,
 // ALSA via purego on linux, winmm waveOut on windows, Web Audio on js).
 // On js, audio prefers AudioWorklet + SharedArrayBuffer (requires COOP+COEP
-// isolation from shirei_web .headers) and falls back to ScriptProcessor.
+// isolation from mullion-web .headers) and falls back to ScriptProcessor.
 // iOS uses Playback + MixWithOthers (audible with silent switch on, mixes with
 // other apps; no background audio) and reports interruptions via
 // native.GetInputState().AudioInterrupted. On the web, the AudioContext often

@@ -87,16 +87,18 @@ func TestDirListingCacheEviction(t *testing.T) {
 
 // TestReadFileContentAsyncSmokeLargeFile exercises the real async threshold on a
 // large many-newline file (text-view demo corpus). Skips unless the path exists:
-//   SHIREI_SMOKE_LARGE_FILE=/path/to/file go test ./shirei/ -run SmokeLarge -count=1
-// Default path: /tmp/shirei-textview-200mb.txt
+//
+//	MULLION_SMOKE_LARGE_FILE=/path/to/file go test ./mullion/ -run SmokeLarge -count=1
+//
+// Default path: /tmp/mullion-textview-200mb.txt
 func TestReadFileContentAsyncSmokeLargeFile(t *testing.T) {
-	path := os.Getenv("SHIREI_SMOKE_LARGE_FILE")
+	path := os.Getenv("MULLION_SMOKE_LARGE_FILE")
 	if path == "" {
-		path = "/tmp/shirei-textview-200mb.txt"
+		path = "/tmp/mullion-textview-200mb.txt"
 	}
 	st, err := os.Stat(path)
 	if err != nil || st.Size() < fileContentAsyncThreshold {
-		t.Skip("need a file >= fileContentAsyncThreshold (see SHIREI_SMOKE_LARGE_FILE)")
+		t.Skip("need a file >= fileContentAsyncThreshold (see MULLION_SMOKE_LARGE_FILE)")
 	}
 
 	delete(res.filecontent, path)

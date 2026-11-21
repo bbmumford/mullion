@@ -1,6 +1,6 @@
 # Mobile extensions
 
-Shirei’s core handles layout, text, images, input, and drawing. Features that
+Mullion’s core handles layout, text, images, input, and drawing. Features that
 need a **platform host** — camera, share sheet, sensors, and similar — live
 in **extension packages**: Go modules that call into the OS and return results
 to the app (for example as `*image.RGBA` for `UseImage`).
@@ -9,10 +9,10 @@ This guide covers:
 
 1. How extensions reach the native window or activity at runtime
    (`Host.EscapeHatchBackendContext`)
-2. How **shirei_mobilerun** applies privacy and packaging declarations
-   (`shirei.capabilities`)
+2. How **mullion-mobilerun** applies privacy and packaging declarations
+   (`mullion.capabilities`)
 3. How to use and write extensions, with
-   [`camera`](../ext/camera) (`go.hasen.dev/shirei/ext/camera`) as the reference
+   [`camera`](../ext/camera) (`go.hasen.dev/mullion/ext/camera`) as the reference
 
 Related: [Running on iOS](ios.md), [Running on Android](android.md).
 
@@ -23,9 +23,9 @@ Related: [Running on iOS](ios.md), [Running on Android](android.md).
 | Concern | How it works |
 |---------|----------------|
 | **Runtime** — open system UI or call a native API that needs the Activity or root view controller | Your extension reads `Host.EscapeHatchBackendContext` and uses the platform context |
-| **Packaging** — Info.plist purpose strings, Android permissions, related manifest queries | A `shirei.capabilities` file on the extension (or app) module; **shirei_mobilerun** injects the matching declarations when you build |
+| **Packaging** — Info.plist purpose strings, Android permissions, related manifest queries | A `mullion.capabilities` file on the extension (or app) module; **mullion-mobilerun** injects the matching declarations when you build |
 
-Apps import the extension and call its portable API. shirei_mobilerun merges capability
+Apps import the extension and call its portable API. mullion-mobilerun merges capability
 tokens from the dependency graph into the build’s Info.plist / AndroidManifest.
 
 ---
@@ -36,13 +36,13 @@ When an extension needs the live host (window, activity, root view controller),
 it reads:
 
 ```go
-ctx := shirei.GetHost().EscapeHatchBackendContext
+ctx := mullion.GetHost().EscapeHatchBackendContext
 ```
 
 The active backend sets this when the window or activity is ready. It is `nil`
 in headless mode and before attach.
 
-Use portable Shirei APIs and the extension’s public surface in ordinary app UI.
+Use portable Mullion APIs and the extension’s public surface in ordinary app UI.
 Type-assert the concrete backend context only inside extension platform code
 (or equivalent host glue).
 
@@ -86,7 +86,7 @@ Do not block the frame waiting for a system sheet. Prefer the UI or app thread
 
 ## 3. Backend context types
 
-`EscapeHatchBackendContext` is only `shirei.BackendContext`. Each backend
+`EscapeHatchBackendContext` is only `mullion.BackendContext`. Each backend
 provides a **concrete** type with the handles that platform needs. Extensions
 type-assert or switch on `Platform()`.
 
@@ -94,22 +94,22 @@ type-assert or switch on `Platform()`.
 
 | | |
 |--|--|
-| **Package** | `go.hasen.dev/shirei/iosbackend` |
+| **Package** | `go.hasen.dev/mullion/iosbackend` |
 | **Type** | `iosbackend.Context` |
 | **`Platform()`** | `"ios"` |
 | **Extra method** | `RootViewController() unsafe.Pointer` |
-| **Meaning** | Opaque `UIViewController *` for the Shirei window’s root view controller (`nil` before attach). Present UIKit controllers from it. |
+| **Meaning** | Opaque `UIViewController *` for the Mullion window’s root view controller (`nil` before attach). Present UIKit controllers from it. |
 | **Thread** | Prefer the main / frame path. Hop to the main queue if you leave it. |
 
 ```go
 //go:build ios
 
 type iosPresenter interface {
-    shirei.BackendContext
+    mullion.BackendContext
     RootViewController() unsafe.Pointer
 }
 
-func present(ctx shirei.BackendContext) {
+func present(ctx mullion.BackendContext) {
     p, ok := ctx.(iosPresenter)
     if !ok || p.RootViewController() == nil {
         return
@@ -126,10 +126,10 @@ In ObjC/cgo: `(__bridge UIViewController *)vc`.
 
 | | |
 |--|--|
-| **Package** | `go.hasen.dev/shirei/androidbackend` |
+| **Package** | `go.hasen.dev/mullion/androidbackend` |
 | **Type** | `androidbackend.Context` |
 | **`Platform()`** | `"android"` |
-| **Extra method** | `Activity() unsafe.Pointer` — live `ShireiActivity` `jobject` (glue-owned) |
+| **Extra method** | `Activity() unsafe.Pointer` — live `MullionActivity` `jobject` (glue-owned) |
 | **Host API** (same package) | `OnActivityResult`, `OnPermissionResult`, `StartActivityForResult`, `RequestPermissions`, `CheckPermission`, `JNIEnv` |
 | **Thread** | Frame work runs on the native **app thread**. Activity-result callbacks run on the **UI thread**; the JNIEnv passed into the handler is valid only for that call. |
 
@@ -141,7 +141,7 @@ results. Feature-specific Intents and decoding stay in the extension.
 
 import (
     "unsafe"
-    "go.hasen.dev/shirei/androidbackend"
+    "go.hasen.dev/mullion/androidbackend"
 )
 
 const myReq = 0xBEEF
@@ -152,7 +152,7 @@ func init() {
     })
 }
 
-func start(ctx shirei.BackendContext) {
+func start(ctx mullion.BackendContext) {
     if ctx == nil || ctx.Platform() != "android" {
         return
     }
@@ -181,7 +181,7 @@ handle for extensions that need the live window.
 
 | | |
 |--|--|
-| **Package** | `go.hasen.dev/shirei/x11backend` |
+| **Package** | `go.hasen.dev/mullion/x11backend` |
 | **Type** | `x11backend.Context` |
 | **`Platform()`** | `"x11"` |
 | **Extra methods** | `Conn() *xgb.Conn`, `Window() xproto.Window`, `Connected() bool` |
@@ -192,11 +192,11 @@ handle for extensions that need the live window.
 //go:build linux
 
 import (
-    "go.hasen.dev/shirei"
-    "go.hasen.dev/shirei/x11backend"
+    "go.hasen.dev/mullion"
+    "go.hasen.dev/mullion/x11backend"
 )
 
-func useX11(ctx shirei.BackendContext) {
+func useX11(ctx mullion.BackendContext) {
     c, ok := ctx.(x11backend.Context)
     if !ok || !c.Connected() {
         return
@@ -215,11 +215,11 @@ On Wayland, drawing (`wl_surface`) and “being a desktop window” are separate
 
 | | |
 |--|--|
-| **Package** | `go.hasen.dev/shirei/waylandbackend` |
+| **Package** | `go.hasen.dev/mullion/waylandbackend` |
 | **Type** | `waylandbackend.Context` |
 | **`Platform()`** | `"wayland"` |
-| **Extra method** | `XdgToplevel() *xdg.Toplevel` (`go.hasen.dev/shirei/internal/wayland/xdg`) |
-| **Meaning** | Live `xdg_toplevel` for the Shirei window (`nil` before the window exists) |
+| **Extra method** | `XdgToplevel() *xdg.Toplevel` (`go.hasen.dev/mullion/internal/wayland/xdg`) |
+| **Meaning** | Live `xdg_toplevel` for the Mullion window (`nil` before the window exists) |
 | **Ownership** | Backend-owned. Do not `Destroy` it or take over configure / commit / present of the main surface. |
 
 Many Linux features (notifications, file chooser portals, V4L2 camera) use
@@ -230,11 +230,11 @@ extension needs the main window as the compositor sees it.
 //go:build linux
 
 import (
-    "go.hasen.dev/shirei"
-    "go.hasen.dev/shirei/waylandbackend"
+    "go.hasen.dev/mullion"
+    "go.hasen.dev/mullion/waylandbackend"
 )
 
-func useToplevel(ctx shirei.BackendContext) {
+func useToplevel(ctx mullion.BackendContext) {
     c, ok := ctx.(waylandbackend.Context)
     if !ok {
         return
@@ -255,35 +255,35 @@ Apps call a **portable** API. They do not use `EscapeHatchBackendContext`
 unless they implement an extension themselves.
 
 ```go
-import "go.hasen.dev/shirei/ext/camera"
+import "go.hasen.dev/mullion/ext/camera"
 
 var photo *image.RGBA
 
 if Button(SymImage, "Take photo") {
     camera.TakePhoto(&photo, func(err error) {
-        shirei.WithFrameLock(func() {
+        mullion.WithFrameLock(func() {
             if err == nil && photo != nil {
-                shirei.UseImage("camera/last", photo)
+                mullion.UseImage("camera/last", photo)
             }
-            shirei.RequestNextFrame()
+            mullion.RequestNextFrame()
         })
     })
 }
 ```
 
-Run the sample with shirei_mobilerun:
+Run the sample with mullion-mobilerun:
 
 ```sh
-shirei_mobilerun -platform ios ./shirei/demos/mobile-camera
-shirei_mobilerun -platform ios -device ./shirei/demos/mobile-camera
-shirei_mobilerun -platform android ./shirei/demos/mobile-camera
+mullion-mobilerun -platform ios ./mullion/demos/mobile-camera
+mullion-mobilerun -platform ios -device ./mullion/demos/mobile-camera
+mullion-mobilerun -platform android ./mullion/demos/mobile-camera
 ```
 
 ---
 
-## 5. Packaging: `shirei.capabilities`
+## 5. Packaging: `mullion.capabilities`
 
-Extensions declare **coarse** capability tokens. When you build with shirei_mobilerun,
+Extensions declare **coarse** capability tokens. When you build with mullion-mobilerun,
 those tokens become the platform declarations for that build.
 
 ### File format
@@ -291,10 +291,10 @@ those tokens become the platform declarations for that build.
 Place next to the extension’s `go.mod` (module root):
 
 ```
-shirei.capabilities
+mullion.capabilities
 ```
 
-Example (`go.hasen.dev/shirei/ext/camera`):
+Example (`go.hasen.dev/mullion/ext/camera`):
 
 ```
 # one token per line; # starts a comment
@@ -309,20 +309,20 @@ Rules:
 3. **Intent, not OS API names** — write `camera`, not `NSCameraUsageDescription`.
 4. The file ships with the module like any other file (`go get` includes it).
 
-The **app** module may also ship a `shirei.capabilities` file for features
+The **app** module may also ship a `mullion.capabilities` file for features
 implemented without a separate extension package.
 
-### How shirei_mobilerun applies them
+### How mullion-mobilerun applies them
 
 When building a `package main`:
 
 1. Resolve module directories of that package’s dependency graph (`go list -deps`)
-2. Read each module’s `shirei.capabilities` if present
+2. Read each module’s `mullion.capabilities` if present
 3. Union tokens and inject into **this build’s** Info.plist / AndroidManifest
 
 Only modules depended on by that main package are considered.
 
-| Platform | What shirei_mobilerun injects |
+| Platform | What mullion-mobilerun injects |
 |----------|-------------------------|
 | **iOS** | Privacy purpose strings on the build’s Info.plist (default English text for development); optional supported orientations |
 | **Android** | Extra `<uses-permission>` entries, related `<queries>` when needed (for example `IMAGE_CAPTURE` for `camera`), optional `screenOrientation` |
@@ -336,7 +336,7 @@ builds can replace them with product-specific copy in your release process.
 ## 6. Capability token catalogue
 
 Meaning and platform mapping. Source of truth in the runner:
-`cmd/shirei_mobilerun/capabilities.go`.
+`cmd/mullion-mobilerun/capabilities.go`.
 
 | Token | Meaning | iOS (Info.plist) | Android permission(s) |
 |-------|---------|------------------|------------------------|
@@ -365,7 +365,7 @@ Meaning and platform mapping. Source of truth in the runner:
 
 `orientation-landscape` and `orientation-portrait` should not both appear
 in the resolved token set. If both are present (for example via different
-modules), shirei_mobilerun logs a **warning** and continues; **which orientation
+modules), mullion-mobilerun logs a **warning** and continues; **which orientation
 is applied is not guaranteed**. Prefer declaring only one. Apps that also
 set `Host.PreferredOrientation` at runtime control in-session orientation
 policy. If neither token is present, the default host template allows
@@ -381,16 +381,16 @@ Some tokens only affect one OS; the other side is a no-op.
 
 1. Ship a Go module with a **portable** public API (no `BackendContext` in
    signatures apps call).
-2. Inside the extension, read `shirei.GetHost().EscapeHatchBackendContext`,
+2. Inside the extension, read `mullion.GetHost().EscapeHatchBackendContext`,
    type-assert the platform context, and start OS work.
 3. Deliver results asynchronously — do not block the frame on a system sheet.
-4. Feed data into Shirei (for example `UseImage`) and wake the UI with
+4. Feed data into Mullion (for example `UseImage`) and wake the UI with
    `RequestNextFrame` (use `WithFrameLock` if off the frame thread).
 
 ### Packaging
 
-1. Add `shirei.capabilities` at the module root with the minimal tokens.
-2. Build under shirei_mobilerun and confirm the log shows your tokens
+1. Add `mullion.capabilities` at the module root with the minimal tokens.
+2. Build under mullion-mobilerun and confirm the log shows your tokens
    (`— capabilities […]`).
 
 ### Host helpers
@@ -411,7 +411,7 @@ Some tokens only affect one OS; the other side is a no-op.
 
 ## 8. Reference: camera
 
-Module: **`go.hasen.dev/shirei/ext/camera`**.
+Module: **`go.hasen.dev/mullion/ext/camera`**.
 
 | Piece | Role |
 |-------|------|
@@ -423,9 +423,9 @@ Module: **`go.hasen.dev/shirei/ext/camera`**.
 | Demo | `demos/mobile-camera` |
 
 ```sh
-shirei_mobilerun -platform ios ./shirei/demos/mobile-camera
-shirei_mobilerun -platform ios -device ./shirei/demos/mobile-camera
-shirei_mobilerun -platform android ./shirei/demos/mobile-camera
+mullion-mobilerun -platform ios ./mullion/demos/mobile-camera
+mullion-mobilerun -platform ios -device ./mullion/demos/mobile-camera
+mullion-mobilerun -platform android ./mullion/demos/mobile-camera
 ```
 
 **iOS:** Simulator without a camera falls back to the photo library. On a
@@ -433,7 +433,7 @@ device, the system asks for camera permission once.
 
 **Android:** Runtime `CAMERA` permission, then the system capture activity.
 Gallery is a fallback when no camera app is available. With the `camera`
-token, shirei_mobilerun declares the `IMAGE_CAPTURE` package-visibility query.
+token, mullion-mobilerun declares the `IMAGE_CAPTURE` package-visibility query.
 
 ---
 
@@ -451,17 +451,17 @@ token, shirei_mobilerun declares the `IMAGE_CAPTURE` package-visibility query.
 
 ## 10. Development builds vs store releases
 
-**Dev vs release:** `shirei_mobilerun` produces **development** builds (debug
-signing, debuggable packages). Release packaging is **`shirei_bundle`**
-([cmd/shirei_bundle/README.md](../cmd/shirei_bundle/README.md)).
+**Dev vs release:** `mullion-mobilerun` produces **development** builds (debug
+signing, debuggable packages). Release packaging is **`mullion-bundle`**
+([cmd/mullion-bundle/README.md](../cmd/mullion-bundle/README.md)).
 
 ```sh
-go install go.hasen.dev/shirei/cmd/shirei_mobilerun@latest
-go install go.hasen.dev/shirei/cmd/shirei_bundle@latest
+go install go.hasen.dev/mullion/cmd/mullion-mobilerun@latest
+go install go.hasen.dev/mullion/cmd/mullion-bundle@latest
 ```
 
 The **capability policy is the same** on both paths: tokens from
-`shirei.capabilities` on modules in the main package’s dependency graph are
+`mullion.capabilities` on modules in the main package’s dependency graph are
 unioned into the build, unknown tokens are warned and ignored, and only
 those packaging declarations are injected. Review privacy labels and usage
 copy for store listings, and avoid depending on extension modules you never
@@ -474,4 +474,4 @@ use (their tokens still apply if they are in the graph).
 - [Running on iOS](ios.md)
 - [Running on Android](android.md)
 - [Camera extension](../ext/camera/README.md)
-- Capability mapping: `cmd/shirei_mobilerun/capabilities.go`
+- Capability mapping: `cmd/mullion-mobilerun/capabilities.go`

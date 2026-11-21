@@ -1,8 +1,8 @@
 # Container Identity
 
-Shirei rebuilds the current UI description for each requested frame. That
+Mullion rebuilds the current UI description for each requested frame. That
 raises a practical question: when a row scrolls, stays hovered, or keeps a text
-field’s caret, how does Shirei know it is looking at the *same* container as the
+field’s caret, how does Mullion know it is looking at the *same* container as the
 previous frame?
 
 This document aims to answer these questions, and explain when you can ignore it,
@@ -13,7 +13,7 @@ and when you must give items an explicit key.
 ## 1. The short version
 
 Most of the time you write `Container(...)` and nothing special is needed.
-Shirei matches containers by **where they sit** in the tree: “the first
+Mullion matches containers by **where they sit** in the tree: “the first
 button under this panel,” “the third row in this loop,” and so on.
 
 That works for fixed layouts and for lists that don’t change order or
@@ -40,7 +40,7 @@ shuffles.
 
 ## 2. What goes wrong if identity is wrong
 
-If shirei thinks two different items are “the same” container (or loses
+If mullion thinks two different items are “the same” container (or loses
 track of one), you may see:
 
 - hover or focus jumping to another row after a sort
@@ -110,10 +110,10 @@ unrelated chrome around a stable list, you’re fine.
 
 | What | What it’s for |
 |------|----------------|
-| **Key** — the value you pass to `ContainerWithKey` | Tells shirei “this is item X” across frames |
+| **Key** — the value you pass to `ContainerWithKey` | Tells mullion “this is item X” across frames |
 | **`ContainerId`** — returned by `Container` / `ContainerWithKey`, or from `CurrentId()` | A handle you pass to helpers like “is this focused?” or “where is this on screen?” |
 
-You pick the key from your app data. Shirei gives you the `ContainerId`
+You pick the key from your app data. Mullion gives you the `ContainerId`
 when you need to ask questions about that container later.
 
 ---

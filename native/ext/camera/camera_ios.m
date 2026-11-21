@@ -1,14 +1,14 @@
-// UIImagePickerController bridge for go.hasen.dev/shirei/ext/camera.
+// UIImagePickerController bridge for go.hasen.dev/mullion/ext/camera.
 #import <UIKit/UIKit.h>
 #include <stdlib.h>
 #include <string.h>
 #include "camera_ios.h"
 #include "_cgo_export.h"
 
-@interface ShireiCameraDelegate : NSObject <UIImagePickerControllerDelegate, UINavigationControllerDelegate>
+@interface MullionCameraDelegate : NSObject <UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 @end
 
-@implementation ShireiCameraDelegate
+@implementation MullionCameraDelegate
 
 static void deliver_fail(int status) {
 	cameraIOSOnResult(NULL, 0, 0, 0, status);
@@ -85,7 +85,7 @@ static void deliver_fail(int status) {
 
 @end
 
-static ShireiCameraDelegate *gDelegate;
+static MullionCameraDelegate *gDelegate;
 
 void camera_ios_present(void *viewController) {
 	UIViewController *vc = (__bridge UIViewController *)viewController;
@@ -96,7 +96,7 @@ void camera_ios_present(void *viewController) {
 
 	void (^present)(void) = ^{
 		if (!gDelegate) {
-			gDelegate = [[ShireiCameraDelegate alloc] init];
+			gDelegate = [[MullionCameraDelegate alloc] init];
 		}
 		UIImagePickerController *picker = [[UIImagePickerController alloc] init];
 		// Prefer camera; Simulator (and some devices) have none — fall back to

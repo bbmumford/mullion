@@ -504,7 +504,7 @@ func compileHLSL(entry, target string) (uintptr, error) {
 	src := append([]byte(d3dShaderSrc), 0)
 	ep, _ := syscall.BytePtrFromString(entry)
 	tg, _ := syscall.BytePtrFromString(target)
-	name, _ := syscall.BytePtrFromString("shirei")
+	name, _ := syscall.BytePtrFromString("mullion")
 	var code, errmsg uintptr
 	hr, _, _ := procD3DCompile.Call(
 		uintptr(unsafe.Pointer(&src[0])), uintptr(len(d3dShaderSrc)),
