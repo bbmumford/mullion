@@ -8,7 +8,9 @@
 // which makes it the thing to run when the question is whether the renderer and
 // the widget set came through the merge intact.
 //
-// Nothing here is HTML. Every pixel is drawn by the Go-drawn surface.
+// Nothing here is HTML. Every pixel is drawn by the Go-drawn surface, and the
+// colours come from the scheme, so the window follows the desktop between light
+// and dark without the application doing anything.
 //
 // Run: go run ./examples/widget-gallery
 package main
@@ -69,12 +71,20 @@ func main() {
 }
 
 func (s *state) draw() {
-	Container(Attrs(Row, Viewport, Background(0, 0, 98, 1)), func() {
+	// The surfaces come from the colour scheme rather than being written as
+	// fixed colours. The widgets below follow the scheme on their own; a
+	// container does not, so hard-coding its background is how a window ends
+	// up with dark controls on a white panel when the desktop turns dark.
+	scheme := CurrentColorScheme
+	canvas := scheme.Surfaces.Canvas
+	panel := scheme.Surfaces.Panel
+
+	Container(Attrs(Row, Viewport, BackgroundVec(canvas.Background)), func() {
 		// The controls, down the left in a fixed column.
-		Container(Attrs(FixWidth(300), Expand, Clip, Pad(14), Gap(10), Background(0, 0, 94, 1)), func() {
-			Label("Widget Gallery", FontWeight(WeightBold), FontSize(16))
-			Label("mixed 日本語 and English 123", FontSize(12))
-			Label("subtle italic caption", FontStyle(StyleItalic), FontSize(11), TextColor(0, 0, 45, 1))
+		Container(Attrs(FixWidth(300), Expand, Clip, Pad(14), Gap(10), BackgroundVec(panel.Background)), func() {
+			Label("Widget Gallery", FontWeight(WeightBold), FontSize(16), TextColorVec(panel.Text))
+			Label("mixed 日本語 and English 123", FontSize(12), TextColorVec(panel.Text))
+			Label("subtle italic caption", FontStyle(StyleItalic), FontSize(11), TextColorVec(panel.Text))
 
 			NextButtonType(ButtonPrimary)
 			if Button(NoIcon, "Primary Button") {
@@ -88,7 +98,7 @@ func (s *state) draw() {
 				// greyed one beside it is for.
 				CtrlButton(NoIcon, "Disabled", false)
 			})
-			Label(fmt.Sprintf("%d button presses", s.clicks), FontSize(11), TextColor(0, 0, 45, 1))
+			Label(fmt.Sprintf("%d button presses", s.clicks), FontSize(11), TextColorVec(panel.Text))
 
 			CheckBox(&s.checkOn, "Enabled option")
 			CheckBox(&s.checkOff, "Disabled option")
@@ -99,10 +109,10 @@ func (s *state) draw() {
 			})
 
 			Slider(&s.slider, SliderAttrs{Min: 0, Max: 1, Width: 200})
-			Label(fmt.Sprintf("slider at %.2f", s.slider), FontSize(11), TextColor(0, 0, 45, 1))
+			Label(fmt.Sprintf("slider at %.2f", s.slider), FontSize(11), TextColorVec(panel.Text))
 
 			TextInput(&s.input)
-			Label(fmt.Sprintf("%d runes typed", len([]rune(s.input))), FontSize(11), TextColor(0, 0, 45, 1))
+			Label(fmt.Sprintf("%d runes typed", len([]rune(s.input))), FontSize(11), TextColorVec(panel.Text))
 		})
 
 		// The table fills what is left, and sorts on a header click.

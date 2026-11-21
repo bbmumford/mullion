@@ -40,6 +40,8 @@ import (
 	"github.com/bbmumford/mullion/internal/mainthread"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/app"
+	"github.com/bbmumford/mullion/native/ext/darkmode"
+	"github.com/bbmumford/mullion/native/widgets"
 	"github.com/bbmumford/mullion/shell"
 	"github.com/bbmumford/mullion/web"
 	g "go.hasen.dev/generic"
@@ -81,6 +83,21 @@ type App struct {
 	// on the goroutine that is tearing down, so it should be short: flush
 	// state, do not start anything.
 	OnQuit func()
+
+	// KeepLightTheme stops the Go-drawn window from following the system's
+	// dark mode, leaving it on the light colour scheme whatever the desktop is
+	// set to.
+	//
+	// Following is the default because not following it is the surprising
+	// behaviour: every other application on the machine turns dark together,
+	// and one that stays white looks broken rather than deliberate. Set this
+	// only for a window whose colours are its own -- something showing a
+	// document or an image that should not be reinterpreted.
+	//
+	// The colour schemes themselves are the widgets package's, and an
+	// application wanting its own passes them to SetLightColorScheme and
+	// SetDarkColorScheme before Run.
+	KeepLightTheme bool
 }
 
 // A Window is the application's window. Exactly one of Draw and Page says what
@@ -274,6 +291,9 @@ func (s *Session) runNative() error {
 	native.RegisterFrameStart(mainthread.Drain)
 	native.RegisterFrameStart(s.pumpAttachedWindows)
 	native.RegisterFrameStart(s.matchMenuShortcuts)
+	if !s.app.KeepLightTheme {
+		native.RegisterFrameStart(followSystemTheme)
+	}
 	mainthread.SetWake(native.RequestNextFrame)
 
 	app.SetupWindow(w.Title, w.width(), w.height())
@@ -300,6 +320,25 @@ func (s *Session) matchMenuShortcuts() {
 		return
 	}
 	shell.Match(s.shortcuts)
+}
+
+// followSystemTheme keeps the Go-drawn window's colours in step with the
+// desktop's light or dark setting.
+//
+// The two halves of this existed and were never joined: the widgets package
+// carries a light and a dark colour scheme and a switch between them, and
+// ext/darkmode asks each platform which the desktop is set to. Nothing called
+// one with the other, so a window stayed light however the machine was set --
+// which, next to every other application on the desktop, reads as a bug rather
+// than a choice.
+//
+// It is checked per frame rather than subscribed to. Each platform reports the
+// setting differently -- a defaults read on macOS, a registry value on Windows,
+// a portal call on Linux -- and SetDarkMode only asks for a repaint when the
+// effective scheme actually changes, so a check that answers the same thing
+// costs a comparison.
+func followSystemTheme() {
+	widgets.SetDarkMode(darkmode.OSDarkMode())
 }
 
 // pumpAttachedWindows gives a WebView window opened under this loop its turn.
