@@ -8,9 +8,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/ebitengine/purego/objc"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/gpurender"
+	"github.com/ebitengine/purego/objc"
 )
 
 var popupWindows = map[native.PopupWindow]*windowState{}

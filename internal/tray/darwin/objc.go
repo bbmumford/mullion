@@ -14,6 +14,7 @@ package darwin
 
 import (
 	"errors"
+	mobjc "github.com/bbmumford/mullion/internal/objc"
 	"runtime"
 	"structs"
 	"sync"
@@ -124,15 +125,21 @@ func GetClass(name string) Class {
 	if initRuntime() != nil {
 		return 0
 	}
-	return Class(objc.GetClass(name))
+	return Class(mobjc.Class(name))
 }
 
 // RegisterSelector interns a selector by name.
+// RegisterSelector interns a selector by name.
+//
+// It goes through internal/objc, which caches. This package interned afresh
+// every time, and the tray asks for the same selectors on every menu rebuild
+// and every icon change -- each one taking the Objective-C runtime's global
+// lock.
 func RegisterSelector(name string) SEL {
 	if initRuntime() != nil {
 		return 0
 	}
-	return SEL(objc.RegisterName(name))
+	return SEL(mobjc.Sel(name))
 }
 
 // Send sends a message that takes no arguments.

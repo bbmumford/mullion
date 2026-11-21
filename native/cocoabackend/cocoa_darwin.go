@@ -16,12 +16,12 @@ import (
 	"unicode/utf16"
 	"unsafe"
 
-	"github.com/cli/browser"
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/gpurender"
 	"github.com/bbmumford/mullion/native/internal/iconimg"
 	"github.com/bbmumford/mullion/native/internal/qwerty"
+	"github.com/cli/browser"
+	g "go.hasen.dev/generic"
 )
 
 // glyphCacheBudget caps total cached glyph-bitmap bytes (enables the shared core

@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bbmumford/mullion/internal/mainthread"
+	mobjc "github.com/bbmumford/mullion/internal/objc"
 	neturl "net/url"
 	"os"
 	"path/filepath"
@@ -72,29 +73,15 @@ type cgRect struct {
 
 // --- objc helpers ----------------------------------------------------------
 
-var selCache sync.Map // string -> objc.SEL
+// sel, class, nsstr and autorelease are internal/objc, under the names this
+// file has used throughout. The implementations were the same short list three
+// packages each kept their own copy of; the names stay so the several hundred
+// call sites here do not move.
+func sel(name string) objc.SEL { return mobjc.Sel(name) }
 
-func sel(name string) objc.SEL {
-	v, ok := selCache.Load(name)
-	if ok {
-		return v.(objc.SEL)
-	}
-	s := objc.RegisterName(name)
-	selCache.Store(name, s)
-	return s
-}
+func class(name string) objc.ID { return mobjc.Class(name) }
 
-func class(name string) objc.ID {
-	c := objc.GetClass(name)
-	if c == 0 {
-		panic(fmt.Sprintf("glaze: objc class %q not found", name))
-	}
-	return objc.ID(c)
-}
-
-func nsstr(s string) objc.ID {
-	return class("NSString").Send(sel("stringWithUTF8String:"), s)
-}
+func nsstr(s string) objc.ID { return mobjc.NSString(s) }
 
 // cstr reads a NUL-terminated C string returned as an objc.ID (e.g. -UTF8String).
 func cstr(id objc.ID) string {
@@ -113,13 +100,7 @@ func cstr(id objc.ID) string {
 }
 
 // autorelease wraps f in an NSAutoreleasePool, draining it afterward.
-func autorelease(f func()) {
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-	pool := class("NSAutoreleasePool").Send(sel("alloc")).Send(sel("init"))
-	defer pool.Send(sel("drain"))
-	f()
-}
+func autorelease(f func()) { mobjc.Autorelease(f) }
 
 // --- one-time runtime initialization ---------------------------------------
 

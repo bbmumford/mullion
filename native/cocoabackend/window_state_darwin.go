@@ -5,8 +5,8 @@ package cocoabackend
 import (
 	"unsafe"
 
-	"github.com/ebitengine/purego/objc"
 	"github.com/bbmumford/mullion/native"
+	"github.com/ebitengine/purego/objc"
 )
 
 type windowState struct {

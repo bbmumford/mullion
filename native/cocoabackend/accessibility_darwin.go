@@ -7,9 +7,9 @@ import (
 	"math"
 	"slices"
 
+	"github.com/bbmumford/mullion/native"
 	"github.com/ebitengine/purego"
 	"github.com/ebitengine/purego/objc"
-	"github.com/bbmumford/mullion/native"
 )
 
 // Native objects and snapshots belong to the AppKit thread. Getters never

@@ -4,6 +4,7 @@ package cocoabackend
 
 import (
 	"fmt"
+	mobjc "github.com/bbmumford/mullion/internal/objc"
 	"os"
 	"structs"
 	"sync"
@@ -73,7 +74,6 @@ func nsMakeRect(x, y, w, h float64) nsRect {
 var (
 	appkitOnce sync.Once
 	appkitErr  error
-	sels       sync.Map
 
 	kIOSurfaceWidth           objc.ID
 	kIOSurfaceHeight          objc.ID
@@ -101,14 +101,11 @@ var (
 	gDelegate objc.ID
 )
 
-func sel(name string) objc.SEL {
-	if v, ok := sels.Load(name); ok {
-		return v.(objc.SEL)
-	}
-	s := objc.RegisterName(name)
-	actual, _ := sels.LoadOrStore(name, s)
-	return actual.(objc.SEL)
-}
+// sel is internal/objc's selector cache, under the name this backend uses
+// throughout. Interning takes the Objective-C runtime's global lock, and this
+// module asks for the same few dozen selectors on the frame path, so it is
+// cached once for every macOS package here rather than once per package.
+func sel(name string) objc.SEL { return mobjc.Sel(name) }
 
 func nsString(s string) objc.ID {
 	return objc.ID(objc.GetClass("NSString")).Send(sel("stringWithUTF8String:"), s)
