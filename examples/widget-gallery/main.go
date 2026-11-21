@@ -44,6 +44,9 @@ type state struct {
 	input    string
 	unit     string
 	clicks   int
+	tree     TreeState
+	sections [2]bool
+	picked   string
 	rows     []*row
 }
 
@@ -55,6 +58,10 @@ func main() {
 		input:   "hello 世界",
 		rows:    makeRows(40),
 	}
+	// Opened so the first frame shows the tree expanded rather than a
+	// single collapsed row.
+	s.sections[0] = true
+	s.tree.SetOpen("src", true)
 
 	err := mullion.Run(mullion.App{
 		Name: "Widget Gallery",
@@ -117,6 +124,25 @@ func (s *state) draw() {
 
 			TextInput(&s.input)
 			Label(fmt.Sprintf("%d runes typed", len([]rune(s.input))), FontSize(11), TextColorVec(panel.Text))
+		})
+
+		// A middle column of the composite widgets.
+		Container(Attrs(FixWidth(260), Expand, Clip, Pad(10), Gap(10)), func() {
+			Card(CardAttrs{Title: "Card", Subtitle: "a titled panel"}, func() {
+				Form(FormAttrs{LabelWidth: 70}, func() {
+					FormRow("Unit", func() { Select(&s.unit, "choose", "bytes", "lines", "pages") })
+					FormRow("Enabled", func() { CheckBox(&s.checkOn, "") })
+				})
+			})
+			AccordionSection(&s.sections[0], "Tree", func() {
+				if v, ok := Tree(&s.tree, TreeAttrs{}, treeChildren); ok {
+					s.picked = v
+				}
+				Label("picked: "+pickedOr(s.picked), FontSize(11))
+			})
+			AccordionSection(&s.sections[1], "Collapsed by default", func() {
+				Label("only drawn while open", FontSize(11))
+			})
 		})
 
 		// The table fills what is left, and sorts on a header click.
@@ -185,4 +211,34 @@ func unitLabel(unit string) string {
 		return "no unit chosen"
 	}
 	return "unit: " + unit
+}
+
+// treeChildren is a small hierarchy, shaped the way a filesystem would be: the
+// children of a key, asked for only where the tree needs them.
+func treeChildren(key string) []TreeNode[string] {
+	switch key {
+	case "":
+		return []TreeNode[string]{
+			{Key: "src", Label: "src", HasChildren: true, Value: "src"},
+			{Key: "docs", Label: "docs", HasChildren: true, Value: "docs"},
+			{Key: "go.mod", Label: "go.mod", Value: "go.mod"},
+		}
+	case "src":
+		return []TreeNode[string]{
+			{Key: "src/main.go", Label: "main.go", Value: "src/main.go"},
+			{Key: "src/ui", Label: "ui", HasChildren: true, Value: "src/ui"},
+		}
+	case "src/ui":
+		return []TreeNode[string]{{Key: "src/ui/view.go", Label: "view.go", Value: "src/ui/view.go"}}
+	case "docs":
+		return []TreeNode[string]{{Key: "docs/readme.md", Label: "readme.md", Value: "docs/readme.md"}}
+	}
+	return nil
+}
+
+func pickedOr(v string) string {
+	if v == "" {
+		return "nothing"
+	}
+	return v
 }
