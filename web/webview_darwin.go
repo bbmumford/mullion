@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bbmumford/mullion/internal/mainthread"
 	neturl "net/url"
 	"os"
 	"path/filepath"
@@ -563,8 +564,15 @@ func dispatchMain(f func()) {
 
 // onMainThread reports whether the caller runs on the process main thread —
 // the only thread AppKit accepts UI work from.
+//
+// It asks internal/mainthread, which pinned that thread and is the one place
+// in this module that answers the question. Asking AppKit instead, through
+// [NSThread isMainThread], gave a second answer by a second mechanism: it
+// needed Foundation loaded and went through objc reflection to say what a
+// single libSystem call says. Two answers to one question is how a file dialog
+// came to run its modal panel off the main thread.
 func onMainThread() bool {
-	return class("NSThread").Send(sel("isMainThread")) != 0
+	return mainthread.OnMainThread()
 }
 
 // uiIsMain records, at first webview creation, whether the UI runs on the

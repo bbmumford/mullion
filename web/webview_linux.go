@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bbmumford/mullion/internal/mainthread"
 	"net/url"
 	"os"
 	"os/exec"
@@ -1559,7 +1560,23 @@ func downloadFinished(dl uintptr) {
 	callDownloadDone(w.onDownloadEnd, d.path, d.err)
 }
 
-func onUIThread() bool { return uiThreadID != 0 && syscall.Gettid() == uiThreadID }
+// onUIThread reports whether the caller may touch GTK here and now.
+//
+// Where a WebView has recorded its UI thread, that is the thread, whatever
+// else is going on: GTK belongs to it and to nowhere else. Where none has,
+// the answer is the thread internal/mainthread pinned, which is where this
+// module puts every window it makes.
+//
+// The fallback is the point. Without it the answer was a flat no in any
+// process that had made no WebView -- every Go-drawn application -- so a file
+// dialog asked from such a process queued itself onto a thread and waited for
+// a drain that a blocked caller could never reach.
+func onUIThread() bool {
+	if uiThreadID != 0 {
+		return syscall.Gettid() == uiThreadID
+	}
+	return mainthread.OnMainThread()
+}
 
 // --- cookies -----------------------------------------------------------------
 

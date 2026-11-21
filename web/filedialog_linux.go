@@ -33,7 +33,7 @@ func fileDialogFrom(window unsafe.Pointer, kind fileDialogKind, opts FileDialogO
 
 	// Already on the thread that owns GTK: run here. Queueing the work and then
 	// waiting would block the only thread that could run it.
-	if onUIThread() || mainthread.OnMainThread() {
+	if onUIThread() {
 		return runFileChooser(parent, action, multi, opts), nil
 	}
 	ch := make(chan []string, 1)

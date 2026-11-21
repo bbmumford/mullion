@@ -94,7 +94,7 @@ func askQuestion(window unsafe.Pointer, opts QuestionOptions) (bool, error) {
 
 	// Already on the thread that owns GTK: run it here. Queueing the dialog and
 	// then waiting would block the only thread that could run it.
-	if onUIThread() || mainthread.OnMainThread() {
+	if onUIThread() {
 		return runQuestion(parent, opts)
 	}
 	type answer struct {

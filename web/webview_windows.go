@@ -20,6 +20,7 @@ package web
 
 import (
 	"fmt"
+	"github.com/bbmumford/mullion/internal/mainthread"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -622,4 +623,17 @@ func (w *webview) Destroy() {
 	unregisterEngine(w.id)
 }
 
-func onUIThread() bool { return uiThreadID != 0 && getCurrentThreadID() == uiThreadID }
+// onUIThread reports whether the caller may touch this thread's windows here
+// and now.
+//
+// Where a WebView has recorded its UI thread, that is the thread: Win32
+// delivers a window's messages only to the thread that created it. Where none
+// has, the answer is the thread internal/mainthread pinned, which is where
+// this module creates every window. See the Linux twin for why the fallback
+// matters.
+func onUIThread() bool {
+	if uiThreadID != 0 {
+		return getCurrentThreadID() == uiThreadID
+	}
+	return mainthread.OnMainThread()
+}

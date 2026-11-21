@@ -73,7 +73,7 @@ func askQuestion(window unsafe.Pointer, opts QuestionOptions) (bool, error) {
 		return answer{r == idYes, nil}
 	}
 
-	if onUIThread() || mainthread.OnMainThread() {
+	if onUIThread() {
 		r := ask()
 		return r.ok, r.err
 	}

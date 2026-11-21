@@ -24,7 +24,7 @@ func fileDialogFrom(window unsafe.Pointer, kind fileDialogKind, opts FileDialogO
 
 	// Already on the UI thread: run here. Queueing the work and then waiting
 	// would block the only thread that could run it.
-	if onUIThread() || mainthread.OnMainThread() {
+	if onUIThread() {
 		return runFileDialog(parent, save, pickFolders, multi, opts)
 	}
 	type outcome struct {
