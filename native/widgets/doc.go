@@ -47,4 +47,15 @@
 //
 // An application with its own palette sets it once through mullion.App's
 // LightScheme and DarkScheme.
+//
+// # Colours are HSLA
+//
+// Every colour here is a Vec4 of hue in 0 to 360, saturation and lightness in
+// 0 to 100, and alpha in 0 to 1 -- not red, green, blue and alpha. Vec4{120,
+// 60, 45, 1} is a green; the same four numbers read as RGBA would be a
+// saturated green too, which is why the mistake survives a quick look. What
+// gives it away is Vec4{1, 0, 0, 1}: meant as red, it is a hue of one degree
+// at one per cent saturation and one per cent lightness, which draws as
+// near-black. A colour that comes out grey has almost always been written as
+// RGBA.
 package widgets
