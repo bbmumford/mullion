@@ -41,6 +41,7 @@ import (
 	"github.com/bbmumford/mullion/native"
 	"github.com/bbmumford/mullion/native/app"
 	"github.com/bbmumford/mullion/native/ext/darkmode"
+	extwindow "github.com/bbmumford/mullion/native/ext/window"
 	"github.com/bbmumford/mullion/native/widgets"
 	"github.com/bbmumford/mullion/shell"
 	"github.com/bbmumford/mullion/web"
@@ -84,6 +85,20 @@ type App struct {
 	// state, do not start anything.
 	OnQuit func()
 
+	// LightScheme and DarkScheme replace the built-in colour schemes, for an
+	// application with a palette of its own. Either may be left nil to keep the
+	// built-in one.
+	//
+	// They are the widgets package's own type, so the way to build one is to
+	// take widgets.LightColorScheme() and change the parts that matter rather
+	// than fill in every field.
+	LightScheme, DarkScheme *widgets.ColorScheme
+
+	// Background keeps the process alive after its last window closes, for a
+	// helper that goes on working from the tray. The default is to exit, which
+	// is what a window-shaped application should do.
+	Background bool
+
 	// KeepLightTheme stops the Go-drawn window from following the system's
 	// dark mode, leaving it on the light colour scheme whatever the desktop is
 	// set to.
@@ -118,6 +133,42 @@ type Window struct {
 
 	// Page is a user interface rendered by the system WebView.
 	Page *Page
+
+	// MinWidth and MinHeight stop the person shrinking the window below a size
+	// the layout stops making sense at. Zero means no minimum.
+	MinWidth, MinHeight int
+
+	// Centered opens the window in the middle of the primary display instead of
+	// wherever the platform would otherwise put it.
+	Centered bool
+
+	// Transparent lets unpainted pixels show what is behind the window, and
+	// turns off the native drop shadow. Backgrounds and controls keep their own
+	// alpha, so a window is only as transparent as it is left unpainted.
+	//
+	// macOS, Windows and Wayland. Elsewhere it is ignored rather than refused,
+	// and the window is simply opaque.
+	Transparent bool
+
+	// Undecorated omits the title bar and the window buttons. The window still
+	// takes keyboard input and can still be resized, so a frameless window has
+	// to offer its own way to move and close it.
+	//
+	// macOS, Windows and Wayland.
+	Undecorated bool
+
+	// Overlay keeps the window above the others and on every space, for a
+	// heads-up panel rather than a document window.
+	//
+	// macOS, Windows, and Wayland with layer-shell v4. Elsewhere, and on
+	// compositors without layer-shell, it opens as an ordinary borderless
+	// transparent window.
+	Overlay bool
+
+	// Quiet opens the window without activating the application or taking key
+	// focus, for something that should appear without interrupting whatever the
+	// person is typing into.
+	Quiet bool
 }
 
 // A Page is what a WebView window shows.
@@ -291,14 +342,44 @@ func (s *Session) runNative() error {
 	native.RegisterFrameStart(mainthread.Drain)
 	native.RegisterFrameStart(s.pumpAttachedWindows)
 	native.RegisterFrameStart(s.matchMenuShortcuts)
+	if s.app.LightScheme != nil {
+		widgets.SetLightColorScheme(*s.app.LightScheme)
+	}
+	if s.app.DarkScheme != nil {
+		widgets.SetDarkColorScheme(*s.app.DarkScheme)
+	}
 	if !s.app.KeepLightTheme {
 		native.RegisterFrameStart(followSystemTheme)
 	}
 	mainthread.SetWake(native.RequestNextFrame)
 
+	// Everything below has to be said before Run: these are properties of the
+	// window the backend is about to create, not of one it already has.
+	if s.app.Background {
+		app.SetupBackground()
+	}
+	if w.Transparent {
+		app.SetupTransparent()
+	}
+	if w.Undecorated {
+		app.SetupUndecorated()
+	}
+	if w.Overlay {
+		app.SetupOverlay()
+	}
+	if w.Quiet {
+		app.SetupQuiet()
+	}
 	app.SetupWindow(w.Title, w.width(), w.height())
 	if !s.app.Icon.Empty() {
 		app.SetupIconBytes(s.app.Icon.Data)
+	}
+	// These two want a window to exist, and SetupWindow has just made one.
+	if w.MinWidth > 0 || w.MinHeight > 0 {
+		extwindow.SetMinSize(float32(w.MinWidth), float32(w.MinHeight))
+	}
+	if w.Centered {
+		extwindow.Center()
 	}
 	app.Run(w.Draw) // does not return
 	return nil
