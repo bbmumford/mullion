@@ -116,7 +116,17 @@ func Scan(root string, cfg Config) ([]Finding, error) {
 			return nil, fmt.Errorf("ffiaudit: allow entry %q has no reason", key)
 		}
 	}
-	var findings []Finding
+	// Two passes. The first collects, from every package, the names holding a
+	// proc whose Call carries //go:uintptrescapes; the second judges the call
+	// sites. A single pass could not do it: a package that keeps its procs
+	// somewhere shared -- which is the tidy way to bind a DLL once -- would
+	// have every one of its call sites reported, because the declaration is not
+	// in the file being read.
+	//
+	// A qualified receiver is what this is for, and all it is used for. A bare
+	// identifier still has to be declared in the package that calls it, so a
+	// local variable cannot be waved through by a same-named proc elsewhere.
+	var dirs []string
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil || !d.IsDir() {
 			return err
@@ -139,15 +149,31 @@ func Scan(root string, cfg Config) ([]Finding, error) {
 				return filepath.SkipDir
 			}
 		}
-		found, err := scanDir(root, path, cfg)
-		if err != nil {
-			return err
-		}
-		findings = append(findings, found...)
+		dirs = append(dirs, path)
 		return nil
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	moduleProcs := map[string]bool{}
+	for _, dir := range dirs {
+		names, err := procsInDir(dir, cfg)
+		if err != nil {
+			return nil, err
+		}
+		for name := range names {
+			moduleProcs[name] = true
+		}
+	}
+
+	var findings []Finding
+	for _, dir := range dirs {
+		found, err := scanDir(root, dir, cfg, moduleProcs)
+		if err != nil {
+			return nil, err
+		}
+		findings = append(findings, found...)
 	}
 	sort.Slice(findings, func(i, j int) bool {
 		if findings[i].File != findings[j].File {
@@ -159,20 +185,54 @@ func Scan(root string, cfg Config) ([]Finding, error) {
 }
 
 // ScanSource analyses one file's source, for testing the analysis itself.
-func ScanSource(name, src string, cfg Config) ([]Finding, error) {
+//
+// moduleProcs stands in for the first pass Scan does over the whole module: the
+// names a qualified receiver may be recognised by. Pass nil for none.
+func ScanSource(name, src string, cfg Config, moduleProcs ...string) ([]Finding, error) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, name, src, 0)
 	if err != nil {
 		return nil, err
 	}
+	known := map[string]bool{}
+	for _, p := range moduleProcs {
+		known[p] = true
+	}
 	files, paths := []*ast.File{file}, []string{name}
-	return analyse(fset, files, paths, cfg), nil
+	return analyse(fset, files, paths, cfg, known), nil
 }
 
-func scanDir(root, dir string, cfg Config) ([]Finding, error) {
+// procsInDir returns the proc-holding names one package declares, for Scan's
+// first pass.
+func procsInDir(dir string, cfg Config) (map[string]bool, error) {
+	fset, files, _, err := parseDir(dir, cfg)
+	if err != nil || len(files) == 0 {
+		return nil, err
+	}
+	return escapingProcs(fset, files), nil
+}
+
+func scanDir(root, dir string, cfg Config, moduleProcs map[string]bool) ([]Finding, error) {
+	fset, files, paths, err := parseDir(dir, cfg)
+	if err != nil || len(files) == 0 {
+		return nil, err
+	}
+	rel := make([]string, len(paths))
+	for i, p := range paths {
+		r, err := filepath.Rel(root, p)
+		if err != nil {
+			return nil, err
+		}
+		rel[i] = filepath.ToSlash(r)
+	}
+	return analyse(fset, files, rel, cfg, moduleProcs), nil
+}
+
+// parseDir parses one directory's Go files.
+func parseDir(dir string, cfg Config) (*token.FileSet, []*ast.File, []string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 	fset := token.NewFileSet()
 	var files []*ast.File
@@ -188,27 +248,20 @@ func scanDir(root, dir string, cfg Config) ([]Finding, error) {
 		path := filepath.Join(dir, name)
 		f, err := parser.ParseFile(fset, path, nil, 0)
 		if err != nil {
-			return nil, err
-		}
-		rel, err := filepath.Rel(root, path)
-		if err != nil {
-			return nil, err
+			return nil, nil, nil, err
 		}
 		files = append(files, f)
-		paths = append(paths, filepath.ToSlash(rel))
+		paths = append(paths, path)
 	}
-	if len(files) == 0 {
-		return nil, nil
-	}
-	return analyse(fset, files, paths, cfg), nil
+	return fset, files, paths, nil
 }
 
-func analyse(fset *token.FileSet, files []*ast.File, paths []string, cfg Config) []Finding {
+func analyse(fset *token.FileSet, files []*ast.File, paths []string, cfg Config, moduleProcs map[string]bool) []Finding {
 	procs := escapingProcs(fset, files)
 	globals := packageVars(files)
 	var findings []Finding
 	for i, f := range files {
-		findings = append(findings, fileFindings(fset, f, paths[i], procs, globals, cfg)...)
+		findings = append(findings, fileFindings(fset, f, paths[i], procs, moduleProcs, globals, cfg)...)
 	}
 	return findings
 }
@@ -220,7 +273,7 @@ func analyse(fset *token.FileSet, files []*ast.File, paths []string, cfg Config)
 // `var load = sync.OnceValue(func() ...)`, which is how a library resolves its
 // symbols once. Those bodies hold some of the most pointer-heavy code there is,
 // and they are not reachable from a scan of FuncDecls.
-func fileFindings(fset *token.FileSet, file *ast.File, rel string, procs map[string]bool, globals map[string]*ast.ValueSpec, cfg Config) []Finding {
+func fileFindings(fset *token.FileSet, file *ast.File, rel string, procs, moduleProcs map[string]bool, globals map[string]*ast.ValueSpec, cfg Config) []Finding {
 	var findings []Finding
 	var (
 		stack []ast.Node
@@ -315,7 +368,7 @@ func fileFindings(fset *token.FileSet, file *ast.File, rel string, procs map[str
 			if !ok {
 				return true
 			}
-			if call, ok := stack[len(stack)-2].(*ast.CallExpr); ok && keepsReferentAlive(call, procs) {
+			if call, ok := stack[len(stack)-2].(*ast.CallExpr); ok && keepsReferentAlive(call, procs, moduleProcs) {
 				return true
 			}
 			if addressOfPackageVar(addr, globals) {
@@ -535,7 +588,7 @@ func addressToUintptr(n ast.Node) (ast.Expr, bool) {
 // only reaches a conversion written in the argument list of the annotated call
 // itself, so a wrapper of any of these loses it; that is why the check looks at
 // the immediate parent call and no further.
-func keepsReferentAlive(call *ast.CallExpr, procs map[string]bool) bool {
+func keepsReferentAlive(call *ast.CallExpr, procs, moduleProcs map[string]bool) bool {
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	if !ok {
 		return false
@@ -557,9 +610,16 @@ func keepsReferentAlive(call *ast.CallExpr, procs map[string]bool) bool {
 	// be a name this package declared as a proc.
 	switch recv := sel.X.(type) {
 	case *ast.Ident:
+		// A bare name has to be declared by the package that calls it.
 		return procs[recv.Name]
 	case *ast.SelectorExpr:
-		return procs[recv.Sel.Name]
+		// A qualified receiver -- win32.AppendMenuW, or a struct field holding
+		// a proc -- is matched against every package in the module, so binding
+		// a DLL once in a shared package does not blind this check. The cost is
+		// that a non-proc of the same name elsewhere would be accepted; the
+		// name has to be one some package declares as a proc for that to
+		// happen at all.
+		return procs[recv.Sel.Name] || moduleProcs[recv.Sel.Name]
 	}
 	return false
 }

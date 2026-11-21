@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/bbmumford/mullion/internal/win32"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
@@ -120,13 +121,19 @@ var (
 	kernel32 = windows.NewLazySystemDLL("kernel32.dll")
 
 	procShellNotifyIconW = shell32.NewProc("Shell_NotifyIconW")
-	procRegisterClassExW = user32.NewProc("RegisterClassExW")
-	procCreateWindowExW  = user32.NewProc("CreateWindowExW")
 
-	procDefWindowProcW              = user32.NewProc("DefWindowProcW")
+	// The window plumbing is bound in internal/win32, which the main-thread
+	// wake's message-only window uses too. The types are written out so the
+	// pointer audit still sees these as procs whose Call carries
+	// //go:uintptrescapes: it recognises a proc by its declared type or by a
+	// NewProc call, and an assignment from another package is neither.
+	procRegisterClassExW *windows.LazyProc = win32.RegisterClassExW
+	procCreateWindowExW  *windows.LazyProc = win32.CreateWindowExW
+	procDefWindowProcW   *windows.LazyProc = win32.DefWindowProcW
+	procPostMessageW     *windows.LazyProc = win32.PostMessageW
+
 	procSetForegroundWindow         = user32.NewProc("SetForegroundWindow")
 	procTrackPopupMenu              = user32.NewProc("TrackPopupMenu")
-	procPostMessageW                = user32.NewProc("PostMessageW")
 	procCreatePopupMenu             = user32.NewProc("CreatePopupMenu")
 	procAppendMenuW                 = user32.NewProc("AppendMenuW")
 	procDestroyMenu                 = user32.NewProc("DestroyMenu")

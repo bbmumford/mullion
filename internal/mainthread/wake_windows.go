@@ -6,6 +6,7 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/bbmumford/mullion/internal/win32"
 	"golang.org/x/sys/windows"
 )
 
@@ -41,11 +42,17 @@ func postToPlatform(id uintptr) bool {
 }
 
 var windowsWake = sync.OnceValue(func() func() {
-	user32 := windows.NewLazySystemDLL("user32.dll")
-	createWindowEx := user32.NewProc("CreateWindowExW")
-	defWindowProc := user32.NewProc("DefWindowProcW")
-	registerClass := user32.NewProc("RegisterClassExW")
-	postMessage := user32.NewProc("PostMessageW")
+	// The window plumbing is bound once, in internal/win32, which the tray's
+	// hidden window uses too. The types are written out rather than inferred so
+	// the pointer audit still sees these as procs whose Call carries
+	// //go:uintptrescapes: it recognises a proc by its declared type or by a
+	// NewProc call, and an assignment from another package is neither.
+	var (
+		createWindowEx *windows.LazyProc = win32.CreateWindowExW
+		defWindowProc  *windows.LazyProc = win32.DefWindowProcW
+		registerClass  *windows.LazyProc = win32.RegisterClassExW
+		postMessage    *windows.LazyProc = win32.PostMessageW
+	)
 
 	proc := windows.NewCallback(func(hwnd uintptr, msg uint32, wparam, lparam uintptr) uintptr {
 		switch msg {

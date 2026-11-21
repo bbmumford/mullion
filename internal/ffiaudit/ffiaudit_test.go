@@ -449,3 +449,51 @@ func TestPartitionWithNoBaselineMakesEverythingFresh(t *testing.T) {
 		t.Errorf("fresh=%d inherited=%d stale=%d, want 2/0/0", len(fresh), len(inherited), len(stale))
 	}
 }
+
+// A shared package binding a DLL once is the tidy way to do it, and the audit
+// must not punish it: the directive is on LazyProc.Call whatever package holds
+// the value, so a qualified receiver is matched against every package in the
+// module.
+func TestAQualifiedProcFromAnotherPackageIsRecognised(t *testing.T) {
+	const src = `package p
+
+import "unsafe"
+
+func f(x int) { win32.AppendMenuW.Call(uintptr(unsafe.Pointer(&x))) }
+`
+	// Without the module pass, the declaration is nowhere to be seen.
+	alone, err := ScanSource("p.go", src, Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(alone) != 1 {
+		t.Errorf("with no module context, reported %v; want the one finding", alone)
+	}
+
+	// With it, the same call is recognised as safe.
+	withModule, err := ScanSource("p.go", src, Config{}, "AppendMenuW")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(withModule) != 0 {
+		t.Errorf("a proc the module declares was still reported: %v", withModule)
+	}
+}
+
+// A bare identifier is local, and must stay local: a proc of the same name in
+// another package must not vouch for an undeclared local variable, or the
+// module pass would become a way to launder any name at all.
+func TestABareNameIsStillJudgedLocally(t *testing.T) {
+	got, err := ScanSource("p.go", `package p
+
+import "unsafe"
+
+func f(x int) { AppendMenuW.Call(uintptr(unsafe.Pointer(&x))) }
+`, Config{}, "AppendMenuW")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 {
+		t.Errorf("a bare name was accepted on another package's declaration: %v", got)
+	}
+}
