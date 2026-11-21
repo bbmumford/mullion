@@ -36,6 +36,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 
+	"github.com/bbmumford/mullion/bind"
 	"github.com/bbmumford/mullion/icon"
 	"github.com/bbmumford/mullion/internal/mainthread"
 	"github.com/bbmumford/mullion/native"
@@ -351,6 +352,11 @@ func (s *Session) runNative() error {
 	if !s.app.KeepLightTheme {
 		native.RegisterFrameStart(followSystemTheme)
 	}
+	// Values a widget edited this frame are noticed at the start of the next
+	// one, which is the earliest the edit can be seen: the widget writes
+	// through a pointer during the frame, so there is nothing to compare until
+	// that frame has finished.
+	native.RegisterFrameStart(syncBoundValues)
 	mainthread.SetWake(native.RequestNextFrame)
 
 	// Everything below has to be said before Run: these are properties of the
@@ -421,6 +427,11 @@ func (s *Session) matchMenuShortcuts() {
 func followSystemTheme() {
 	widgets.SetDarkMode(darkmode.OSDarkMode())
 }
+
+// syncBoundValues applies the Sets made from other goroutines and tells the
+// watchers of anything a widget changed last frame. It discards the count,
+// which is for a caller driving the surface itself.
+func syncBoundValues() { bind.Sync() }
 
 // pumpAttachedWindows gives a WebView window opened under this loop its turn.
 //
