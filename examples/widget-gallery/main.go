@@ -48,6 +48,7 @@ type state struct {
 	tree     TreeState
 	due      time.Time
 	dueEdit  DateFieldState
+	month    CalendarState
 	sections [2]bool
 	picked   string
 	rows     []*row
@@ -146,6 +147,14 @@ func (s *state) draw() {
 			})
 			AccordionSection(&s.sections[1], "Collapsed by default", func() {
 				Label("only drawn while open", FontSize(11))
+			})
+			Card(CardAttrs{Title: "Calendar"}, func() {
+				if picked, ok := Calendar(&s.due, &s.month, CalendarAttrs{WeekStart: time.Monday}); ok {
+					// Picking a day retypes the field beside it, so the two
+					// views of one date cannot disagree.
+					s.dueEdit = DateFieldState{}
+					_ = picked
+				}
 			})
 		})
 
