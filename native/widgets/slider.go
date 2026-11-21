@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"go.hasen.dev/generic"
 	. "github.com/bbmumford/mullion/native"
+	"go.hasen.dev/generic"
 )
 
 // SliderConfig is the interaction/math configuration for ProcessSlider.

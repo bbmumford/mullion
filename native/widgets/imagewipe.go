@@ -5,8 +5,8 @@ import (
 	"image"
 	"image/color"
 
-	"go.hasen.dev/generic"
 	. "github.com/bbmumford/mullion/native"
+	"go.hasen.dev/generic"
 )
 
 // Default outline accents for ImageWipe (git-style: green = left/new, red = right/old).

@@ -115,14 +115,14 @@ func TestViewToggleResetsTableSort(t *testing.T) {
 	rowIds := map[*semRow]native.ContainerId{}
 	cols := []TableColumn[*semRow]{
 		{
-			Label:  "Name",
-			Cell: func(r *semRow) { rowIds[r] = native.CurrentId(); Label(r.Name) },
-			Less:   func(a, b *semRow) bool { return a.Name < b.Name },
+			Label: "Name",
+			Cell:  func(r *semRow) { rowIds[r] = native.CurrentId(); Label(r.Name) },
+			Less:  func(a, b *semRow) bool { return a.Name < b.Name },
 		},
 		{
 			Label: "Val", Width: 80, DefaultDesc: true,
 			Cell: func(r *semRow) { Label("v") },
-			Less:   func(a, b *semRow) bool { return a.Val < b.Val },
+			Less: func(a, b *semRow) bool { return a.Val < b.Val },
 		},
 	}
 

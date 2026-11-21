@@ -16,8 +16,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	g "go.hasen.dev/generic"
 	"github.com/bbmumford/mullion/native"
+	g "go.hasen.dev/generic"
 
 	. "github.com/bbmumford/mullion/native"
 )

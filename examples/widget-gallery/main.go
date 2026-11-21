@@ -42,6 +42,7 @@ type state struct {
 	option   string
 	slider   float32
 	input    string
+	unit     string
 	clicks   int
 	rows     []*row
 }
@@ -108,6 +109,9 @@ func (s *state) draw() {
 				OptionButton("Choice B", "b")
 			})
 
+			Select(&s.unit, "Choose a unit", "bytes", "lines", "pages")
+			Label(unitLabel(s.unit), FontSize(11), TextColorVec(panel.Text))
+
 			Slider(&s.slider, SliderAttrs{Min: 0, Max: 1, Width: 200})
 			Label(fmt.Sprintf("slider at %.2f", s.slider), FontSize(11), TextColorVec(panel.Text))
 
@@ -172,4 +176,13 @@ func makeRows(n int) []*row {
 		})
 	}
 	return out
+}
+
+// unitLabel says what the Select currently holds, so the difference between
+// "nothing chosen" and a chosen value is visible rather than implied.
+func unitLabel(unit string) string {
+	if unit == "" {
+		return "no unit chosen"
+	}
+	return "unit: " + unit
 }

@@ -103,14 +103,14 @@ var benchRows = func() []*benchRow {
 func BenchmarkFrameVirtualTable(b *testing.B) {
 	cols := []TableColumn[*benchRow]{
 		{
-			Label:  "Name",
-			Cell: func(r *benchRow) { Label(r.Name) },
-			Less:   func(a, b *benchRow) bool { return a.Name < b.Name },
+			Label: "Name",
+			Cell:  func(r *benchRow) { Label(r.Name) },
+			Less:  func(a, b *benchRow) bool { return a.Name < b.Name },
 		},
 		{
 			Label: "Val", Width: 90, DefaultDesc: true,
 			Cell: func(r *benchRow) { Label(fmt.Sprintf("%d", r.Val)) },
-			Less:   func(a, b *benchRow) bool { return a.Val < b.Val },
+			Less: func(a, b *benchRow) bool { return a.Val < b.Val },
 		},
 	}
 	benchFrame(b, func() {

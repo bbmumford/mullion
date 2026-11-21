@@ -52,7 +52,7 @@ func TestNestedTablesRenderRows(t *testing.T) {
 			{
 				Label: "Value", Width: 90, DefaultDesc: true,
 				Cell: func(e *peekEdge) { native.Label("v") },
-				Less:   func(a, b *peekEdge) bool { return a.Value < b.Value },
+				Less: func(a, b *peekEdge) bool { return a.Value < b.Value },
 			},
 		}
 	}

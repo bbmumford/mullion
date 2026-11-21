@@ -187,7 +187,7 @@ func TestTextRingFloodAppendCost(t *testing.T) {
 	}
 
 	// warm / fill to capacity
-	fill := timeN( (byteCap/len(chunk))*2 )
+	fill := timeN((byteCap / len(chunk)) * 2)
 	if r.Bytes() > int64(byteCap) {
 		t.Fatalf("Bytes=%d > Cap=%d", r.Bytes(), byteCap)
 	}

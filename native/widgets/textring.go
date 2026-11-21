@@ -18,7 +18,7 @@ package widgets
 //
 // DefaultTextRingCap is 20MiB; DefaultTextRingMaxLines is 256Ki lines.
 
-const DefaultTextRingCap = 20 << 20     // 20 MiB
+const DefaultTextRingCap = 20 << 20       // 20 MiB
 const DefaultTextRingMaxLines = 256 << 10 // 262144 lines
 
 // TextRing holds recent log bytes and newline-delimited line starts.
