@@ -29,11 +29,11 @@ stays in application state, so OS changes do not override a manual choice.
 package main
 
 import (
-    "go.hasen.dev/mullion/app"
-    "go.hasen.dev/mullion/ext/darkmode"
+    "github.com/bbmumford/mullion/native/app"
+    "github.com/bbmumford/mullion/native/ext/darkmode"
 
-    . "go.hasen.dev/mullion"
-    . "go.hasen.dev/mullion/widgets"
+    . "github.com/bbmumford/mullion/native"
+    . "github.com/bbmumford/mullion/native/widgets"
 )
 
 var (
@@ -455,10 +455,10 @@ independent override for the themed layer.
 `Toast` and `ToastExt` resolve paint when the card is drawn, so queued toasts
 follow live scheme changes. `ToastStyled` stores a copy of its explicit style.
 
-With `widgets` imported, `mullion.Modal` resolves its panel and scrim from the
-active scheme through `mullion.DefaultModalStyle`. For an explicit surface,
+With `widgets` imported, `native.Modal` resolves its panel and scrim from the
+active scheme through `native.DefaultModalStyle`. For an explicit surface,
 call `ModalStyled(width, dismiss, ModalStyleForScheme(scheme), body)` or pass a
-`mullion.ModalStyle` directly. The body owns its widget styling.
+`native.ModalStyle` directly. The body owns its widget styling.
 
 ## Focus appearance
 

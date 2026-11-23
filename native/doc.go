@@ -2,7 +2,7 @@
 // pixel is drawn by this process rather than by the platform's widgets or by a
 // browser engine.
 //
-// It is go-mullion, merged into mullion. The import path and the package name
+// It is go-shirei, merged into mullion. The import path and the package name
 // changed; the design did not. See ALTERED.md beside this file.
 //
 // # The frame model

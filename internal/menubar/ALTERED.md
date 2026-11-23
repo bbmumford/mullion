@@ -23,12 +23,14 @@ responsible for them.
    `CreatePopupMenu`, `AppendMenuW`, `DestroyMenu`) come from `../win32`, which
    the tray uses too (`menu_windows.go` and its test).
 
-The comments in these files are glaze's and still speak of the package as
-`menu` and of glaze as its first consumer.
+3. **Package comment.** `menu.go`'s package comment was rewritten for this tree:
+   the package's name, its example and how it is reached. The other comments
+   are glaze's, and some still speak of glaze as the package's consumer.
 
 ## The files
 
 Each file compared with its counterpart at the merged commit, after item 1 is
-applied to the upstream text: 9 files, of which 7 differ by item 1 only and 2
-were changed further, `menu_windows.go` and `menu_windows_test.go` (item 2).
+applied to the upstream text: 9 files, of which 6 differ by item 1 only and 3
+were changed further, `menu.go` (item 3) and `menu_windows.go` and
+`menu_windows_test.go` (item 2).
 None was added for mullion, and the counts leave out this file and `LICENSE`.

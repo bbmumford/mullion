@@ -1,20 +1,20 @@
-// Package menu builds native application menus without cgo.
+// Package menubar builds native application menus without cgo.
 //
-// It is a standalone package: it depends only on purego (and the Objective-C
-// runtime on macOS), not on glaze's WebView. Any app with a native run loop can
-// install a menu bar — a glaze window, an Ebitengine game, or a bare
-// NSApplication. glaze is one consumer, not a requirement.
+// It depends only on purego (and the Objective-C runtime on macOS), not on the
+// WebView, so it installs a menu bar over whichever surface drives the event
+// loop. Applications reach it through shell.SetMenuBar, which converts
+// shell's one menu model into this package's items.
 //
-//	menu.Set([]menu.Item{
-//		{Title: "App", Submenu: []menu.Item{
+//	menubar.Set([]menubar.Item{
+//		{Title: "App", Submenu: []menubar.Item{
 //			{Title: "About", OnClick: showAbout},
 //			{Separator: true},
 //			{Title: "Quit", Shortcut: "cmd+q", OnClick: quit},
 //		}},
-//		{Title: "Edit", Submenu: []menu.Item{
+//		{Title: "Edit", Submenu: []menubar.Item{
 //			{Title: "Copy", Shortcut: "cmd+c", OnClick: copy},
 //		}},
-//	}, menu.Options{})
+//	}, menubar.Options{})
 //
 // Platform support: macOS (NSMenu) and Windows (a Win32 menu bar attached to the
 // caller's window, without shortcuts). Linux draws no bar -- the GTK3/GTK4

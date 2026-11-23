@@ -595,7 +595,7 @@ func TestTray_Callbacks_SharedPointer(t *testing.T) {
 	t.Parallel()
 
 	// Verify that Callbacks is stored by value in Tray, but the public API
-	// in shell/systray.go passes a pointer to impl.Callbacks to NewPlatformTray.
+	// in shell/tray.go passes a pointer to impl.Callbacks to NewPlatformTray.
 	// This test verifies the basic struct behavior.
 	tray := &Tray{
 		ID: NewTrayID(),

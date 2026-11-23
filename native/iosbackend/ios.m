@@ -7,7 +7,7 @@
 // (preedit) text — same contract as cocoabackend's NSTextInputClient. Marked
 // text → mullionSetComposition; commits → mullionInsertText; the app buffer stays
 // in Go (TextInput). Visibility is driven by ios_syncKeyboard from
-// mullion.WantsKeyboard after each frame.
+// native.WantsKeyboard after each frame.
 //
 // Content view: full safe-area frame (stable CALayer size). Keyboard overlap
 // only shrinks the layout size reported as WindowSize — presenting always uses
@@ -47,7 +47,7 @@ static CGRect gKeyboardFrameScreen;
 static CGFloat gLayoutW = 0;
 static CGFloat gLayoutH = 0;
 
-// Preferred interface orientation (mullion.PreferredOrientation): 0 any,
+// Preferred interface orientation (native.PreferredOrientation): 0 any,
 // 1 portrait, 2 landscape. Read by MullionRootVC; written by ios_syncOrientation.
 static int gPreferredOrientation = 0;
 static int gAppliedOrientation = -1; // force first apply

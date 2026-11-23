@@ -12,7 +12,7 @@ This guide covers:
 2. How **mullion-mobilerun** applies privacy and packaging declarations
    (`mullion.capabilities`)
 3. How to use and write extensions, with
-   [`camera`](../ext/camera) (`go.hasen.dev/mullion/ext/camera`) as the reference
+   [`camera`](../ext/camera) (`github.com/bbmumford/mullion/native/ext/camera`) as the reference
 
 Related: [Running on iOS](ios.md), [Running on Android](android.md).
 
@@ -36,7 +36,7 @@ When an extension needs the live host (window, activity, root view controller),
 it reads:
 
 ```go
-ctx := mullion.GetHost().EscapeHatchBackendContext
+ctx := native.GetHost().EscapeHatchBackendContext
 ```
 
 The active backend sets this when the window or activity is ready. It is `nil`
@@ -86,7 +86,7 @@ Do not block the frame waiting for a system sheet. Prefer the UI or app thread
 
 ## 3. Backend context types
 
-`EscapeHatchBackendContext` is only `mullion.BackendContext`. Each backend
+`EscapeHatchBackendContext` is only `native.BackendContext`. Each backend
 provides a **concrete** type with the handles that platform needs. Extensions
 type-assert or switch on `Platform()`.
 
@@ -94,7 +94,7 @@ type-assert or switch on `Platform()`.
 
 | | |
 |--|--|
-| **Package** | `go.hasen.dev/mullion/iosbackend` |
+| **Package** | `github.com/bbmumford/mullion/native/iosbackend` |
 | **Type** | `iosbackend.Context` |
 | **`Platform()`** | `"ios"` |
 | **Extra method** | `RootViewController() unsafe.Pointer` |
@@ -105,11 +105,11 @@ type-assert or switch on `Platform()`.
 //go:build ios
 
 type iosPresenter interface {
-    mullion.BackendContext
+    native.BackendContext
     RootViewController() unsafe.Pointer
 }
 
-func present(ctx mullion.BackendContext) {
+func present(ctx native.BackendContext) {
     p, ok := ctx.(iosPresenter)
     if !ok || p.RootViewController() == nil {
         return
@@ -126,7 +126,7 @@ In ObjC/cgo: `(__bridge UIViewController *)vc`.
 
 | | |
 |--|--|
-| **Package** | `go.hasen.dev/mullion/androidbackend` |
+| **Package** | `github.com/bbmumford/mullion/native/androidbackend` |
 | **Type** | `androidbackend.Context` |
 | **`Platform()`** | `"android"` |
 | **Extra method** | `Activity() unsafe.Pointer` — live `MullionActivity` `jobject` (glue-owned) |
@@ -141,7 +141,7 @@ results. Feature-specific Intents and decoding stay in the extension.
 
 import (
     "unsafe"
-    "go.hasen.dev/mullion/androidbackend"
+    "github.com/bbmumford/mullion/native/androidbackend"
 )
 
 const myReq = 0xBEEF
@@ -152,7 +152,7 @@ func init() {
     })
 }
 
-func start(ctx mullion.BackendContext) {
+func start(ctx native.BackendContext) {
     if ctx == nil || ctx.Platform() != "android" {
         return
     }
@@ -181,7 +181,7 @@ handle for extensions that need the live window.
 
 | | |
 |--|--|
-| **Package** | `go.hasen.dev/mullion/x11backend` |
+| **Package** | `github.com/bbmumford/mullion/native/x11backend` |
 | **Type** | `x11backend.Context` |
 | **`Platform()`** | `"x11"` |
 | **Extra methods** | `Conn() *xgb.Conn`, `Window() xproto.Window`, `Connected() bool` |
@@ -192,11 +192,11 @@ handle for extensions that need the live window.
 //go:build linux
 
 import (
-    "go.hasen.dev/mullion"
-    "go.hasen.dev/mullion/x11backend"
+    "github.com/bbmumford/mullion/native"
+    "github.com/bbmumford/mullion/native/x11backend"
 )
 
-func useX11(ctx mullion.BackendContext) {
+func useX11(ctx native.BackendContext) {
     c, ok := ctx.(x11backend.Context)
     if !ok || !c.Connected() {
         return
@@ -215,10 +215,10 @@ On Wayland, drawing (`wl_surface`) and “being a desktop window” are separate
 
 | | |
 |--|--|
-| **Package** | `go.hasen.dev/mullion/waylandbackend` |
+| **Package** | `github.com/bbmumford/mullion/native/waylandbackend` |
 | **Type** | `waylandbackend.Context` |
 | **`Platform()`** | `"wayland"` |
-| **Extra method** | `XdgToplevel() *xdg.Toplevel` (`go.hasen.dev/mullion/internal/wayland/xdg`) |
+| **Extra method** | `XdgToplevel() *xdg.Toplevel` (`github.com/bbmumford/mullion/native/internal/wayland/xdg`) |
 | **Meaning** | Live `xdg_toplevel` for the Mullion window (`nil` before the window exists) |
 | **Ownership** | Backend-owned. Do not `Destroy` it or take over configure / commit / present of the main surface. |
 
@@ -230,11 +230,11 @@ extension needs the main window as the compositor sees it.
 //go:build linux
 
 import (
-    "go.hasen.dev/mullion"
-    "go.hasen.dev/mullion/waylandbackend"
+    "github.com/bbmumford/mullion/native"
+    "github.com/bbmumford/mullion/native/waylandbackend"
 )
 
-func useToplevel(ctx mullion.BackendContext) {
+func useToplevel(ctx native.BackendContext) {
     c, ok := ctx.(waylandbackend.Context)
     if !ok {
         return
@@ -255,17 +255,17 @@ Apps call a **portable** API. They do not use `EscapeHatchBackendContext`
 unless they implement an extension themselves.
 
 ```go
-import "go.hasen.dev/mullion/ext/camera"
+import "github.com/bbmumford/mullion/native/ext/camera"
 
 var photo *image.RGBA
 
 if Button(SymImage, "Take photo") {
     camera.TakePhoto(&photo, func(err error) {
-        mullion.WithFrameLock(func() {
+        native.WithFrameLock(func() {
             if err == nil && photo != nil {
-                mullion.UseImage("camera/last", photo)
+                native.UseImage("camera/last", photo)
             }
-            mullion.RequestNextFrame()
+            native.RequestNextFrame()
         })
     })
 }
@@ -294,7 +294,7 @@ Place next to the extension’s `go.mod` (module root):
 mullion.capabilities
 ```
 
-Example (`go.hasen.dev/mullion/ext/camera`):
+Example (`github.com/bbmumford/mullion/native/ext/camera`):
 
 ```
 # one token per line; # starts a comment
@@ -381,7 +381,7 @@ Some tokens only affect one OS; the other side is a no-op.
 
 1. Ship a Go module with a **portable** public API (no `BackendContext` in
    signatures apps call).
-2. Inside the extension, read `mullion.GetHost().EscapeHatchBackendContext`,
+2. Inside the extension, read `native.GetHost().EscapeHatchBackendContext`,
    type-assert the platform context, and start OS work.
 3. Deliver results asynchronously — do not block the frame on a system sheet.
 4. Feed data into Mullion (for example `UseImage`) and wake the UI with
@@ -411,7 +411,7 @@ Some tokens only affect one OS; the other side is a no-op.
 
 ## 8. Reference: camera
 
-Module: **`go.hasen.dev/mullion/ext/camera`**.
+Module: **`github.com/bbmumford/mullion/native/ext/camera`**.
 
 | Piece | Role |
 |-------|------|
@@ -456,8 +456,8 @@ signing, debuggable packages). Release packaging is **`mullion-bundle`**
 ([cmd/mullion-bundle/README.md](../cmd/mullion-bundle/README.md)).
 
 ```sh
-go install go.hasen.dev/mullion/cmd/mullion-mobilerun@latest
-go install go.hasen.dev/mullion/cmd/mullion-bundle@latest
+go install github.com/bbmumford/mullion/cmd/mullion-mobilerun@latest
+go install github.com/bbmumford/mullion/cmd/mullion-bundle@latest
 ```
 
 The **capability policy is the same** on both paths: tokens from

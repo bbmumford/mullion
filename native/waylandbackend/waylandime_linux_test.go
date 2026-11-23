@@ -173,7 +173,7 @@ func TestDoneCommitOnlyClearsComposition(t *testing.T) {
 	}
 }
 
-// go-mullion#15: text-input-v3 being enabled must not by itself block plain
+// go-shirei#15: text-input-v3 being enabled must not by itself block plain
 // typing. GNOME only delivers non-IME characters on wl_keyboard; commit_string
 // is for IME-routed text. Composition still consumes keys (textInputConsumesKeys).
 func TestTextInputEnabledDoesNotConsumeKeysWithoutComposition(t *testing.T) {

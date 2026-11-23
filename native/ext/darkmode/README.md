@@ -1,11 +1,11 @@
 # darkmode
 
-`go.hasen.dev/mullion/ext/darkmode` provides real-time detection of the host operating system's dark mode preference across desktop, mobile, and web platforms.
+`github.com/bbmumford/mullion/native/ext/darkmode` provides real-time detection of the host operating system's dark mode preference across desktop, mobile, and web platforms.
 
 ## Installation
 
 ```bash
-go get go.hasen.dev/mullion/ext/darkmode
+go get github.com/bbmumford/mullion/native/ext/darkmode
 ```
 
 ## API
@@ -28,11 +28,11 @@ func OSDarkMode() bool
 package main
 
 import (
-	"go.hasen.dev/mullion/app"
-	"go.hasen.dev/mullion/ext/darkmode"
+	"github.com/bbmumford/mullion/native/app"
+	"github.com/bbmumford/mullion/native/ext/darkmode"
 
-	. "go.hasen.dev/mullion"
-	. "go.hasen.dev/mullion/widgets"
+	. "github.com/bbmumford/mullion/native"
+	. "github.com/bbmumford/mullion/native/widgets"
 )
 
 func main() {

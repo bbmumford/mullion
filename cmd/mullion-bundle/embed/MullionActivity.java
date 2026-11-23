@@ -81,7 +81,7 @@ public class MullionActivity extends NativeActivity {
 	}
 
 	// Called from native when Host.PreferredOrientation changes.
-	// mode matches mullion.PreferredOrientation: 0 any, 1 portrait, 2 landscape.
+	// mode matches native.PreferredOrientation: 0 any, 1 portrait, 2 landscape.
 	public void setPreferredOrientation(final int mode) {
 		runOnUiThread(new Runnable() {
 			@Override

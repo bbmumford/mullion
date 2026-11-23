@@ -45,8 +45,8 @@ In Mullion that widget is `widgets.VirtualListView` /
 
 ```go
 import (
-    . "go.hasen.dev/mullion"
-    . "go.hasen.dev/mullion/widgets"
+    . "github.com/bbmumford/mullion/native"
+    . "github.com/bbmumford/mullion/native/widgets"
 )
 
 var listKey = new(int) // stable address for commands / Use state

@@ -43,17 +43,26 @@ way and live in [`../cmd`](../cmd/ALTERED.md).
    `go.mod` and `go.sum` files. go-shirei's `COPYING` is carried unchanged,
    beside this file and as
    [`../licenses/LICENSE.shirei`](../licenses/LICENSE.shirei).
+7. **Corrections to the carried prose.** Comments and documents that say who
+   wrote, vendored or changed something name go-shirei
+   (`internal/wayland/README.md`, `internal/wayland/cursorshape/cursorshape.go`,
+   and go-shirei's issue numbers in `waylandbackend/`). Module paths written in
+   documents and comments are this tree's (`github.com/bbmumford/mullion/native/...`,
+   and `github.com/bbmumford/mullion/cmd/...` for the tools), and where prose
+   names go-shirei's root package, as in `native.Vec4`, it uses this tree's
+   package name. `docs/migration-v0.8.0.md` opens by saying it is go-shirei's
+   note for its own v0.8.0 release.
 
 ### Reading the text in this directory
 
-Item 2 reached prose as well as code, so comments and documents that
-go-shirei's authors wrote now say "mullion" where they said "shirei". In a file
-of this directory, read "mullion" as go-shirei, its authors or its design
-unless the file is listed below as changed further or added for mullion.
-"go-mullion" means go-shirei; no project of that name exists. The replacement
-also reached module paths written in the documents and in some comments, which
-read `go.hasen.dev/mullion/...`: no such module exists, and this tree is
-imported as `github.com/bbmumford/mullion/native/...`.
+Item 2 reached prose as well as code, so most comments and documents that
+go-shirei's authors wrote now say "mullion" where they said "shirei". Where
+they describe the library (its frame model, its backends, its tools, its log
+tag and file names), that library is now this tree, mullion's Go-drawn
+surface, and the name is right. Where a statement is about who wrote, designed
+or changed something, it was go-shirei's authors, unless the file is listed
+below as added for mullion; item 7 corrected the statements that said
+otherwise outright.
 
 ## The files
 
@@ -67,12 +76,12 @@ and 2 are applied to the upstream text:
 | `app/` | 36 | 14 | 22 | 0 | 0 |
 | `audio/` | 6 | 6 | 0 | 0 | 0 |
 | `cocoabackend/` | 9 | 0 | 8 | 1 | 0 |
-| `docs/` | 20 | 0 | 20 | 0 | 0 |
+| `docs/` | 20 | 0 | 19 | 1 | 0 |
 | `drive/` | 4 | 0 | 4 | 0 | 0 |
 | `editorfile/` | 2 | 0 | 2 | 0 | 0 |
 | `ext/` | 35 | 12 | 23 | 0 | 0 |
 | `gpurender/` | 25 | 11 | 11 | 3 | 0 |
-| `internal/` | 54 | 32 | 22 | 0 | 0 |
+| `internal/` | 54 | 32 | 20 | 2 | 0 |
 | `iosbackend/` | 4 | 0 | 4 | 0 | 0 |
 | `ioshost/` | 1 | 0 | 1 | 0 | 0 |
 | `jsbackend/` | 9 | 1 | 8 | 0 | 0 |
@@ -82,16 +91,17 @@ and 2 are applied to the upstream text:
 | `widgets/` | 102 | 17 | 66 | 0 | 19 |
 | `win32backend/` | 17 | 4 | 13 | 0 | 0 |
 | `x11backend/` | 20 | 6 | 14 | 0 | 0 |
-| **total** | **491** | **124** | **343** | **4** | **20** |
+| **total** | **491** | **124** | **340** | **7** | **20** |
 
 The counts leave out this file and `COPYING`.
 
-Changed further (items 3 and 4):
+Changed further:
 
-- `cocoabackend/cocoa_appkit_darwin.go`
-- `gpurender/d3d11_windows.go`
-- `gpurender/gles.go`
-- `gpurender/metal_macos.go`
+- `cocoabackend/cocoa_appkit_darwin.go` (item 4)
+- `gpurender/d3d11_windows.go`, `gpurender/gles.go`, `gpurender/metal_macos.go`
+  (item 3)
+- `docs/migration-v0.8.0.md`, `internal/wayland/README.md`,
+  `internal/wayland/cursorshape/cursorshape.go` (item 7)
 
 Added for mullion (item 5):
 

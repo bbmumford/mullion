@@ -34,14 +34,15 @@ responsible for them. The library these tools build for is
    and `mullion-mobilerun` asks the toolchain for the module's main packages
    where the original text-searched the tree for `func main`, which also removed
    the `go.hasen.dev/textsearch` dependency.
-5. **Not carried.** `shirei_tester` and `behavior_runner`, which run go-shirei's
+5. **Module paths in the text** of the READMEs and of
+   `mullion-mobilerun/embed/ios-run.sh` (a comment and its usage text) are this
+   tree's.
+6. **Not carried.** `shirei_tester` and `behavior_runner`, which run go-shirei's
    behaviour programs; those programs were not carried either.
 
 The note on reading the text in `../native/ALTERED.md` applies here as well:
-the tools' comments and READMEs say "mullion" where go-shirei's authors wrote
-the upstream name, and the module paths in the READMEs and in
-`mullion-mobilerun/embed/ios-run.sh` read `go.hasen.dev/mullion/...`, which does
-not exist.
+where the tools' comments and READMEs say "mullion", they describe what the
+tools are now; who wrote them is go-shirei's authors.
 
 ## The files
 
@@ -51,20 +52,21 @@ the name replacement are applied to the upstream text:
 | directory | files | unchanged | rewrite only | changed further |
 |---|---:|---:|---:|---:|
 | `mullion-bundle/` | 29 | 13 | 6 | 10 |
-| `mullion-mobilerun/` | 25 | 5 | 9 | 11 |
+| `mullion-mobilerun/` | 25 | 5 | 8 | 12 |
 | `mullion-web/` | 7 | 2 | 2 | 3 |
-| **total** | **61** | **20** | **17** | **24** |
+| **total** | **61** | **20** | **16** | **25** |
 
 No file here was added for mullion, and the counts leave out this file and
 `COPYING`.
 
-Changed further (items 2 to 4):
+Changed further (items 2 to 5):
 
 - `mullion-bundle/`: `android.go`, `android_adb.go`, `config.go`, `desktop.go`,
   `gui.go`, `ios.go`, `macos.go`, `main.go`, `packages.go`, `provision.go`
 - `mullion-mobilerun/`: `android_build.go`, `android_embed.go`,
-  `capabilities.go`, `config.go`, `config_test.go`, `gui.go`, `ios_embed.go`,
-  `ios_run.go`, `ios_sims.go`, `main.go`, `packages.go`
+  `capabilities.go`, `config.go`, `config_test.go`, `embed/ios-run.sh`,
+  `gui.go`, `ios_embed.go`, `ios_run.go`, `ios_sims.go`, `main.go`,
+  `packages.go`
 - `mullion-web/`: `compiler.go`, `gallery.go`, `main.go`
 
 `mullion-web/wasm_exec.js` is the Go Authors' file, unchanged, under the BSD

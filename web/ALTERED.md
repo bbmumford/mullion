@@ -36,16 +36,13 @@ responsible for them. glaze's `menu` package is
 5. **Targets with no WebView.** `webview_unsupported.go` reports
    `errors.ErrUnsupported` on targets built with none of the `darwin`, `linux`
    and `windows` build tags, js/wasm among them.
-6. **Package documentation** in `doc.go`.
-7. **Not carried.** `examples/`, `imgs/`, `editor/` and its scenario test (the
-   line of `webview_darwin_test.go` that ran it went with it), `Makefile`,
-   `CONTRIBUTING.md`, `.github/`, `go.mod` and `go.sum`. glaze's `LICENSE` is
-   carried unchanged, beside this file and as
+6. **Package documentation** in `doc.go`, and a `README.md` written for this
+   package in place of glaze's.
+7. **Not carried.** glaze's `README.md`, `examples/`, `imgs/`, `editor/` and its
+   scenario test (the line of `webview_darwin_test.go` that ran it went with
+   it), `Makefile`, `CONTRIBUTING.md`, `.github/`, `go.mod` and `go.sum`.
+   glaze's `LICENSE` is carried unchanged, beside this file and as
    [`../licenses/LICENSE.glaze`](../licenses/LICENSE.glaze).
-
-`README.md` in this directory is glaze's own README, unchanged. It describes
-glaze, its import path `github.com/crgimenes/glaze` and its examples, which are
-not in this tree; in mullion the package is `github.com/bbmumford/mullion/web`.
 
 ## The files
 
@@ -54,16 +51,17 @@ applied to the upstream text:
 
 | | files |
 |---|---:|
-| unchanged | 2 |
+| unchanged | 1 |
 | item 1 only | 54 |
-| changed further | 5 |
+| changed further | 6 |
 | added for mullion | 15 |
 | **total** | **76** |
 
 The counts leave out this file and `LICENSE`.
 
-Changed further (items 2 to 4 and 7):
+Changed further (items 2 to 4, 6 and 7):
 
+- `README.md`
 - `dialog_darwin.go`
 - `webview_darwin.go`
 - `webview_darwin_test.go`

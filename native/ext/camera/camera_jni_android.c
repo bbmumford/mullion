@@ -1,4 +1,4 @@
-// Android camera capture for go.hasen.dev/mullion/ext/camera.
+// Android camera capture for github.com/bbmumford/mullion/native/ext/camera.
 // Builds camera/gallery Intents and decodes results via the generic host
 // bridges (activity, startActivityForResult, permissions).
 #include <android/log.h>

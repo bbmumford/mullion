@@ -106,9 +106,9 @@ import (
 	"fmt"
 	"os"
 
-	"go.hasen.dev/mullion/app"
+	"github.com/bbmumford/mullion/native/app"
 
-	. "go.hasen.dev/mullion"
+	. "github.com/bbmumford/mullion/native"
 )
 
 const winW, winH = 1100, 720
@@ -385,8 +385,8 @@ compose strip.
 ```diff
  import (
  	...
- 	. "go.hasen.dev/mullion"
-+	. "go.hasen.dev/mullion/widgets"
+ 	. "github.com/bbmumford/mullion/native"
++	. "github.com/bbmumford/mullion/native/widgets"
  )
 +
 +var messages = []msg{ /* ~15 lines of dummy chat */ }

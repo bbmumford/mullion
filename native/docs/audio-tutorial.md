@@ -32,8 +32,8 @@ So the entire setup is:
 
 ```go
 import (
-    app "go.hasen.dev/mullion/app"
-    "go.hasen.dev/mullion/audio"
+    app "github.com/bbmumford/mullion/native/app"
+    "github.com/bbmumford/mullion/native/audio"
 )
 
 const SampleRate = 44100

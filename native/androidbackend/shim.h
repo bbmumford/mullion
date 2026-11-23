@@ -55,7 +55,7 @@ void mullion_android_wake(void);
 // Soft keyboard show/hide via the Java activity (see jni.c). App thread only.
 void mullion_android_set_keyboard(int show);
 
-// Preferred orientation (matches mullion.PreferredOrientation): 0 = any,
+// Preferred orientation (matches native.PreferredOrientation): 0 = any,
 // 1 = portrait, 2 = landscape. App thread only; hops to the UI thread.
 void mullion_android_set_orientation(int preferred);
 

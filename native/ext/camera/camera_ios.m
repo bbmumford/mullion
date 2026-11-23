@@ -1,4 +1,4 @@
-// UIImagePickerController bridge for go.hasen.dev/mullion/ext/camera.
+// UIImagePickerController bridge for github.com/bbmumford/mullion/native/ext/camera.
 #import <UIKit/UIKit.h>
 #include <stdlib.h>
 #include <string.h>

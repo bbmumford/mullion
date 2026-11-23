@@ -140,10 +140,10 @@ Most Mullion applications start with this shape:
 package main
 
 import (
-    app "go.hasen.dev/mullion/app"
+    app "github.com/bbmumford/mullion/native/app"
 
-    . "go.hasen.dev/mullion"
-    . "go.hasen.dev/mullion/widgets"
+    . "github.com/bbmumford/mullion/native"
+    . "github.com/bbmumford/mullion/native/widgets"
 )
 
 func main() {

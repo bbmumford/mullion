@@ -42,10 +42,10 @@ Save this as `main.go` in a Mullion application module and run `go run .`.
 package main
 
 import (
-    "go.hasen.dev/mullion/app"
+    "github.com/bbmumford/mullion/native/app"
 
-    . "go.hasen.dev/mullion"
-    . "go.hasen.dev/mullion/widgets"
+    . "github.com/bbmumford/mullion/native"
+    . "github.com/bbmumford/mullion/native/widgets"
 )
 
 var sound, locked bool

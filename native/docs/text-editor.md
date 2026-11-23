@@ -16,7 +16,7 @@ func load(text string, line int) {
 func view() {
     // Under the window root, the editor receives the height left by the toolbar.
     toolbar()
-    widgets.TextEditor(&document, mullion.FontSize(14))
+    widgets.TextEditor(&document, native.FontSize(14))
 }
 ```
 
@@ -56,7 +56,7 @@ widget to focus an explicitly opened document.
 
 ```go
 state := widgets.TextEditorExt(&document, widgets.TextEditorAttrs{
-    TextStyle: mullion.TextStyle(mullion.Fonts(mullion.Monospace...), mullion.FontSize(13)),
+    TextStyle: native.TextStyle(native.Fonts(native.Monospace...), native.FontSize(13)),
     LineNumbers: true,
     ReadOnly: false,
     NoAutoFocus: true,
@@ -85,7 +85,7 @@ Gutter clicks do not change text selection. The width uses design units, like
 the editor's font size.
 
 `LineBackground(line)` supplies a row color behind the gutter and text.
-`LineSpans(line, base)` returns `[]mullion.StyleSpan`, built with `ResolveSpan`
+`LineSpans(line, base)` returns `[]native.StyleSpan`, built with `ResolveSpan`
 against the provided style. These spans paint text color, background, underline
 and strike; they do not change font metrics. Their offsets use document rune
 coordinates, including when an IME composition is displayed.

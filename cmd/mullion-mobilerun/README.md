@@ -10,7 +10,7 @@ For **release** IPAs and APKs, use **`mullion-bundle`**:
 ## Install
 
 ```bash
-go install go.hasen.dev/mullion/cmd/mullion-mobilerun@latest
+go install github.com/bbmumford/mullion/cmd/mullion-mobilerun@latest
 ```
 
 Put `$(go env GOPATH)/bin` (or `GOBIN`) on your `PATH`, then:

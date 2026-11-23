@@ -53,7 +53,7 @@ The landing sample and two static galleries live under
 
 Gallery membership lives in `cmd/mullion-web/gallery.go` and should stay aligned
 with those scgo index pages. Each gallery app page shows
-`Source: demos/<slug>` linking to `github.com/hasenj/go-mullion`.
+`Source: demos/<slug>` linking to `github.com/hasenj/go-shirei`.
 
 From the Mullion module, rebuild all three:
 

@@ -13,5 +13,5 @@ build always copies the template to a scratch `host-work` directory first.
 Edit the template under `cmd/mullion-mobilerun/embed/ioshost/`, then rebuild:
 
 ```
-go install go.hasen.dev/mullion/cmd/mullion-mobilerun@latest
+go install github.com/bbmumford/mullion/cmd/mullion-mobilerun@latest
 ```

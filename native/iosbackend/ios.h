@@ -26,7 +26,7 @@ void ios_setWantsFrame(int v);
 // Resign commits any active IME marked text first (same policy as Cocoa).
 void ios_syncKeyboard(int wants);
 
-// Preferred interface orientation (matches mullion.PreferredOrientation):
+// Preferred interface orientation (matches native.PreferredOrientation):
 // 0 = any, 1 = portrait, 2 = landscape. Call before ios_attach when possible
 // so the first frame is already in the preferred orientation. Safe to call
 // again each frame (no-ops when unchanged). Locks via the root VC's

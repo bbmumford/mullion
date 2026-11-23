@@ -1,10 +1,10 @@
 # camera
 
 Reference Mullion **extension**: take a still photo with the system camera UI
-and produce `*image.RGBA` for `mullion.UseImage` — without putting camera
+and produce `*image.RGBA` for `native.UseImage` — without putting camera
 support in core.
 
-Module: `go.hasen.dev/mullion/ext/camera`
+Module: `github.com/bbmumford/mullion/native/ext/camera`
 
 ## Run the demo
 
@@ -47,11 +47,11 @@ var photo *image.RGBA
 
 if Button(SymImage, "Take photo") {
     camera.TakePhoto(&photo, func(err error) {
-        mullion.WithFrameLock(func() {
+        native.WithFrameLock(func() {
             if err == nil && photo != nil {
-                mullion.UseImage("camera/last", photo)
+                native.UseImage("camera/last", photo)
             }
-            mullion.RequestNextFrame()
+            native.RequestNextFrame()
         })
     })
 }

@@ -1,7 +1,7 @@
 // Package brand holds the names the build tools put into the things they
 // produce, in one place rather than spelled out wherever they are used.
 //
-// The tools came from go-mullion with its name written inline in some two
+// The tools came from go-shirei with its name written inline in some two
 // hundred places: log prefixes, temporary directory patterns, generated file
 // names, environment variables, reverse-DNS identifiers, a logcat tag. Renaming
 // a project by substituting a string across two hundred sites is how a tool

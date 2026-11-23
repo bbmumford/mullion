@@ -17,7 +17,7 @@ Development certificate. For signed release IPAs and related packaging, use
 Install the tool:
 
 ```sh
-go install go.hasen.dev/mullion/cmd/mullion-mobilerun@latest
+go install github.com/bbmumford/mullion/cmd/mullion-mobilerun@latest
 ```
 
 Ensure `$(go env GOPATH)/bin` is on your `PATH`.

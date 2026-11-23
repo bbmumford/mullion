@@ -14,7 +14,7 @@ APKs using your keystore with `debuggable=false`, use **`mullion-bundle`**
 Install the tool:
 
 ```sh
-go install go.hasen.dev/mullion/cmd/mullion-mobilerun@latest
+go install github.com/bbmumford/mullion/cmd/mullion-mobilerun@latest
 ```
 
 Ensure `$(go env GOPATH)/bin` is on your `PATH`.
@@ -267,7 +267,7 @@ Studio or `avdmanager` both work.)
 ## 5. Build and run
 
 Point `mullion-mobilerun` at any `package main` that uses
-`go.hasen.dev/mullion/app` (path relative to your cwd, or absolute):
+`github.com/bbmumford/mullion/native/app` (path relative to your cwd, or absolute):
 
 ```sh
 # CLI: build, adb install, launch

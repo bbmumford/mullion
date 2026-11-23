@@ -16,7 +16,7 @@ sideload or Play Console when you use APK tracks.
 ## Install
 
 ```bash
-go install go.hasen.dev/mullion/cmd/mullion-bundle@latest
+go install github.com/bbmumford/mullion/cmd/mullion-bundle@latest
 ```
 
 Ensure `$(go env GOPATH)/bin` (or `GOBIN`) is on your `PATH`, then:

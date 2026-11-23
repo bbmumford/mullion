@@ -1,7 +1,7 @@
 // Package widgets is the control set for the Go-drawn surface: buttons,
 // fields, lists, tables, menus and the compositions over them.
 //
-// It is go-mullion's widget package, merged into mullion, with a handful of
+// It is go-shirei's widget package, merged into mullion, with a handful of
 // additions marked as such in their own files. See ../ALTERED.md.
 //
 // # How a widget works here

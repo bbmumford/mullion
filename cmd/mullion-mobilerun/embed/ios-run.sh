@@ -19,7 +19,7 @@
 # Layout (portable — no monorepo required):
 #   MULLION_IOS_HOST_DIR  template UIKit host (never mutated)
 #   MULLION_IOS_BUILD_DIR scratch (archive, host work copy, .app)
-#   MULLION_MODULE        optional path to a local go.hasen.dev/mullion module
+#   MULLION_MODULE        optional path to a local github.com/bbmumford/mullion module
 #                        for go.work when the package lives outside that module
 set -euo pipefail
 
@@ -108,7 +108,7 @@ Examples:
 Environment:
   MULLION_IOS_HOST_DIR      UIKit host template (default: <script>/ioshost)
   MULLION_IOS_BUILD_DIR     build scratch (default: ~/Library/Caches/mullion/ios-build)
-  MULLION_MODULE            local go.hasen.dev/mullion module for go.work (optional)
+  MULLION_MODULE            local github.com/bbmumford/mullion module for go.work (optional)
   MULLION_IOS_BUNDLE_ID     CFBundleIdentifier (default: dev.mullion.<folder>)
   MULLION_IOS_APP_NAME      home-screen / .app name (default: package folder name)
   MULLION_IOS_ICON_PATH     PNG/JPEG path for AppIcon (optional)

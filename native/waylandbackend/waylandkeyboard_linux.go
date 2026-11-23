@@ -232,7 +232,7 @@ func pumpKeyboardRepeat(now time.Time) {
 // Mutter (and similar) only sends commit_string for IME-routed text; ordinary
 // latin/digit keys arrive solely on wl_keyboard.key with no commit_string.
 // Gating on textInputEnabled left TextInput fields read-only without an IME
-// (go-mullion#15). While composing, the early return above already skips xkb
+// (go-shirei#15). While composing, the early return above already skips xkb
 // text — that is enough to avoid double-insert with preedit/commit_string.
 func onKey(code, keysym uint32, down bool) {
 	kc := qwerty.FromScan(uint16(code - 8)) // xkb keycode -> evdev

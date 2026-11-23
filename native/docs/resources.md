@@ -25,10 +25,10 @@ myapp/
 Name the directory **`Resources`** (capital R). Nested folders inside it are
 fine; paths passed to `ResourcePath` are relative to that root.
 
-## API (`go.hasen.dev/mullion/app`)
+## API (`github.com/bbmumford/mullion/native/app`)
 
 ```go
-import app "go.hasen.dev/mullion/app"
+import app "github.com/bbmumford/mullion/native/app"
 
 app.SetupIcon(app.ResourcePath("icon.png"))
 Image(app.ResourcePath("assets/photo.png"), Vec2{0, 120})

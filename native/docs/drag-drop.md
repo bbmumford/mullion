@@ -34,7 +34,7 @@ handler uses to update app state.
 ## 2. The pieces
 
 ```go
-import . "go.hasen.dev/mullion/widgets"
+import . "github.com/bbmumford/mullion/native/widgets"
 
 // On the draggable item (inside its container):
 if DragAndDrop(payload) {
