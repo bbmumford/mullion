@@ -1,5 +1,5 @@
 mullion
-Copyright (c) 2026 HSTLES / ORBTR Pty Ltd
+Copyright (c) 2026 Brandon Miller-Mumford
 
 mullion is built from three open-source projects, altered so that they share
 one event loop, together with the code written for it. This notice names each
@@ -28,7 +28,8 @@ go-shirei
   merged     commit 26d6369dce19fc82643f4f403d2dd87907f85437
              (v0.9.1, 2026-11-16)
   copyright  Copyright (c) 2026 Judi Systems
-  licence    zlib licence, licenses/LICENSE.shirei
+  licence    zlib licence, licenses/LICENSE.shirei, and beside the trees
+             as native/COPYING and cmd/COPYING
   here       native/        the library, with its ext/camera, ext/darkmode
                             and ext/window modules folded in
              cmd/           mullion-web, mullion-mobilerun and mullion-bundle,
@@ -49,7 +50,8 @@ glaze
   merged     commit f07fcba9e1805dbd739ace8fa94337f8fd75b50b (2026-11-16)
   copyright  Copyright (c) 2025 Adam Bouqdib (original go-webview base)
              Copyright (c) 2026 crgimenes
-  licence    MIT licence, licenses/LICENSE.glaze
+  licence    MIT licence, licenses/LICENSE.glaze, and beside the trees
+             as web/LICENSE and internal/menubar/LICENSE
   here       web/               the root package
              internal/menubar/  its menu package
   altered    web/ALTERED.md, internal/menubar/ALTERED.md
@@ -61,7 +63,9 @@ systray
              module github.com/gogpu/systray
   merged     commit 732654fe9ab62c537dbffadea7d41c6bf67d675e (2026-11-11)
   copyright  Copyright (c) 2026 Andrey Kolkov and GoGPU Contributors
-  licence    MIT licence, licenses/LICENSE.systray
+  licence    MIT licence, licenses/LICENSE.systray, and beside the trees
+             as shell/LICENSE, internal/tray/LICENSE and
+             internal/ffiaudit/LICENSE
   here       shell/             from the root package
              internal/tray/     its internal package
              internal/ffiaudit/ from its FFI pointer audit test

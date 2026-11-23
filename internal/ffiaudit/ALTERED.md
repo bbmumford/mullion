@@ -7,7 +7,8 @@ software.
 - Project: <https://github.com/gogpu/systray>, module `github.com/gogpu/systray`
 - Merged: commit `732654fe9ab62c537dbffadea7d41c6bf67d675e` (2026-11-11)
 - Copyright (c) 2026 Andrey Kolkov and GoGPU Contributors, under the MIT
-  licence: [`../../licenses/LICENSE.systray`](../../licenses/LICENSE.systray)
+  licence, whose text is [`LICENSE`](LICENSE) beside this file and
+  [`../../licenses/LICENSE.systray`](../../licenses/LICENSE.systray)
 
 systray's authors did not write the alterations described here and are not
 responsible for them.
@@ -38,4 +39,4 @@ over the whole module:
 
 `ffiaudit.go`, `ffiaudit_test.go` and `helper_test.go` have no file of the same
 name upstream; `ffiaudit.go` carries the original's matching forward, and the
-tests are new.
+tests are new. `LICENSE` is systray's, unchanged.

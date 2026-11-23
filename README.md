@@ -224,12 +224,15 @@ The module's minimum Go version is the `go` line in `go.mod`.
 
 ## Licences
 
-The code written for mullion is under the MIT licence in [LICENSE](LICENSE).
-The parts derived from go-shirei (`native/`, `cmd/`, under the zlib licence),
-glaze (`web/`, `internal/menubar/`, MIT) and systray (`shell/`,
-`internal/tray/`, `internal/ffiaudit/`, MIT) stay under their own licences,
-whose texts are in [licenses/](licenses). Each of those directories carries an
-`ALTERED.md` saying how it differs from the commit merged.
+The code written for mullion is Copyright (c) 2026 Brandon Miller-Mumford,
+under the MIT licence in [LICENSE](LICENSE). The parts derived from go-shirei
+(`native/`, `cmd/`, under the zlib licence), glaze (`web/`,
+`internal/menubar/`, MIT) and systray (`shell/`, `internal/tray/`,
+`internal/ffiaudit/`, MIT) stay under their own licences and their authors'
+copyright. Each of those directories carries its upstream's licence file
+(`COPYING` or `LICENSE`), so a package's licence can be read from its own
+directory, and an `ALTERED.md` saying how it differs from the commit merged;
+[licenses/](licenses) holds every licence text in one place.
 [NOTICE](NOTICE) names each project, the commit merged and where its code
 lives, and lists the third-party parts that came inside go-shirei with their
 own terms: the Android native-app glue (Apache 2.0), the Wayland bindings (MIT),

@@ -6,8 +6,8 @@ the original software. glaze's root package is [`../../web`](../../web/ALTERED.m
 - Project: <https://github.com/crgimenes/glaze>, module `github.com/crgimenes/glaze`
 - Merged: commit `f07fcba9e1805dbd739ace8fa94337f8fd75b50b` (2026-11-16)
 - Copyright (c) 2025 Adam Bouqdib (original go-webview base), Copyright (c) 2026
-  crgimenes, under the MIT licence:
-  [`../../licenses/LICENSE.glaze`](../../licenses/LICENSE.glaze)
+  crgimenes, under the MIT licence, whose text is [`LICENSE`](LICENSE) beside
+  this file and [`../../licenses/LICENSE.glaze`](../../licenses/LICENSE.glaze)
 
 glaze's authors did not write the alterations described here and are not
 responsible for them.
@@ -31,4 +31,4 @@ The comments in these files are glaze's and still speak of the package as
 Each file compared with its counterpart at the merged commit, after item 1 is
 applied to the upstream text: 9 files, of which 7 differ by item 1 only and 2
 were changed further, `menu_windows.go` and `menu_windows_test.go` (item 2).
-None was added for mullion, and the counts leave out this file.
+None was added for mullion, and the counts leave out this file and `LICENSE`.

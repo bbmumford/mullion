@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 HSTLES / ORBTR Pty Ltd
+Copyright (c) 2026 Brandon Miller-Mumford
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,5 +21,5 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 This licence covers the code written for mullion. The parts derived from
-go-shirei, glaze and systray stay under their own licences, in licenses/;
-NOTICE says which directories they are.
+go-shirei, glaze and systray stay under their own licences, whose texts are in
+licenses/ and beside each of those directories; NOTICE names them.

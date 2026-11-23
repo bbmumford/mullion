@@ -6,8 +6,8 @@ software.
 - Project: <https://github.com/crgimenes/glaze>, module `github.com/crgimenes/glaze`
 - Merged: commit `f07fcba9e1805dbd739ace8fa94337f8fd75b50b` (2026-11-16)
 - Copyright (c) 2025 Adam Bouqdib (original go-webview base), Copyright (c) 2026
-  crgimenes, under the MIT licence:
-  [`../licenses/LICENSE.glaze`](../licenses/LICENSE.glaze)
+  crgimenes, under the MIT licence, whose text is [`LICENSE`](LICENSE) beside
+  this file and [`../licenses/LICENSE.glaze`](../licenses/LICENSE.glaze)
 
 glaze's authors did not write the alterations described here and are not
 responsible for them. glaze's `menu` package is
@@ -40,7 +40,8 @@ responsible for them. glaze's `menu` package is
 7. **Not carried.** `examples/`, `imgs/`, `editor/` and its scenario test (the
    line of `webview_darwin_test.go` that ran it went with it), `Makefile`,
    `CONTRIBUTING.md`, `.github/`, `go.mod` and `go.sum`. glaze's `LICENSE` is
-   [`../licenses/LICENSE.glaze`](../licenses/LICENSE.glaze), unchanged.
+   carried unchanged, beside this file and as
+   [`../licenses/LICENSE.glaze`](../licenses/LICENSE.glaze).
 
 `README.md` in this directory is glaze's own README, unchanged. It describes
 glaze, its import path `github.com/crgimenes/glaze` and its examples, which are
@@ -59,7 +60,7 @@ applied to the upstream text:
 | added for mullion | 15 |
 | **total** | **76** |
 
-The counts leave out this file.
+The counts leave out this file and `LICENSE`.
 
 Changed further (items 2 to 4 and 7):
 

@@ -8,7 +8,8 @@ the original software. systray's internal package is
 - Project: <https://github.com/gogpu/systray>, module `github.com/gogpu/systray`
 - Merged: commit `732654fe9ab62c537dbffadea7d41c6bf67d675e` (2026-11-11)
 - Copyright (c) 2026 Andrey Kolkov and GoGPU Contributors, under the MIT
-  licence: [`../licenses/LICENSE.systray`](../licenses/LICENSE.systray)
+  licence, whose text is [`LICENSE`](LICENSE) beside this file and
+  [`../licenses/LICENSE.systray`](../licenses/LICENSE.systray)
 
 systray's authors did not write the alterations described here and are not
 responsible for them.
@@ -38,8 +39,9 @@ replaced, and the builder it wrapped is unchanged underneath, in
    (`AGENTS.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`,
    `README.md`, `ROADMAP.md`, `SECURITY.md`, `llms.txt`), `codecov.yml`,
    `.golangci.yml`, `.gitignore`, `.github/`, `go.mod` and `go.sum`. systray's
-   `LICENSE` is [`../licenses/LICENSE.systray`](../licenses/LICENSE.systray),
-   unchanged.
+   `LICENSE` is carried unchanged, beside this file, `../internal/tray` and
+   `../internal/ffiaudit`, and as
+   [`../licenses/LICENSE.systray`](../licenses/LICENSE.systray).
 
 ## The files
 
@@ -52,3 +54,4 @@ replaced, and the builder it wrapped is unchanged underneath, in
 | `notify.go` | added for mullion |
 | `shortcut.go`, `shortcut_test.go` | added for mullion |
 | `tray.go`, `tray_test.go` | added for mullion, replacing systray's `systray.go` and `systray_test.go` |
+| `LICENSE` | systray's `LICENSE`, unchanged |

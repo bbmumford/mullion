@@ -5,7 +5,8 @@ software.
 
 - Project: <https://github.com/hasenj/go-shirei>, module `go.hasen.dev/shirei`
 - Merged: commit `26d6369dce19fc82643f4f403d2dd87907f85437` (v0.9.1, 2026-11-16)
-- Copyright (c) 2026 Judi Systems, under the zlib licence:
+- Copyright (c) 2026 Judi Systems, under the zlib licence, whose text is
+  [`COPYING`](COPYING) beside this file and
   [`../licenses/LICENSE.shirei`](../licenses/LICENSE.shirei)
 
 go-shirei's authors did not write the alterations described here and are not
@@ -39,8 +40,9 @@ way and live in [`../cmd`](../cmd/ALTERED.md).
 6. **Not carried.** `demos/`, `promos/`, `examples/`, `behavior_test/`,
    `layout_tests/`, the `shirei_tester` and `behavior_runner` tools, `README.md`,
    `CHANGELOG.md`, the images under `docs/` and at the top level, and the
-   `go.mod` and `go.sum` files. go-shirei's `COPYING` is
-   [`../licenses/LICENSE.shirei`](../licenses/LICENSE.shirei), unchanged.
+   `go.mod` and `go.sum` files. go-shirei's `COPYING` is carried unchanged,
+   beside this file and as
+   [`../licenses/LICENSE.shirei`](../licenses/LICENSE.shirei).
 
 ### Reading the text in this directory
 
@@ -82,7 +84,7 @@ and 2 are applied to the upstream text:
 | `x11backend/` | 20 | 6 | 14 | 0 | 0 |
 | **total** | **491** | **124** | **343** | **4** | **20** |
 
-The counts leave out this file.
+The counts leave out this file and `COPYING`.
 
 Changed further (items 3 and 4):
 

@@ -6,7 +6,8 @@ They are not the original software.
 
 - Project: <https://github.com/hasenj/go-shirei>, module `go.hasen.dev/shirei`
 - Merged: commit `26d6369dce19fc82643f4f403d2dd87907f85437` (v0.9.1, 2026-11-16)
-- Copyright (c) 2026 Judi Systems, under the zlib licence:
+- Copyright (c) 2026 Judi Systems, under the zlib licence, whose text is
+  [`COPYING`](COPYING) beside this file and
   [`../licenses/LICENSE.shirei`](../licenses/LICENSE.shirei)
 
 go-shirei's authors did not write the alterations described here and are not
@@ -54,7 +55,8 @@ the name replacement are applied to the upstream text:
 | `mullion-web/` | 7 | 2 | 2 | 3 |
 | **total** | **61** | **20** | **17** | **24** |
 
-No file here was added for mullion, and the counts leave out this file.
+No file here was added for mullion, and the counts leave out this file and
+`COPYING`.
 
 Changed further (items 2 to 4):
 

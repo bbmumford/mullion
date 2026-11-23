@@ -7,7 +7,8 @@ systray's root package is [`../../shell`](../../shell/ALTERED.md).
 - Project: <https://github.com/gogpu/systray>, module `github.com/gogpu/systray`
 - Merged: commit `732654fe9ab62c537dbffadea7d41c6bf67d675e` (2026-11-11)
 - Copyright (c) 2026 Andrey Kolkov and GoGPU Contributors, under the MIT
-  licence: [`../../licenses/LICENSE.systray`](../../licenses/LICENSE.systray)
+  licence, whose text is [`LICENSE`](LICENSE) beside this file and
+  [`../../licenses/LICENSE.systray`](../../licenses/LICENSE.systray)
 
 systray's authors did not write the alterations described here and are not
 responsible for them.
@@ -60,7 +61,7 @@ applied to the upstream text:
 | added for mullion | 4 |
 | **total** | **17** |
 
-The counts leave out this file.
+The counts leave out this file and `LICENSE`.
 
 Changed further:
 
