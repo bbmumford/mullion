@@ -1,0 +1,108 @@
+mullion
+Copyright (c) 2026 HSTLES / ORBTR Pty Ltd
+
+mullion is built from three open-source projects, altered so that they share
+one event loop, together with the code written for it. This notice names each
+project, its licence, the commit merged and where its code lives in this tree.
+
+The zlib licence on go-shirei requires that the origin of the software is not
+misrepresented, and that an altered version is plainly marked as such and not
+presented as the original. Every directory below that came from another
+project is an altered version of it, and carries an ALTERED.md saying how it
+differs from the commit merged and which files were changed or added.
+
+The code written for mullion is under the MIT licence in LICENSE: the root
+package (mullion.go, window.go, nativewindow.go, openurl.go and their tests,
+binaries_test.go, ffiaudit_test.go), bind/, dialog/, icon/, examples/,
+internal/brand/, internal/mainthread/, internal/objc/ and internal/win32/, and
+the files each ALTERED.md lists as added for mullion. internal/mainthread,
+internal/objc and internal/win32 replace helpers that each of the three
+projects carried for itself: pinning the main thread and posting work to it, an
+Objective-C selector and class cache, and the Win32 window and menu bindings.
+
+--------------------------------------------------------------------------------
+go-shirei
+
+  project    https://github.com/hasenj/go-shirei
+             module go.hasen.dev/shirei
+  merged     commit 26d6369dce19fc82643f4f403d2dd87907f85437
+             (v0.9.1, 2026-11-16)
+  copyright  Copyright (c) 2026 Judi Systems
+  licence    zlib licence, licenses/LICENSE.shirei
+  here       native/        the library, with its ext/camera, ext/darkmode
+                            and ext/window modules folded in
+             cmd/           mullion-web, mullion-mobilerun and mullion-bundle,
+                            which are go-shirei's cmd/shirei_web,
+                            cmd/shirei_mobilerun and cmd/shirei_bundle
+  altered    native/ALTERED.md, cmd/ALTERED.md
+
+  go-shirei's authors did not write the alterations and are not responsible
+  for them. The project's name was replaced with "mullion" throughout these
+  trees, in prose as well as in code; native/ALTERED.md says how to read the
+  text that resulted.
+
+--------------------------------------------------------------------------------
+glaze
+
+  project    https://github.com/crgimenes/glaze
+             module github.com/crgimenes/glaze
+  merged     commit f07fcba9e1805dbd739ace8fa94337f8fd75b50b (2026-11-16)
+  copyright  Copyright (c) 2025 Adam Bouqdib (original go-webview base)
+             Copyright (c) 2026 crgimenes
+  licence    MIT licence, licenses/LICENSE.glaze
+  here       web/               the root package
+             internal/menubar/  its menu package
+  altered    web/ALTERED.md, internal/menubar/ALTERED.md
+
+--------------------------------------------------------------------------------
+systray
+
+  project    https://github.com/gogpu/systray
+             module github.com/gogpu/systray
+  merged     commit 732654fe9ab62c537dbffadea7d41c6bf67d675e (2026-11-11)
+  copyright  Copyright (c) 2026 Andrey Kolkov and GoGPU Contributors
+  licence    MIT licence, licenses/LICENSE.systray
+  here       shell/             from the root package
+             internal/tray/     its internal package
+             internal/ffiaudit/ from its FFI pointer audit test
+  altered    shell/ALTERED.md, internal/tray/ALTERED.md,
+             internal/ffiaudit/ALTERED.md
+
+--------------------------------------------------------------------------------
+Third-party parts that arrived inside go-shirei and keep their own terms. Each
+is carried as go-shirei had it, apart from the import paths and project name
+native/ALTERED.md describes.
+
+  native/androidbackend/android_native_app_glue.c, android_native_app_glue.h
+             Copyright (C) 2010 The Android Open Source Project
+             Apache License 2.0; notice in native/androidbackend/NOTICE,
+             licence text in licenses/LICENSE.apache-2.0
+
+  native/internal/wayland/
+             Wayland protocol bindings from github.com/neurlang/wayland
+             v0.4.3, as go-shirei vendored and modified them
+             Copyright (c) 2021 Neurlang project
+             MIT licence, native/internal/wayland/LICENSE
+             The protocol descriptions (wl/wayland.xml, xdg/xdg-shell.xml)
+             and the key symbol table (xkbcommon/keysyms_linux.go) carry
+             their own copyright and permission notices in the files.
+
+  cmd/mullion-web/wasm_exec.js
+             Copyright 2018 The Go Authors
+             BSD 3-clause licence, licenses/LICENSE.golang
+
+  native/jsbackend/NotoSans-Regular.ttf
+             Noto Sans, Copyright 2015-2021 Google LLC
+             SIL Open Font License 1.1, licenses/LICENSE.noto-sans
+
+  native/widgets/microns.ttf
+             Microns, designed by Stephen Hutchings
+             SIL Open Font License 1.1, licenses/LICENSE.microns
+
+  native/widgets/typicons.ttf
+             Typicons, designed by Stephen Hutchings
+             SIL Open Font License 1.1, licenses/LICENSE.typicons
+
+--------------------------------------------------------------------------------
+Modules resolved through go.mod keep their own licences and are not
+redistributed here.
