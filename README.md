@@ -222,6 +222,25 @@ The module's minimum Go version is the `go` line in `go.mod`.
 - **The snapshot tests in `native/widgets`** compare rendered pixels with
   go-shirei's reference images, so their result depends on the fonts installed.
 
+## Dependencies
+
+- No other package of this estate.
+- `github.com/ebitengine/purego` (the system libraries without cgo, Objective-C
+  included) and `golang.org/x/sys`; `github.com/godbus/dbus/v5` (the Linux
+  tray and notifications) and `github.com/jezek/xgb` (X11);
+  `github.com/go-text/typesetting`, `golang.org/x/image`, `golang.org/x/text`
+  and `github.com/anthonynsimon/bild` (text shaping, fonts and images for the
+  Go-drawn surface); `github.com/fsnotify/fsnotify`, `github.com/cli/browser`,
+  `github.com/dboslee/lru`, `github.com/cespare/xxhash/v2`,
+  `go.hasen.dev/generic` and `go.hasen.dev/udplib`.
+
+## Used by
+
+Importers in the ORBTR estate:
+
+- `github.com/ORBTR/agent/cmd/orbtr-tray` (`mullion`, `dialog`, `icon`,
+  `shell`): the device tray on Windows and Linux.
+
 ## Licences
 
 The code written for mullion is Copyright (c) 2026 Brandon Miller-Mumford,
