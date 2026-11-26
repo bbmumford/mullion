@@ -20,6 +20,10 @@ internal/objc and internal/win32 replace helpers that each of the three
 projects carried for itself: pinning the main thread and posting work to it, an
 Objective-C selector and class cache, and the Win32 window and menu bindings.
 
+LICENSE covers that code only. The parts derived from go-shirei, glaze and
+systray stay under their own licences, named below, whose texts are in
+licenses/ and beside each of those directories.
+
 --------------------------------------------------------------------------------
 go-shirei
 
