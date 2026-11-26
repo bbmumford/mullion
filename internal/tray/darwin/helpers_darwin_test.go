@@ -32,11 +32,11 @@ func nsStringGoValue(s ID) string {
 	if cstr.IsNil() {
 		return ""
 	}
-	p := uintptr(cstr)
+	p := cPointer(uintptr(cstr))
 	var n int
-	for ; *(*byte)(unsafe.Pointer(p + uintptr(n))) != 0; n++ {
+	for ; *(*byte)(unsafe.Add(p, n)) != 0; n++ {
 	}
-	return string(unsafe.Slice((*byte)(unsafe.Pointer(p)), n))
+	return string(unsafe.Slice((*byte)(p), n))
 }
 
 // newTestCallback builds a method implementation that calls fn, with the

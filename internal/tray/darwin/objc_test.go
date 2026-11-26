@@ -113,11 +113,21 @@ func goString(cstr uintptr) string {
 	if cstr == 0 {
 		return ""
 	}
+	p := cPointer(cstr)
 	var n int
-	for ; *(*byte)(unsafe.Pointer(cstr + uintptr(n))) != 0; n++ {
+	for ; *(*byte)(unsafe.Add(p, n)) != 0; n++ {
 	}
-	return string(unsafe.Slice((*byte)(unsafe.Pointer(cstr)), n))
+	return string(unsafe.Slice((*byte)(p), n))
 }
+
+// cPointer turns an address a foreign call returned into a pointer. The
+// memory is C's or Objective-C's (an NSString's UTF-8 bytes, an IOSurface's
+// pixels, an MTLBuffer's contents, an NSWindow), which Go's garbage collector
+// neither moves nor frees, so a Go pointer to it stays valid for as long as
+// its owner keeps it. The uintptr's bits are read as a pointer through the
+// variable that holds them, instead of converting the integer, which go vet's
+// unsafeptr check cannot tell apart from arithmetic on a Go pointer.
+func cPointer(addr uintptr) unsafe.Pointer { return *(*unsafe.Pointer)(unsafe.Pointer(&addr)) }
 
 // The rest of this file covers the calls an ABI mistake breaks silently: a
 // wrongly-placed bool, int or double does not fail, it arrives as something

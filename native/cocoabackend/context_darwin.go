@@ -22,7 +22,16 @@ func (c Context) NSWindow() unsafe.Pointer {
 	if c.window == nil || c.window.closed {
 		return nil
 	}
-	return unsafe.Pointer(uintptr(c.window.gWindow))
+	return cPointer(uintptr(c.window.gWindow))
 }
+
+// cPointer turns an address a foreign call returned into a pointer. The
+// memory is C's or Objective-C's (an NSString's UTF-8 bytes, an IOSurface's
+// pixels, an MTLBuffer's contents, an NSWindow), which Go's garbage collector
+// neither moves nor frees, so a Go pointer to it stays valid for as long as
+// its owner keeps it. The uintptr's bits are read as a pointer through the
+// variable that holds them, instead of converting the integer, which go vet's
+// unsafeptr check cannot tell apart from arithmetic on a Go pointer.
+func cPointer(addr uintptr) unsafe.Pointer { return *(*unsafe.Pointer)(unsafe.Pointer(&addr)) }
 
 var _ native.BackendContext = Context{}

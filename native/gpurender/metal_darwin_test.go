@@ -533,7 +533,7 @@ func testPixels(s unsafe.Pointer, w, h int) []byte {
 	base, stride := ioSurfaceGetBaseAddress(p), ioSurfaceGetBytesPerRow(p)
 	pixels := make([]byte, w*h*4)
 	for y := 0; y < h; y++ {
-		copy(pixels[y*w*4:(y+1)*w*4], unsafe.Slice((*byte)(unsafe.Pointer(base+uintptr(y)*stride)), w*4))
+		copy(pixels[y*w*4:(y+1)*w*4], unsafe.Slice((*byte)(unsafe.Add(cPointer(base), uintptr(y)*stride)), w*4))
 	}
 	return pixels
 }

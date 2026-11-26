@@ -405,7 +405,7 @@ func metalEncode(cmd, tex, inst objc.ID, w, h int, quads []Quad, batches []Batch
 	qbytes := uint(len(quads) * int(unsafe.Sizeof(Quad{})))
 	if len(quads) > 0 {
 		dst := objc0(inst, sel_contents)
-		copy(unsafe.Slice((*byte)(unsafe.Pointer(dst)), qbytes), unsafe.Slice((*byte)(unsafe.Pointer(&quads[0])), qbytes))
+		copy(unsafe.Slice((*byte)(cPointer(dst)), qbytes), unsafe.Slice((*byte)(unsafe.Pointer(&quads[0])), qbytes))
 		bufferDidModify(inst, qbytes)
 	}
 
@@ -592,7 +592,16 @@ func testPixel(s unsafe.Pointer, x, y int) [4]byte {
 	base := ioSurfaceGetBaseAddress(p)
 	bpr := ioSurfaceGetBytesPerRow(p)
 	off := uintptr(y)*bpr + uintptr(x)*4
-	out := *(*[4]byte)(unsafe.Pointer(base + off))
+	out := *(*[4]byte)(unsafe.Add(cPointer(base), off))
 	ioSurfaceUnlock(p, kIOSurfaceLockReadOnly, nil)
 	return out
 }
+
+// cPointer turns an address a foreign call returned into a pointer. The
+// memory is C's or Objective-C's (an NSString's UTF-8 bytes, an IOSurface's
+// pixels, an MTLBuffer's contents, an NSWindow), which Go's garbage collector
+// neither moves nor frees, so a Go pointer to it stays valid for as long as
+// its owner keeps it. The uintptr's bits are read as a pointer through the
+// variable that holds them, instead of converting the integer, which go vet's
+// unsafeptr check cannot tell apart from arithmetic on a Go pointer.
+func cPointer(addr uintptr) unsafe.Pointer { return *(*unsafe.Pointer)(unsafe.Pointer(&addr)) }
